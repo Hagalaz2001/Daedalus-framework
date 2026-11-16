@@ -1,0 +1,5 @@
+Checks: >
+  clang-analyzer-*,bugprone-*,cert-*,misc-*,readability-braces-around-statements,
+  performance-*,-bugprone-easily-swappable-parameters
+WarningsAsErrors: "clang-analyzer-*,bugprone-*"
+HeaderFilterRegex: "include/.*"

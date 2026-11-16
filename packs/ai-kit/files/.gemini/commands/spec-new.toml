@@ -1,0 +1,7 @@
+description = "Spec-driven development: start a spec for a feature"
+prompt = """
+Start a spec for this feature: {{args}}
+Run `deno task spec:new <slug>`, then follow .claude/skills/spec-new/SKILL.md: interview the owner, never guess
+(mark unknowns with a NEEDS CLARIFICATION marker), fill spec.md and acceptance.md, then stop for human approval.
+AGENTS.md and docs/RESPONSIBLE-AI.md apply.
+"""

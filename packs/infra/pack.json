@@ -1,0 +1,30 @@
+{
+  "name": "infra",
+  "status": "starter",
+  "description": "Infrastructure starter: Docker Compose, GitHub Actions examples, OpenTofu example, Helm chart skeleton, OpenTelemetry + Prometheus + Jaeger + Grafana observability stack. Nothing is deployed by it.",
+  "stacks": [
+    "any"
+  ],
+  "files": "files",
+  "rules": "rules.md",
+  "requires": {
+    "backend": true
+  },
+  "tasks": {
+    "infra:up": "docker compose up --build",
+    "infra:obs": "docker compose -f infra/observability/docker-compose.yml up"
+  },
+  "adds": {
+    "files": [
+      "docker-compose.yml",
+      "infra/README.md",
+      "infra/github-actions/ci.example.yml",
+      "infra/github-actions/deploy.example.yml",
+      "infra/opentofu/main.tf",
+      "infra/helm/app/Chart.yaml",
+      "infra/observability/docker-compose.yml",
+      "infra/observability/otel-collector.yaml"
+    ],
+    "checks": []
+  }
+}

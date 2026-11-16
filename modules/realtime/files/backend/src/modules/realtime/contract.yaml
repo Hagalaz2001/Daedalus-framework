@@ -1,0 +1,19 @@
+paths:
+  /events:
+    get:
+      operationId: streamEvents
+      summary: Server-sent events for the organization (a `ping` comment every 25 s keeps proxies open).
+      description: >
+        Each event has an `event` name and a JSON `data` payload, for example `event: note.created`. Web apps use
+        `new EventSource(url, { withCredentials: true })`; mobile apps read the stream with `fetch` and the bearer token.
+      tags: [realtime]
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+      responses:
+        "200":
+          description: Event stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }

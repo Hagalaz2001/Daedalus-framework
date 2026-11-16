@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "../../../../packages/ui/src/styles/tokens.css";
+@import "../../../../packages/ui/src/styles/index.css";
+/* Tailwind skips node_modules, so name the kit's source for class detection. */
+@source "../../../../packages/ui/src";
+
+/* Long-form text (blog posts, legal pages). Tokens only, no typography plugin. */
+.prose-site { font-size: 1.125rem; line-height: 1.75; max-width: 42rem; }
+.prose-site > * + * { margin-top: 1.25em; }
+.prose-site h2 { font-size: 1.75rem; line-height: 1.2; font-weight: 600; margin-top: 2.25em; letter-spacing: -0.01em; }
+.prose-site h3 { font-size: 1.3rem; font-weight: 600; margin-top: 1.8em; }
+.prose-site a { color: var(--color-primary); text-decoration: underline; text-underline-offset: 3px; }
+.prose-site ul, .prose-site ol { padding-left: 1.4em; }
+.prose-site ul { list-style: disc; }
+.prose-site ol { list-style: decimal; }
+.prose-site li + li { margin-top: .4em; }
+.prose-site blockquote { border-left: 3px solid var(--color-primary); padding-left: 1.1em; color: var(--color-text-muted); font-family: var(--font-display); font-size: 1.25rem; }
+.prose-site code { font-family: var(--font-mono); font-size: .9em; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: .1em .35em; }
+.prose-site pre { background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1rem 1.25rem; overflow-x: auto; font-size: .95rem; }
+.prose-site pre code { border: 0; padding: 0; background: none; }
+.prose-site hr { border-color: var(--color-border); margin-block: 2.5em; }
+.prose-site strong { font-weight: 600; }

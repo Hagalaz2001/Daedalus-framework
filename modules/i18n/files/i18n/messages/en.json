@@ -1,0 +1,9 @@
+{
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.retry": "Try again",
+  "notes.empty.title": "No notes yet",
+  "notes.count": "{count} notes",
+  "errors.unauthorized": "Sign in to continue",
+  "errors.generic": "Something went wrong"
+}

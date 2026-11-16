@@ -1,0 +1,42 @@
+{
+  "deno": {
+    "imports": {
+      "@opentelemetry/api": "npm:@opentelemetry/api@1.10.0"
+    }
+  },
+  "env": [
+    {
+      "name": "OTEL_DENO",
+      "example": "true",
+      "description": "true turns on Deno's built-in OpenTelemetry export (traces, metrics, logs)"
+    },
+    {
+      "name": "OTEL_SERVICE_NAME",
+      "example": "app-backend",
+      "description": "Service name shown in your tracing UI"
+    },
+    {
+      "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "example": "http://localhost:4318",
+      "description": "OTLP/HTTP collector (Grafana, SigNoz, Jaeger, Honeycomb...)"
+    },
+    {
+      "name": "POSTHOG_KEY",
+      "description": "PostHog project API key (enables product analytics events)"
+    },
+    {
+      "name": "POSTHOG_HOST",
+      "example": "https://eu.i.posthog.com",
+      "description": "PostHog host (cloud region or self-hosted)"
+    },
+    {
+      "name": "PLAUSIBLE_DOMAIN",
+      "description": "Plausible site domain (enables Plausible events)"
+    },
+    {
+      "name": "PLAUSIBLE_HOST",
+      "example": "https://plausible.io",
+      "description": "Plausible host (self-hosted: your URL)"
+    }
+  ]
+}

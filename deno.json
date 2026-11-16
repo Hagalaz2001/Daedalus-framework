@@ -1,0 +1,27 @@
+{
+  "tasks": {
+    "new": "deno run -A new-project.ts",
+    "test": "deno test -A lib/ new-project_test.ts mcp_test.ts template/scripts/ packs/",
+    "oss:check": "deno run -A tools/oss-check.ts",
+    "check": "deno task test && deno task oss:check && deno audit"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "exclude": [
+      "*.mjs",
+      "packs/infra/files/infra/helm",
+      "setup",
+      "stacks",
+      "template"
+    ]
+  },
+  "lint": {
+    "exclude": [
+      "*.mjs",
+      "packs/infra/files/infra/helm",
+      "setup",
+      "stacks",
+      "template"
+    ]
+  }
+}

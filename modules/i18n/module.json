@@ -1,0 +1,12 @@
+{
+  "name": "i18n",
+  "title": "Internationalization",
+  "status": "thin",
+  "summary": "One message catalog shared by the API and every app (JSON per locale), a translate helper, Accept-Language negotiation and a parity check.",
+  "requires": { "backend": true },
+  "files": "files",
+  "tasks": { "i18n:check": { "cwd": ".", "run": "deno run -A i18n/check.ts" } },
+  "check": [{ "cwd": ".", "run": "deno task i18n:check" }],
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply i18n" }],
+  "docs": "docs/modules/i18n.md"
+}

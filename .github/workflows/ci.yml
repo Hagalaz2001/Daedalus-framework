@@ -1,0 +1,41 @@
+# Unit tests and the publishing gate, then a freshly generated project per combination, each running `deno task check`.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  blueprint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.8
+      - run: deno task check # unit tests, oss:check, deno audit
+
+  generate:
+    needs: blueprint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: site-spa-hono, flags: "--web site,spa --backend hono", flutter: false }
+          - { name: spa-vue-rn-hono, flags: "--web spa-vue --mobile rn --backend hono", flutter: false }
+          - { name: site-next-flutter-hono, flags: "--web site-next --mobile flutter --id com.example.shop --backend hono", flutter: true }
+          - { name: spa-flutter-hono, flags: "--web spa --mobile flutter --id com.example.shop --backend hono", flutter: true }
+          - { name: rn-only, flags: "--mobile rn --backend none", flutter: false }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.8
+      - uses: subosito/flutter-action@v2
+        if: matrix.flutter
+        with:
+          channel: stable
+          cache: true
+      - name: Generate and check
+        run: deno run -A new-project.ts "$RUNNER_TEMP/${{ matrix.name }}" --yes --name "Acme Shop" ${{ matrix.flags }}

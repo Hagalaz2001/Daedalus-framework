@@ -1,0 +1,10 @@
+{
+  "name": "auth-extras",
+  "title": "Auth extras",
+  "status": "full",
+  "summary": "OAuth sign-in (GitHub, Google), passwordless magic links and two-factor authentication through Better Auth plugins.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply auth-extras" }],
+  "docs": "docs/modules/auth-extras.md"
+}

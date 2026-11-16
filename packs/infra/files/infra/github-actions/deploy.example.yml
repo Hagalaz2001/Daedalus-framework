@@ -1,0 +1,20 @@
+# Skeleton only. The "production" environment must have required reviewers (a human approves each deploy).
+name: deploy
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy
+        required: true
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Deploy
+        run: echo "replace with your deploy command; secrets come from the environment, never from this file"

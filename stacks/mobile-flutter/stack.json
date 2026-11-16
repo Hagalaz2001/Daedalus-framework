@@ -1,0 +1,44 @@
+{
+  "id": "mobile-flutter",
+  "kind": "mobile",
+  "label": "Flutter + Riverpod (Android + iOS)",
+  "defaultAppDir": "apps/mobile",
+  "appSource": "app",
+  "workspaceMember": false,
+  "packages": ["stack:packages/app_core"],
+  "scripts": "scripts",
+  "tasks": {
+    "dev:mobile": { "cwd": "{appDir}", "run": "flutter run" },
+    "shot:mobile": "deno run -A scripts/mobile-shot.mjs",
+    "build:android": "deno run -A scripts/build-android.mjs"
+  },
+  "replace": [
+    { "from": "package:mobile/", "to": "package:{appName}/" },
+    { "files": ["pubspec.yaml"], "from": "^name: mobile$", "to": "name: {appName}", "regex": true },
+    { "from": "com.example.mobile", "to": "{bundleId}" },
+    { "files": ["lib/main.dart"], "from": "title: 'App'", "to": "title: '{displayName}'" },
+    { "files": ["android/app/src/main/AndroidManifest.xml"], "from": "android:label=\"mobile\"", "to": "android:label=\"{displayName}\"" },
+    { "files": ["ios/Runner/Info.plist"], "from": "(<key>CFBundleDisplayName</key>\\s*<string>)[^<]*", "to": "$1{displayName}", "regex": true }
+  ],
+  "move": [
+    { "from": "android/app/src/main/kotlin/com/example/mobile", "to": "android/app/src/main/kotlin/{bundlePath}" }
+  ],
+  "install": [
+    { "cwd": "packages/app_core", "run": "flutter pub get" },
+    { "cwd": "{appDir}", "run": "flutter pub get" }
+  ],
+  "sync": [
+    { "cwd": "packages/app_core", "run": "flutter pub get" },
+    { "cwd": "packages/app_core", "run": "dart run swagger_parser" },
+    { "cwd": "packages/app_core", "run": "dart run build_runner build" }
+  ],
+  "tokens": "scripts/tokens.ts",
+  "check": [
+    { "cwd": "packages/app_core", "run": "flutter analyze" },
+    { "cwd": "packages/app_core", "run": "flutter test" },
+    { "cwd": "{appDir}", "run": "flutter analyze" },
+    { "cwd": "{appDir}", "run": "flutter test" }
+  ],
+  "boundaries": { "lang": "dart", "src": "lib" },
+  "requires": { "backend": "optional" }
+}

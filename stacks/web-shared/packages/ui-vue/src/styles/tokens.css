@@ -1,0 +1,52 @@
+/* Generated from design/tokens.json by packages/ui/scripts/tokens.mjs. Do not edit; run `deno task sync`. */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+@theme {
+  --color-primary: #2a4bd7;
+  --color-on-primary: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f6f8;
+  --color-text: #0e1116;
+  --color-text-muted: #525a66;
+  --color-border: #e1e4ea;
+  --color-success: #17743d;
+  --color-warning: #a15c07;
+  --color-danger: #b42318;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, monospace;
+}
+
+/* Dark: explicit class wins; without JS, follow the system unless the page forces light. */
+.dark {
+  color-scheme: dark;
+  --color-primary: #8da2ff;
+  --color-on-primary: #0b1030;
+  --color-surface: #0e1116;
+  --color-surface-muted: #161a21;
+  --color-text: #eef0f4;
+  --color-text-muted: #a3abb8;
+  --color-border: #262b34;
+  --color-success: #4ccb85;
+  --color-warning: #f0b45a;
+  --color-danger: #ff8a7d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    color-scheme: dark;
+    --color-primary: #8da2ff;
+    --color-on-primary: #0b1030;
+    --color-surface: #0e1116;
+    --color-surface-muted: #161a21;
+    --color-text: #eef0f4;
+    --color-text-muted: #a3abb8;
+    --color-border: #262b34;
+    --color-success: #4ccb85;
+    --color-warning: #f0b45a;
+    --color-danger: #ff8a7d;
+  }
+}

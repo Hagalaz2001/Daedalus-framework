@@ -1,0 +1,29 @@
+{
+  "name": "fintech",
+  "status": "full",
+  "description": "Banking and payments building blocks: integer-money library, double-entry ledger with idempotency, maker-checker, hash-chained audit trail, reconciliation, PostgreSQL schema enforced by triggers, compliance checklists.",
+  "stacks": ["any"],
+  "files": "files",
+  "rules": "rules.md",
+  "requires": { "backend": true },
+  "tasks": {
+    "test:ledger": "deno test -A backend/src/modules/ledger/"
+  },
+  "check": [{ "cwd": "backend", "run": "deno test -A src/modules/ledger/" }],
+  "adds": {
+    "files": [
+      "backend/src/modules/ledger/money.ts",
+      "backend/src/modules/ledger/ledger.ts",
+      "backend/src/modules/ledger/approvals.ts",
+      "backend/src/modules/ledger/reconcile.ts",
+      "backend/src/modules/ledger/audit.ts",
+      "backend/src/modules/ledger/ledger.sql",
+      "backend/src/modules/ledger/compliance-interfaces.ts",
+      "docs/compliance/pci-dss.md",
+      "docs/compliance/soc2.md",
+      "docs/compliance/iso27001.md",
+      "docs/compliance/data-retention.md"
+    ],
+    "checks": ["test:ledger"]
+  }
+}

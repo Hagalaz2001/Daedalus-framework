@@ -1,0 +1,31 @@
+{
+  "id": "desktop-tauri",
+  "kind": "desktop",
+  "title": "Desktop app (Tauri v2)",
+  "description": "Rust shell (Tauri v2) around the shared React UI kit: React 19 + Vite + TypeScript + Tailwind v4 + TanStack Query, bearer-token sign-in against the Hono backend, token in the OS credential store, Rust-side HTTP, NSIS installer. No Node at runtime, no Electron.",
+  "label": "Tauri v2 + React (Windows first; macOS and Linux build with the same sources)",
+  "defaultAppDir": "apps/desktop",
+  "appSource": "app",
+  "workspaceMember": true,
+  "packages": ["packages/api_ts", "shared:web-shared/packages/ui"],
+  "tokens": "deno run -A packages/ui/scripts/tokens.mjs",
+  "placeholders": {
+    "{displayName}": ["src/shared/lib/config.ts", "index.html", "src-tauri/tauri.conf.json"],
+    "{bundleId}": ["src-tauri/tauri.conf.json", "src-tauri/src/lib.rs"],
+    "{appSlug}": ["src-tauri/tauri.conf.json"]
+  },
+  "tasks": {
+    "setup:desktop": "cargo install tauri-cli --version 2.12.5 --locked",
+    "dev:desktop": { "cwd": "{appDir}", "run": "cargo tauri dev" },
+    "build:desktop": { "cwd": "{appDir}", "run": "cargo tauri build" }
+  },
+  "install": [{ "cwd": "{appDir}/src-tauri", "run": "cargo fetch --locked" }],
+  "check": [
+    { "cwd": "{appDir}", "run": "deno task check" },
+    { "cwd": "{appDir}/src-tauri", "run": "cargo fmt --check" },
+    { "cwd": "{appDir}/src-tauri", "run": "cargo clippy --all-targets --locked -- -D warnings" },
+    { "cwd": "{appDir}/src-tauri", "run": "cargo test --locked" }
+  ],
+  "boundaries": { "lang": "ts", "src": "src" },
+  "requires": { "backend": "optional" }
+}

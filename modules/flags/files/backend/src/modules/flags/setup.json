@@ -1,0 +1,6 @@
+{
+  "contract": "contract.yaml",
+  "database": {
+    "migration": true
+  }
+}

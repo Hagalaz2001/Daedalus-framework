@@ -1,0 +1,31 @@
+{
+  "$comment": "Preset 'playful': friendly consumer app. Rounded shapes, warm coral accent on a soft lilac-tinted surface, chunky rounded type.",
+  "meta": { "id": "playful", "name": "Playful", "description": "Rounded shapes, coral accent, soft lilac surfaces, chunky friendly type." },
+  "color": {
+    "primary": "#d13138",
+    "onPrimary": "#ffffff",
+    "surface": "#ffffff",
+    "surfaceMuted": "#f6f3ff",
+    "text": "#1d1535",
+    "textMuted": "#5c5478",
+    "border": "#e4defa",
+    "success": "#12794a",
+    "warning": "#a35a00",
+    "danger": "#c4252c"
+  },
+  "colorDark": {
+    "primary": "#ff8a8e",
+    "onPrimary": "#3a0508",
+    "surface": "#15102a",
+    "surfaceMuted": "#1e1840",
+    "text": "#f4f0ff",
+    "textMuted": "#b3abd6",
+    "border": "#312a5c",
+    "success": "#4fd18f",
+    "warning": "#f3b65c",
+    "danger": "#ff9a9d"
+  },
+  "radius": { "sm": 10, "md": 16, "lg": 24 },
+  "space": { "1": 4, "2": 8, "3": 12, "4": 16, "6": 24, "8": 32 },
+  "font": { "sans": "Nunito", "display": "Bricolage Grotesque", "mono": "JetBrains Mono" }
+}

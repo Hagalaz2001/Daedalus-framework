@@ -1,0 +1,5 @@
+description = "Spec-driven development: plan an approved spec"
+prompt = """
+Plan spec {{args}}: run `deno task spec:plan {{args}}`, then fill plan.md as in .claude/skills/spec-implement/SKILL.md
+step 1. Stop for human review before creating tasks. AGENTS.md and docs/RESPONSIBLE-AI.md apply.
+"""

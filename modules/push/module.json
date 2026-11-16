@@ -1,0 +1,11 @@
+{
+  "name": "push",
+  "title": "Push notifications",
+  "status": "thin",
+  "summary": "Device token registry and one sendPush() for Expo (React Native), FCM (Flutter and Android) and web push.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply push" }],
+  "routes": ["PUT /push/tokens", "DELETE /push/tokens/{id}"],
+  "docs": "docs/modules/push.md"
+}

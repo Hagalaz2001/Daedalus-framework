@@ -1,0 +1,15 @@
+[package]
+name = "feature-profile"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "feature_profile"
+
+[dependencies]
+app-core.workspace = true
+app-ui.workspace = true
+app-services.workspace = true
+gpui-kit.workspace = true

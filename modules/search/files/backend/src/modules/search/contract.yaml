@@ -1,0 +1,40 @@
+paths:
+  /search:
+    get:
+      operationId: search
+      summary: Ranked full-text search over the organization's notes.
+      description: Supports quoted phrases, `or` and `-exclusion` (PostgreSQL websearch syntax).
+      tags: [search]
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 200 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+      responses:
+        "200":
+          description: Best matches first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SearchHit" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+components:
+  schemas:
+    SearchHit:
+      type: object
+      required: [id, kind, snippet, rank]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [note] }
+        snippet: {
+          type: string,
+          description: The text with matches wrapped in <b>...</b> (escape before rendering as HTML).,
+        }
+        rank: { type: number }

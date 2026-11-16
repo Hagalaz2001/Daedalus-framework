@@ -1,0 +1,10 @@
+{
+  "name": "error-tracking",
+  "title": "Error tracking",
+  "status": "thin",
+  "summary": "Sentry SDK for the API: unexpected errors are reported with the request id. Works with Sentry or self-hosted GlitchTip through the same DSN.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply error-tracking" }],
+  "docs": "docs/modules/error-tracking.md"
+}

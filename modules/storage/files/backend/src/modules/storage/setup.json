@@ -1,0 +1,38 @@
+{
+  "deno": {
+    "imports": {
+      "aws4fetch": "npm:aws4fetch@1.0.20"
+    }
+  },
+  "env": [
+    {
+      "name": "S3_ENDPOINT",
+      "example": "http://localhost:9000",
+      "description": "S3-compatible endpoint (R2, MinIO, Supabase Storage). Empty means AWS S3"
+    },
+    {
+      "name": "S3_REGION",
+      "example": "auto",
+      "description": "Region (auto for R2)"
+    },
+    {
+      "name": "S3_BUCKET",
+      "example": "app-files",
+      "description": "Bucket name"
+    },
+    {
+      "name": "S3_ACCESS_KEY_ID",
+      "description": "Access key id (scope it to this bucket)"
+    },
+    {
+      "name": "S3_SECRET_ACCESS_KEY",
+      "description": "Secret access key"
+    },
+    {
+      "name": "FILE_MAX_BYTES",
+      "example": "26214400",
+      "description": "Largest accepted upload in bytes (default 25 MB)"
+    }
+  ],
+  "contract": "contract.yaml"
+}

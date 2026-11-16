@@ -1,0 +1,39 @@
+{
+  "deno": {
+    "compilerOptions": {
+      "jsx": "react-jsx",
+      "jsxImportSource": "react",
+      "jsxImportSourceTypes": "@types/react"
+    },
+    "imports": {
+      "nodemailer": "npm:nodemailer@7.0.13",
+      "react-email": "npm:react-email@6.11.13",
+      "@types/react": "npm:@types/react@19.3.0",
+      "react": "npm:react@19.3.1",
+      "react/": "npm:/react@19.3.1/",
+      "react-dom": "npm:react-dom@19.3.1",
+      "react-dom/": "npm:/react-dom@19.3.1/"
+    }
+  },
+  "env": [
+    {
+      "name": "EMAIL_TRANSPORT",
+      "example": "log",
+      "description": "log (print, default) | resend | smtp"
+    },
+    {
+      "name": "EMAIL_FROM",
+      "example": "Acme <hello@example.com>",
+      "description": "Sender address (required for resend and smtp)"
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "description": "Resend API key (EMAIL_TRANSPORT=resend)"
+    },
+    {
+      "name": "SMTP_URL",
+      "example": "smtp://user:pass@localhost:1025",
+      "description": "SMTP connection URL (EMAIL_TRANSPORT=smtp)"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@app/ui-vue",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles/index.css",
+    "./tokens.css": "./src/styles/tokens.css",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "typecheck": "deno run -A scripts/typecheck.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "5.3.0",
+    "@fontsource-variable/fraunces": "5.3.0",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "@fontsource-variable/hanken-grotesk": "5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/nunito": "5.3.0",
+    "@lucide/vue": "1.72.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "reka-ui": "2.11.0",
+    "tailwind-merge": "3.7.0",
+    "vue": "3.5.45",
+    "vue-sonner": "2.0.9"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/user-event": "14.6.10",
+    "@testing-library/vue": "8.1.0",
+    "@vitejs/plugin-vue": "6.0.11",
+    "axe-core": "4.14.0",
+    "jsdom": "31.0.1",
+    "typescript5": "npm:typescript@5.9.3",
+    "vitest": "5.1.0",
+    "vue-tsc": "3.3.14"
+  }
+}

@@ -1,0 +1,10 @@
+[package]
+name = "app-core"
+description = "Domain types and rules. No UI, no I/O."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "app_core"

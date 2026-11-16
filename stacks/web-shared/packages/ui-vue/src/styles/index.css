@@ -1,0 +1,39 @@
+/* Base layer shared by every web app. The app's own CSS does:
+     @import "tailwindcss";
+     @import "<rel>/packages/ui/src/styles/tokens.css";
+     @import "<rel>/packages/ui/src/styles/index.css";
+     @source "<rel>/packages/ui/src";   (Tailwind skips node_modules, so name the kit's source) */
+/* Dim layer behind dialogs and sheets and the shadow colour: constant, so it darkens in both themes. */
+@theme { --color-scrim: oklch(0.2 0.01 260 / 0.5); }
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html { color-scheme: light; -webkit-text-size-adjust: 100%; }
+  html.dark { color-scheme: dark; }
+  body {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; }
+  p { text-wrap: pretty; }
+  :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  ::selection { background: color-mix(in oklab, var(--color-primary) 28%, transparent); }
+  a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+}
+
+/* Overlay motion answers a click, so it is short and off for reduced motion. */
+@keyframes ui-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes ui-pop-in { from { opacity: 0; transform: translateY(6px) scale(.98) } to { opacity: 1; transform: none } }
+@keyframes ui-slide-right { from { transform: translateX(100%) } to { transform: none } }
+@keyframes ui-slide-up { from { transform: translateY(100%) } to { transform: none } }
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui-overlay][data-state="open"] { animation: ui-fade-in .16s ease-out; }
+  [data-ui-dialog][data-state="open"] { animation: ui-pop-in .18s cubic-bezier(.2,.8,.2,1); }
+  [data-ui-sheet="right"][data-state="open"] { animation: ui-slide-right .22s cubic-bezier(.2,.8,.2,1); }
+  [data-ui-sheet="bottom"][data-state="open"] { animation: ui-slide-up .22s cubic-bezier(.2,.8,.2,1); }
+  [data-ui-popover][data-state="open"] { animation: ui-pop-in .14s ease-out; }
+}

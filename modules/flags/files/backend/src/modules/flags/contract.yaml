@@ -1,0 +1,66 @@
+paths:
+  /flags:
+    get:
+      operationId: getFlags
+      summary: Every feature flag evaluated for the signed-in user.
+      tags: [flags]
+      responses:
+        "200":
+          description: Flag key to on/off
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FlagMap" }
+        "401": { $ref: "#/components/responses/Problem" }
+  /flags/{key}:
+    put:
+      operationId: setFlag
+      summary: Create or change a flag (platform administrators only, see ADMIN_EMAILS).
+      tags: [flags]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: { type: string, pattern: "^[a-z][a-z0-9_.-]{1,63}$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FlagUpdate" }
+      responses:
+        "200":
+          description: The flag
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Flag" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+components:
+  schemas:
+    FlagMap:
+      type: object
+      required: [flags]
+      properties:
+        flags:
+          type: object
+          additionalProperties: { type: boolean }
+    FlagUpdate:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: { type: boolean }
+        rolloutPercent: {
+          type: integer,
+          minimum: 0,
+          maximum: 100,
+          description: Share of users that get the flag (default 100).,
+        }
+        description: { type: string, maxLength: 200 }
+    Flag:
+      type: object
+      required: [key, enabled, rolloutPercent]
+      properties:
+        key: { type: string }
+        enabled: { type: boolean }
+        rolloutPercent: { type: integer }
+        description: { type: string }

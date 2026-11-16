@@ -1,0 +1,53 @@
+paths:
+  /push/tokens:
+    put:
+      operationId: registerPushToken
+      summary: Register (or refresh) this device for push notifications.
+      tags: [push]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushTokenInput" }
+      responses:
+        "200":
+          description: Registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PushToken" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+  /push/tokens/{id}:
+    delete:
+      operationId: removePushToken
+      summary: Stop pushing to this device (call on sign-out).
+      tags: [push]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Removed
+        "401": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+components:
+  schemas:
+    PushTokenInput:
+      type: object
+      required: [platform, token]
+      properties:
+        platform: { type: string, enum: [expo, fcm, web] }
+        token: {
+          type: string,
+          minLength: 8,
+          maxLength: 4096,
+          description: "Expo push token, FCM registration token, or the JSON of a web PushSubscription",
+        }
+    PushToken:
+      type: object
+      required: [id, platform]
+      properties:
+        id: { type: string }
+        platform: { type: string, enum: [expo, fcm, web] }

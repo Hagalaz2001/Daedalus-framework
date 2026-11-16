@@ -1,0 +1,34 @@
+{
+  "name": "healthcare",
+  "status": "starter",
+  "description": "Health-data starter: PHI tagging and redaction, consent records, a minimal FHIR R4 client, HIPAA and GDPR health-data checklists.",
+  "stacks": [
+    "any"
+  ],
+  "files": "files",
+  "rules": "rules.md",
+  "requires": {
+    "backend": true
+  },
+  "tasks": {
+    "test:phi": "deno test -A backend/src/shared/phi/ backend/src/modules/fhir/"
+  },
+  "check": [
+    {
+      "cwd": "backend",
+      "run": "deno test -A src/shared/phi/ src/modules/fhir/"
+    }
+  ],
+  "adds": {
+    "files": [
+      "backend/src/shared/phi/phi.ts",
+      "backend/src/shared/phi/consent.ts",
+      "backend/src/modules/fhir/client.ts",
+      "docs/compliance/hipaa-gdpr.md",
+      "docs/compliance/phi-conventions.md"
+    ],
+    "checks": [
+      "test:phi"
+    ]
+  }
+}

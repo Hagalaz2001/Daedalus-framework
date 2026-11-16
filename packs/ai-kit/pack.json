@@ -1,0 +1,44 @@
+{
+  "name": "ai-kit",
+  "status": "full",
+  "description": "AI delivery kit: spec-driven development, agent guardrails (Claude Code hooks), secret/licence/SAST/SBOM checks, role playbooks, PR template, delivery metrics.",
+  "default": true,
+  "stacks": ["any"],
+  "files": "files",
+  "rules": "rules.md",
+  "tasks": {
+    "spec:new": "deno run -A scripts/ai/spec.ts new",
+    "spec:plan": "deno run -A scripts/ai/spec.ts plan",
+    "spec:tasks": "deno run -A scripts/ai/spec.ts tasks",
+    "spec:check": "deno run -A scripts/ai/spec.ts check",
+    "sast": "deno run -A scripts/ai/sast.ts",
+    "audit": "deno run -A scripts/ai/audit.ts",
+    "sbom": "deno run -A scripts/ai/sbom.ts"
+  },
+  "check": ["deno run -A scripts/ai/spec.ts check"],
+  "adds": {
+    "files": [
+      "scripts/ai/guard.ts",
+      ".claude/settings.json",
+      "specs/templates/spec.md",
+      ".claude/skills/spec-new/SKILL.md",
+      ".claude/agents/qa-tester.md",
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      "docs/ROLE-PLAYBOOKS.md",
+      "docs/DELIVERY-METRICS.md",
+      "docs/AI-KIT.md"
+    ],
+    "skills": ["spec-new", "spec-implement", "ai-review"],
+    "agents": [
+      "desktop-dev",
+      "qa-tester",
+      "devops-sre",
+      "security-reviewer",
+      "data-ml",
+      "product-manager",
+      "ux-designer",
+      "tech-writer"
+    ],
+    "checks": ["spec:check"]
+  }
+}

@@ -1,0 +1,10 @@
+# Generates Dart models + Retrofit clients from the shared contract. Run via `deno task sync` at the repo root.
+swagger_parser:
+  schema_path: ../../contracts/openapi.yaml
+  output_directory: lib/src/api
+  name: app_api
+  language: dart
+  json_serializer: json_serializable
+  root_client: true
+  root_client_name: ApiClient
+  put_clients_in_folder: true

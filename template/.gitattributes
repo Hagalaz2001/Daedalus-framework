@@ -1,0 +1,13 @@
+# One line ending everywhere, so Windows and Mac produce identical diffs.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.jar binary
+*.ttf binary
+*.woff2 binary
+# generated: collapsed in reviews
+packages/api_ts/src/schema.d.ts linguist-generated=true
+*.g.dart linguist-generated=true

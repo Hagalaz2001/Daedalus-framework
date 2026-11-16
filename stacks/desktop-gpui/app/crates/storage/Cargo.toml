@@ -1,0 +1,15 @@
+[package]
+name = "app-storage"
+description = "Local settings (redb) and secrets (OS credential store)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "app_storage"
+
+[dependencies]
+app-core.workspace = true
+redb = "4"
+keyring = "4"

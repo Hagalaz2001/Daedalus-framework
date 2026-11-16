@@ -1,0 +1,11 @@
+{
+  "name": "flags",
+  "title": "Feature flags",
+  "status": "full",
+  "summary": "Database-backed flags with percentage rollout, evaluated per user and managed by platform administrators.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply flags" }],
+  "routes": ["GET /flags", "PUT /flags/{key}"],
+  "docs": "docs/modules/flags.md"
+}

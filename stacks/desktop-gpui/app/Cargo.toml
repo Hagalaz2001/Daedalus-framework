@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = ["crates/app", "crates/api", "crates/core", "crates/services", "crates/storage", "crates/ui", "crates/features/*", "xtask"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+# Internal crates
+app-core = { path = "crates/core" }
+app-api = { path = "crates/api" }
+app-storage = { path = "crates/storage" }
+app-ui = { path = "crates/ui" }
+app-services = { path = "crates/services" }
+feature-auth = { path = "crates/features/auth" }
+feature-dashboard = { path = "crates/features/dashboard" }
+feature-notes = { path = "crates/features/notes" }
+feature-profile = { path = "crates/features/profile" }
+feature-settings = { path = "crates/features/settings" }
+
+# UI: GPUI Kit re-exports GPUI, GPUI Component and the Lucide icon assets (Apache-2.0). Pinned exactly.
+gpui-kit = "=0.10.0"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
+opt-level = 3

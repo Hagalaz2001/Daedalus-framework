@@ -1,0 +1,25 @@
+{
+  "name": "game",
+  "status": "starter",
+  "description": "Godot 4 game skeleton (GDScript, one scene, a unit-tested pure-logic script) with a CI workflow example. Not built in this repository's tests.",
+  "stacks": [
+    "any"
+  ],
+  "files": "files",
+  "rules": "rules.md",
+  "tasks": {
+    "game:check": "deno run -A game/check.ts"
+  },
+  "adds": {
+    "files": [
+      "game/project.godot",
+      "game/scenes/main.tscn",
+      "game/scripts/player.gd",
+      "game/scripts/score.gd",
+      "game/check.ts",
+      "game/README.md",
+      "game/ci.example.yml"
+    ],
+    "checks": []
+  }
+}

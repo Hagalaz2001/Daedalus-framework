@@ -1,0 +1,17 @@
+{
+  "contract": "contract.yaml",
+  "ui": {
+    "web-spa": [
+      {
+        "from": "policy.ts",
+        "to": "src/shared/lib/policy.ts"
+      }
+    ],
+    "mobile-rn": [
+      {
+        "from": "policy.ts",
+        "to": "src/shared/lib/policy.ts"
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "env": [
+    {
+      "name": "APP_NAME",
+      "example": "Acme",
+      "description": "Shown in authenticator apps (two-factor issuer)"
+    },
+    {
+      "name": "GITHUB_CLIENT_ID",
+      "description": "GitHub OAuth app client id (enables Sign in with GitHub)"
+    },
+    {
+      "name": "GITHUB_CLIENT_SECRET",
+      "description": "GitHub OAuth app client secret"
+    },
+    {
+      "name": "GOOGLE_CLIENT_ID",
+      "description": "Google OAuth client id (enables Sign in with Google)"
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "description": "Google OAuth client secret"
+    }
+  ],
+  "database": {
+    "authSchema": true,
+    "migration": true
+  }
+}

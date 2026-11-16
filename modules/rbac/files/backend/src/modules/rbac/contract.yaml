@@ -1,0 +1,26 @@
+paths:
+  /permissions:
+    get:
+      operationId: getPermissions
+      summary: What the caller may do in the current organization.
+      tags: [account]
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+      responses:
+        "200":
+          description: Role and permissions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Permissions" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+components:
+  schemas:
+    Permissions:
+      type: object
+      required: [role, permissions]
+      properties:
+        role: { type: string }
+        permissions:
+          type: array
+          items: { type: string }

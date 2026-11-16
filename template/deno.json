@@ -1,0 +1,27 @@
+{
+  "nodeModulesDir": "auto",
+  "workspace": ["./backend", "./packages/api_ts"],
+  "tasks": {
+    "sync": "deno run -A scripts/sync.ts",
+    "check": "deno run -A scripts/check.ts",
+    "lint:boundaries": "deno run -A scripts/lint-boundaries.ts",
+    "lint:deno-only": "deno run -A scripts/lint-deno-only.ts",
+    "test:scripts": "deno test -A scripts/",
+    "dev:backend": "deno task --cwd backend dev",
+    "skills:update": "deno run -A npm:skills update",
+    "timeline": "deno run -A scripts/timeline.mjs",
+    "secrets": "deno run -A scripts/secret-scan.mjs --all",
+    "git:setup": "deno run -A scripts/git-setup.mjs",
+    "add-app": "deno run -A scripts/daedalus.ts",
+    "studio": "deno run -A scripts/daedalus.ts studio",
+    "add-module": "deno run -A scripts/daedalus.ts module",
+    "add-pack": "deno run -A scripts/daedalus.ts pack"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "exclude": ["**/node_modules", "**/dist", "**/build", "packages/api_ts/src/schema.d.ts", "backend/drizzle", ".agents", ".claude", "apps"]
+  },
+  "lint": {
+    "exclude": ["**/node_modules", "**/dist", "**/build", "packages/api_ts/src/schema.d.ts", "backend/drizzle", ".agents", ".claude", "apps"]
+  }
+}

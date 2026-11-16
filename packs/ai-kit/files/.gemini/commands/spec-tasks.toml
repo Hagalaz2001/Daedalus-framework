@@ -1,0 +1,5 @@
+description = "Spec-driven development: tasks for a planned spec"
+prompt = """
+Create tasks for spec {{args}}: run `deno task spec:tasks {{args}}`, refine tasks.md, then implement one task at a time
+with tests first as in .claude/skills/spec-implement/SKILL.md. Never deploy. AGENTS.md and docs/RESPONSIBLE-AI.md apply.
+"""

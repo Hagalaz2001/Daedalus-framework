@@ -1,0 +1,2 @@
+# Build output. Set CARGO_TARGET_DIR to a folder outside the repo to share it between projects.
+/target

@@ -1,0 +1,10 @@
+{
+  "name": "observability",
+  "title": "Observability and analytics",
+  "status": "thin",
+  "summary": "OpenTelemetry traces and logs through Deno's built-in exporter (route, user and organization on every span), plus optional PostHog or Plausible event tracking.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply observability" }],
+  "docs": "docs/modules/observability.md"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "realtime",
+  "title": "Realtime events",
+  "status": "thin",
+  "summary": "Server-sent events: clients subscribe to GET /events and the backend publishes per-organization events with publish().",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply realtime" }],
+  "routes": ["GET /events"],
+  "docs": "docs/modules/realtime.md"
+}

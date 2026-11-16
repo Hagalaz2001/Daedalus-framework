@@ -1,0 +1,12 @@
+{
+  "name": "admin",
+  "title": "Admin panel",
+  "status": "full",
+  "summary": "Generic list, search, edit and delete for the tables you register, with a React screen for the web-spa stack that builds itself from the API's resource metadata. Platform administrators only.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply admin" }],
+  "routes": ["GET /admin/resources", "GET /admin/{resource}", "GET|PATCH|DELETE /admin/{resource}/{id}"],
+  "ui": { "web-spa": ["src/features/admin"] },
+  "docs": "docs/modules/admin.md"
+}

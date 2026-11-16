@@ -1,0 +1,12 @@
+# Nothing in here needs to reach the build machine.
+.agents
+.claude
+agent
+build
+.dart_tool
+android
+ios
+macos
+linux
+windows
+test

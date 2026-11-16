@@ -1,0 +1,11 @@
+{
+  "name": "audit",
+  "title": "Audit log",
+  "status": "full",
+  "summary": "Records every successful write to audit_log (who, what, when, request id) and lists it for organization owners and admins.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply audit" }],
+  "routes": ["GET /audit-log"],
+  "docs": "docs/modules/audit.md"
+}

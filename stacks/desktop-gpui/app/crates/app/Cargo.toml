@@ -1,0 +1,28 @@
+[package]
+name = "app"
+description = "Desktop app: window, menus, shortcuts, single instance, routing."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+build = "build.rs"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+app-core.workspace = true
+app-storage.workspace = true
+app-services.workspace = true
+app-ui.workspace = true
+feature-auth.workspace = true
+feature-dashboard.workspace = true
+feature-notes.workspace = true
+feature-profile.workspace = true
+feature-settings.workspace = true
+gpui-kit.workspace = true
+single-instance = "0.3"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"

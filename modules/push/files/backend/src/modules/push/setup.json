@@ -1,0 +1,31 @@
+{
+  "deno": {
+    "imports": {
+      "jose": "npm:jose@6.2.17",
+      "@block65/webcrypto-web-push": "npm:@block65/webcrypto-web-push@2.0.0"
+    }
+  },
+  "env": [
+    {
+      "name": "FCM_SERVICE_ACCOUNT_JSON",
+      "description": "Firebase service account JSON, single line (Flutter / Android via FCM)"
+    },
+    {
+      "name": "VAPID_PUBLIC_KEY",
+      "description": "Web push VAPID public key (base64url)"
+    },
+    {
+      "name": "VAPID_PRIVATE_KEY",
+      "description": "Web push VAPID private key (base64url)"
+    },
+    {
+      "name": "VAPID_SUBJECT",
+      "example": "mailto:ops@example.com",
+      "description": "Contact URL or mailto for push services"
+    }
+  ],
+  "contract": "contract.yaml",
+  "database": {
+    "migration": true
+  }
+}

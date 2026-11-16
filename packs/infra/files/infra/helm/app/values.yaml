@@ -1,0 +1,11 @@
+image:
+  repository: registry.example.com/app
+  tag: "0.1.0" # never "latest"
+replicaCount: 2
+service:
+  port: 8787
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: 500m, memory: 256Mi }
+# Secrets are referenced, never stored in values: kubectl create secret generic app-env ...
+existingSecret: app-env

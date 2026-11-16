@@ -1,0 +1,17 @@
+{
+  "deno": {
+    "imports": {
+      "@sentry/deno": "npm:@sentry/deno@11.12.0"
+    }
+  },
+  "env": [
+    {
+      "name": "SENTRY_DSN",
+      "description": "Sentry (or GlitchTip) DSN; empty disables error reporting"
+    },
+    {
+      "name": "SENTRY_RELEASE",
+      "description": "Release or git sha, to see which deploy introduced an error"
+    }
+  ]
+}

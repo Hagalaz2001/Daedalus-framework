@@ -1,0 +1,5 @@
+[workspace]
+resolver = "2"
+members = ["core"]
+# `app` is the target-specific firmware crate, built separately for the microcontroller (see README).
+exclude = ["app"]

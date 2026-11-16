@@ -1,0 +1,249 @@
+openapi: 3.1.0
+info:
+  title: App API
+  version: 0.2.0
+  description: >
+    Single source of truth for backend, web and mobile. Change this file first, then run `deno task sync` to
+    regenerate the clients. The backend validates every request body and query string against this file at runtime and
+    a test fails when a route and the contract disagree.
+
+
+    Accounts are Better Auth's endpoints under /api/auth/* (not listed here): POST /api/auth/sign-up/email,
+    POST /api/auth/sign-in/email, POST /api/auth/sign-out, GET /api/auth/get-session, POST /api/auth/request-password-reset,
+    POST /api/auth/reset-password, POST /api/auth/delete-user (body `{ password }`; removes the account, its personal space
+    and their content), and the organization endpoints under
+    /api/auth/organization/* (create, list, invite, members). Web apps use the session cookie; mobile and desktop apps send
+    the token from the sign-in response header `set-auth-token` as `Authorization: Bearer <token>`.
+
+
+    Errors are RFC 9457 problem objects (`application/problem+json`). `message` repeats `detail` for simple clients.
+    Tenant-scoped operations act in the caller's personal organization unless `X-Organization-Id` names another one
+    the caller belongs to.
+servers:
+  - url: http://localhost:8787
+security:
+  - bearerAuth: []
+  - cookieAuth: []
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness. The process is up.
+      tags: [system]
+      security: []
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+  /ready:
+    get:
+      operationId: getReady
+      summary: Readiness. The database answers.
+      tags: [system]
+      security: []
+      responses:
+        "200":
+          description: Ready for traffic
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+        "503": { $ref: "#/components/responses/Problem" }
+  /me:
+    get:
+      operationId: getMe
+      summary: The signed-in user and the organizations they belong to.
+      tags: [account]
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Problem" }
+  /notes:
+    get:
+      operationId: listNotes
+      summary: Notes of the organization, newest first.
+      description: >
+        Cursor pagination: pass `limit` and the `cursor` taken from the `X-Next-Cursor` response header of the previous
+        page. The header is absent on the last page.
+      tags: [notes]
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: q
+          in: query
+          description: Case-insensitive text filter.
+          schema: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: One page of notes
+          headers:
+            X-Next-Cursor:
+              description: Cursor for the next page; absent when there is none.
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Note" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+    post:
+      operationId: createNote
+      tags: [notes]
+      parameters:
+        - $ref: "#/components/parameters/OrganizationId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewNote" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+  /notes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      operationId: getNote
+      tags: [notes]
+      responses:
+        "200":
+          description: The note
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewNote" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "401": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+    delete:
+      operationId: deleteNote
+      summary: Soft delete (the row stays with `deleted_at` set).
+      tags: [notes]
+      responses:
+        "204":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+  parameters:
+    OrganizationId:
+      name: X-Organization-Id
+      in: header
+      description: Organization to act in. Defaults to the caller's personal organization.
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      description: Unique string per logical write; a retry with the same key returns the first result.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string, maxLength: 64 }
+  responses:
+    Problem:
+      description: Error (RFC 9457 problem details)
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+    Error:
+      type: object
+      description: RFC 9457 problem details plus `message` and `requestId`.
+      required: [type, title, status, message]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        message: { type: string }
+        instance: { type: string }
+        requestId: { type: string }
+        errors:
+          type: array
+          description: Field-level problems for validation errors.
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path: { type: string }
+              message: { type: string }
+    Me:
+      type: object
+      required: [id, email, name, organizations]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        name: { type: string }
+        organizations:
+          type: array
+          items:
+            type: object
+            required: [id, name, role]
+            properties:
+              id: { type: string }
+              name: { type: string }
+              role: { type: string }
+    Note:
+      type: object
+      required: [id, text, createdAt]
+      properties:
+        id: { type: string }
+        text: { type: string }
+        createdAt: { type: string, format: date-time }
+    NewNote:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 500 }

@@ -1,0 +1,57 @@
+/* Generated from design/tokens.json by scripts/gen-tokens.mjs. Do not edit; run `deno task tokens`. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0.0% 100.0%;
+    --foreground: 218 22.2% 7.1%;
+    --card: 0 0.0% 100.0%;
+    --card-foreground: 218 22.2% 7.1%;
+    --popover: 0 0.0% 100.0%;
+    --popover-foreground: 218 22.2% 7.1%;
+    --primary: 229 68.4% 50.4%;
+    --primary-foreground: 0 0.0% 100.0%;
+    --secondary: 220 17.6% 96.7%;
+    --secondary-foreground: 218 22.2% 7.1%;
+    --muted: 220 17.6% 96.7%;
+    --muted-foreground: 216 10.9% 36.1%;
+    --accent: 220 17.6% 96.7%;
+    --accent-foreground: 218 22.2% 7.1%;
+    --destructive: 4 76.5% 40.0%;
+    --destructive-foreground: 0 0.0% 100.0%;
+    --border: 220 17.6% 90.0%;
+    --input: 220 17.6% 90.0%;
+    --ring: 229 68.4% 50.4%;
+    --success: 145 66.9% 27.3%;
+    --warning: 33 91.7% 32.9%;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+  }
+
+  .dark:root {
+    --background: 218 22.2% 7.1%;
+    --foreground: 220 21.4% 94.5%;
+    --card: 218 22.2% 7.1%;
+    --card-foreground: 220 21.4% 94.5%;
+    --popover: 218 22.2% 7.1%;
+    --popover-foreground: 220 21.4% 94.5%;
+    --primary: 229 100.0% 77.6%;
+    --primary-foreground: 232 62.7% 11.6%;
+    --secondary: 218 20.0% 10.8%;
+    --secondary-foreground: 220 21.4% 94.5%;
+    --muted: 218 20.0% 10.8%;
+    --muted-foreground: 217 12.9% 68.0%;
+    --accent: 218 20.0% 10.8%;
+    --accent-foreground: 220 21.4% 94.5%;
+    --destructive: 6 100.0% 74.5%;
+    --destructive-foreground: 223 38.9% 7.1%;
+    --border: 219 15.6% 17.6%;
+    --input: 219 15.6% 17.6%;
+    --ring: 229 100.0% 77.6%;
+    --success: 147 55.0% 54.7%;
+    --warning: 36 83.3% 64.7%;
+  }
+}

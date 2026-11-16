@@ -1,0 +1,37 @@
+{
+  "root": "./projects",
+  "projects": [
+    {
+      "name": "project-one",
+      "id": "com.example.projectone",
+      "displayName": "Project One",
+      "brief": "Replace with one paragraph: what it is, who uses the website, who uses the app, and the one job each must do well.",
+      "remote": "git@example.com:acme/project-one.git",
+      "web": "spa",
+      "mobile": "flutter",
+      "backend": "hono"
+    },
+    {
+      "name": "project-two",
+      "id": "com.example.projecttwo",
+      "displayName": "Project Two",
+      "brief": "\u2026"
+    },
+    {
+      "name": "project-three",
+      "id": "com.example.projectthree",
+      "displayName": "Project Three",
+      "brief": "\u2026"
+    },
+    {
+      "name": "project-four",
+      "id": "com.example.projectfour",
+      "displayName": "Project Four",
+      "brief": "\u2026"
+    }
+  ],
+  "git": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  }
+}

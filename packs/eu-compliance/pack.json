@@ -1,0 +1,20 @@
+{
+  "name": "eu-compliance",
+  "status": "starter",
+  "description": "EU rules checklists for products shipped to the EU: GDPR basics, AI Act, Cyber Resilience Act, European Accessibility Act, plus a DPIA template. Documents only.",
+  "stacks": [
+    "any"
+  ],
+  "files": "files",
+  "rules": "rules.md",
+  "adds": {
+    "files": [
+      "docs/compliance/eu/gdpr.md",
+      "docs/compliance/eu/ai-act.md",
+      "docs/compliance/eu/cyber-resilience-act.md",
+      "docs/compliance/eu/accessibility-act.md",
+      "docs/compliance/eu/dpia-template.md"
+    ],
+    "checks": []
+  }
+}

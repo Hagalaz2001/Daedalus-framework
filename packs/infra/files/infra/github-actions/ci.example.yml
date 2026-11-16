@@ -1,0 +1,24 @@
+# Copy to .github/workflows/ci.yml. Pin actions to a commit SHA in your repository (Dependabot can bump them).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.x
+      - run: deno install
+      - run: deno task check
+      - run: deno task secrets
+      - run: deno task audit

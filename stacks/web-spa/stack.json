@@ -1,0 +1,15 @@
+{
+  "id": "web-spa",
+  "kind": "web",
+  "label": "Web app (React SPA)",
+  "description": "React 19 + Vite + TypeScript + Tailwind v4 + TanStack Query + React Router + Better Auth cookie client, with the shared shadcn-style UI kit.",
+  "defaultAppDir": "apps/web",
+  "workspaceMember": true,
+  "packages": ["packages/api_ts", "shared:web-shared/packages/ui"],
+  "tokens": "deno run -A packages/ui/scripts/tokens.mjs",
+  "placeholders": { "{displayName}": ["src/shared/lib/config.ts", "index.html"] },
+  "tasks": { "dev:web": "deno task --cwd {appDir} dev" },
+  "check": ["deno task --cwd {appDir} check"],
+  "boundaries": { "lang": "ts", "src": "src" },
+  "requires": { "backend": "optional" }
+}

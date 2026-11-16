@@ -1,0 +1,24 @@
+{
+  "name": "systems",
+  "status": "full",
+  "description": "Low-level toolkit: C (CMake + Unity), C++ (CMake + doctest), Rust no_std + Embassy firmware, x86-64 NASM and ARM64 GAS assembly with a C test harness, static analysis config, cross-compilation and QEMU notes.",
+  "stacks": ["any"],
+  "files": "files",
+  "rules": "rules.md",
+  "tasks": {
+    "systems": "deno run -A systems/run.ts",
+    "systems:firmware": "deno run -A systems/run.ts rust --firmware"
+  },
+  "adds": {
+    "files": [
+      "systems/README.md",
+      "systems/run.ts",
+      "systems/c/CMakeLists.txt",
+      "systems/cpp/CMakeLists.txt",
+      "systems/asm/x86_64/sum_u64.asm",
+      "systems/asm/arm64/sum_u64.S",
+      "systems/rust-embedded/core/src/lib.rs"
+    ],
+    "checks": []
+  }
+}

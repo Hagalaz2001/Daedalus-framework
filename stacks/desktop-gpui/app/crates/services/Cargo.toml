@@ -1,0 +1,15 @@
+[package]
+name = "app-services"
+description = "Wires the API client and local storage together; the one object screens receive."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "app_services"
+
+[dependencies]
+app-core.workspace = true
+app-api.workspace = true
+app-storage.workspace = true

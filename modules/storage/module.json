@@ -1,0 +1,11 @@
+{
+  "name": "storage",
+  "title": "File storage",
+  "status": "full",
+  "summary": "Upload and download files through signed URLs on any S3-compatible store (Cloudflare R2, MinIO, Supabase Storage, AWS S3).",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply storage" }],
+  "routes": ["POST /files", "POST /files/{id}/complete", "GET /files", "GET /files/{id}", "DELETE /files/{id}"],
+  "docs": "docs/modules/storage.md"
+}

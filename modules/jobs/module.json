@@ -1,0 +1,10 @@
+{
+  "name": "jobs",
+  "title": "Background jobs",
+  "status": "full",
+  "summary": "Queues, retries, delays and cron schedules on Postgres with pg-boss (no Redis); an in-process queue when running on the local database.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply jobs" }],
+  "docs": "docs/modules/jobs.md"
+}

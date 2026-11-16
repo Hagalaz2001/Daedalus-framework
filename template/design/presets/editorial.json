@@ -1,0 +1,31 @@
+{
+  "$comment": "Preset 'editorial': magazine feel. Serif display type, ink on paper, one oxblood accent, square-ish corners, rules instead of cards.",
+  "meta": { "id": "editorial", "name": "Editorial", "description": "Serif display type, ink on paper, one oxblood accent, near-square corners." },
+  "color": {
+    "primary": "#9b1c2c",
+    "onPrimary": "#ffffff",
+    "surface": "#fbfaf8",
+    "surfaceMuted": "#f0eeea",
+    "text": "#17181a",
+    "textMuted": "#585a5e",
+    "border": "#d9d6cf",
+    "success": "#1f6b43",
+    "warning": "#8a5a0b",
+    "danger": "#a4161a"
+  },
+  "colorDark": {
+    "primary": "#f08a96",
+    "onPrimary": "#2a0509",
+    "surface": "#131314",
+    "surfaceMuted": "#1c1c1e",
+    "text": "#f1efe9",
+    "textMuted": "#a8a69f",
+    "border": "#2f2f31",
+    "success": "#58c58b",
+    "warning": "#e7b45f",
+    "danger": "#ff8b8f"
+  },
+  "radius": { "sm": 0, "md": 2, "lg": 4 },
+  "space": { "1": 4, "2": 8, "3": 12, "4": 16, "6": 24, "8": 32 },
+  "font": { "sans": "Hanken Grotesk", "display": "Fraunces", "mono": "JetBrains Mono" }
+}

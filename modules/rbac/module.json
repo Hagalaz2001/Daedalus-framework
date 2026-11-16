@@ -1,0 +1,16 @@
+{
+  "name": "rbac",
+  "title": "Roles and permissions",
+  "status": "full",
+  "summary": "Role-based permissions per organization: one policy file used by the API routes and copied into the web and React Native apps.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply rbac" }],
+  "routes": ["GET /permissions"],
+  "ui": {
+    "web-spa": ["src/shared/lib/policy.ts"],
+    "mobile-rn": ["src/shared/lib/policy.ts"],
+    "mobile-flutter": ["GET /permissions"]
+  },
+  "docs": "docs/modules/rbac.md"
+}

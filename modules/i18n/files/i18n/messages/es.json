@@ -1,0 +1,9 @@
+{
+  "common.save": "Guardar",
+  "common.cancel": "Cancelar",
+  "common.retry": "Reintentar",
+  "notes.empty.title": "Aun no hay notas",
+  "notes.count": "{count} notas",
+  "errors.unauthorized": "Inicia sesion para continuar",
+  "errors.generic": "Algo salio mal"
+}

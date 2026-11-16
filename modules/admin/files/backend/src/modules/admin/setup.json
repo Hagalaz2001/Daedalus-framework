@@ -1,0 +1,11 @@
+{
+  "contract": "contract.yaml",
+  "ui": {
+    "web-spa": [
+      {
+        "from": "ui-templates/web-spa/features/admin",
+        "to": "src/features/admin"
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "deno": {
+    "imports": {
+      "pg-boss": "npm:pg-boss@12.38.2",
+      "@electric-sql/pglite-socket": "npm:@electric-sql/pglite-socket@0.2.19"
+    }
+  }
+}

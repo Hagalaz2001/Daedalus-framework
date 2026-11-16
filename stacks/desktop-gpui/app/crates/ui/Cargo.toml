@@ -1,0 +1,14 @@
+[package]
+name = "app-ui"
+description = "Design-token theme and the shared UI kit (built on GPUI Component)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "app_ui"
+
+[dependencies]
+app-core.workspace = true
+gpui-kit.workspace = true

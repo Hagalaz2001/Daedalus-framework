@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "App",
+    "slug": "mobile",
+    "scheme": "mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": { "bundleIdentifier": "com.example.mobile", "supportsTablet": true },
+    "android": { "package": "com.example.mobile" },
+    "web": { "bundler": "metro", "output": "single" },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": { "onDemandFilesystem": false }
+  }
+}

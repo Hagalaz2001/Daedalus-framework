@@ -1,0 +1,21 @@
+# Windows installer with cargo-packager (free, MIT/Apache-2.0): `cargo install cargo-packager --locked`, then `cargo packager --release`.
+# The installer is NOT signed. Sign it in your release pipeline (signtool or your CI's signing step) before distributing.
+name = "app"
+product-name = "{displayName}"
+identifier = "{bundleId}"
+version = "0.1.0"
+description = "{displayName}"
+out-dir = "dist"
+formats = ["nsis"]
+icons = ["crates/app/assets/icon.ico", "crates/app/assets/icon.png"]
+# Resolved from CARGO_TARGET_DIR when it is set; otherwise ./target/release.
+binaries-dir = "target/release"
+binaries = [{ path = "app", main = true }]
+
+[nsis]
+installer-icon = "crates/app/assets/icon.ico"
+# Per-user install: no administrator prompt.
+installer-mode = "currentUser"
+
+# Auto-update hook (not enabled): publish signed update artifacts and add `cargo-packager-updater`
+# to crates/app, then call it from root.rs on startup. See README.

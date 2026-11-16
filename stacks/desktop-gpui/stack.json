@@ -1,0 +1,30 @@
+{
+  "id": "desktop-gpui",
+  "kind": "desktop",
+  "title": "Desktop app (Rust + GPUI)",
+  "description": "Native desktop app in Rust on GPUI and GPUI Component: no webview, no Node. Generated API client, token-driven theme, feature crates with enforced boundaries.",
+  "label": "Rust + GPUI (Windows first; macOS and Linux compile in principle)",
+  "defaultAppDir": "apps/desktop",
+  "appSource": "app",
+  "workspaceMember": false,
+  "packages": [],
+  "tasks": {
+    "dev:desktop": { "cwd": "{appDir}", "run": "cargo run -p app" },
+    "build:desktop": { "cwd": "{appDir}", "run": "cargo build --release -p app" },
+    "package:desktop": { "cwd": "{appDir}", "run": "cargo packager --release" }
+  },
+  "placeholders": {
+    "{displayName}": ["crates/app/src/main.rs", "Packager.toml"],
+    "{bundleId}": ["crates/app/src/main.rs", "Packager.toml"]
+  },
+  "install": [{ "cwd": "{appDir}", "run": "cargo fetch --locked" }],
+  "sync": [{ "cwd": "{appDir}", "run": "cargo check -q -p app-api" }],
+  "tokens": "cargo run -q --manifest-path {appDir}/Cargo.toml -p xtask -- tokens --tokens design/tokens.json --out {appDir}/crates/ui/src/tokens.g.rs",
+  "check": [
+    { "cwd": "{appDir}", "run": "cargo fmt --all --check" },
+    { "cwd": "{appDir}", "run": "cargo clippy --workspace --all-targets --locked -- -D warnings" },
+    { "cwd": "{appDir}", "run": "cargo test --workspace --locked" },
+    { "cwd": "{appDir}", "run": "cargo run -q -p xtask -- boundaries" }
+  ],
+  "requires": { "backend": "optional" }
+}

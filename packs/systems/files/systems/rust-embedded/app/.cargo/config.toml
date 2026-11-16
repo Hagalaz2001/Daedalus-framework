@@ -1,0 +1,6 @@
+[build]
+target = "thumbv7em-none-eabihf" # Cortex-M4F; change for your chip
+
+[target.thumbv7em-none-eabihf]
+rustflags = ["-C", "link-arg=-Tlink.x"]
+# runner = "probe-rs run --chip STM32F401RETx"   # flash and run on a real board

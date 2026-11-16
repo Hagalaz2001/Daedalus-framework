@@ -1,0 +1,32 @@
+{
+  "name": "data-ml",
+  "status": "starter",
+  "description": "Python (uv) starter for data and LLM features: golden-dataset evaluation harness with regression gate, versioned prompts, RAG with pgvector.",
+  "stacks": [
+    "any"
+  ],
+  "files": "files",
+  "rules": "rules.md",
+  "tasks": {
+    "ml:test": {
+      "cwd": "ml",
+      "run": "uv run python -m unittest discover -s tests -t ."
+    },
+    "ml:eval": {
+      "cwd": "ml",
+      "run": "uv run python -m evals.run --cases evals/golden/example.jsonl --predict evals.example_model:predict --baseline evals/baseline.json --min-rate 0.8"
+    }
+  },
+  "adds": {
+    "files": [
+      "ml/pyproject.toml",
+      "ml/evals/harness.py",
+      "ml/evals/run.py",
+      "ml/prompts/prompts.py",
+      "ml/rag/schema.sql",
+      "ml/rag/retrieve.py",
+      "ml/README.md"
+    ],
+    "checks": []
+  }
+}

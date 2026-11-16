@@ -1,0 +1,15 @@
+{
+  "id": "web-spa-vue",
+  "kind": "web",
+  "label": "Web app (Vue SPA)",
+  "description": "Vue 3 + Vite + TypeScript strict + Tailwind v4 + Pinia + TanStack Query (Vue) + Vue Router + Better Auth cookie client, with the shared Vue UI kit (shadcn-vue patterns on Reka UI).",
+  "defaultAppDir": "apps/web",
+  "workspaceMember": true,
+  "packages": ["packages/api_ts", "shared:web-shared/packages/ui-vue"],
+  "tokens": "deno run -A packages/ui-vue/scripts/tokens.mjs",
+  "placeholders": { "{displayName}": ["src/shared/lib/config.ts", "index.html"] },
+  "tasks": { "dev:web": "deno task --cwd {appDir} dev" },
+  "check": ["deno task --cwd {appDir} check"],
+  "boundaries": { "lang": "ts", "src": "src" },
+  "requires": { "backend": "optional" }
+}

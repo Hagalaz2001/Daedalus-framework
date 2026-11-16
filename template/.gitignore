@@ -1,0 +1,29 @@
+# dependencies and build output
+node_modules/
+.deno/
+dist/
+build/
+target/
+.next/
+.expo/
+.dart_tool/
+.flutter-plugins*
+ephemeral/
+Pods/
+android/.gradle/
+local.properties
+*.iml
+# local data and secrets
+.data/
+.env
+.env.*
+!.env.example
+*.log
+# editors, OS, agents
+.DS_Store
+Thumbs.db
+NUL
+.idea/
+.claude/worktrees/
+.autopilot/
+docs/screens/

@@ -1,0 +1,11 @@
+{
+  "name": "search",
+  "title": "Search",
+  "status": "thin",
+  "summary": "Ranked full-text search over notes with PostgreSQL (websearch syntax, no extra service); the pattern to copy for other tables.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply search" }],
+  "routes": ["GET /search"],
+  "docs": "docs/modules/search.md"
+}

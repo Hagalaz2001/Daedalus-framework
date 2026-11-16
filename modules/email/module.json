@@ -1,0 +1,13 @@
+{
+  "name": "email",
+  "title": "Email",
+  "status": "full",
+  "summary": "Send mail through Resend, SMTP or the console; React Email templates; password-reset mail through it.",
+  "requires": { "backend": true },
+  "files": "files",
+  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply email" }],
+  "check": [],
+  "routes": [],
+  "ui": {},
+  "docs": "docs/modules/email.md"
+}
