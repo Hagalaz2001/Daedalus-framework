@@ -78,13 +78,8 @@ export interface paths {
     "/notes/{id}": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Organization to act in. Defaults to the caller's personal organization. */
-                "X-Organization-Id"?: components["parameters"]["OrganizationId"];
-            };
-            path: {
-                id: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         get: operations["getNote"];

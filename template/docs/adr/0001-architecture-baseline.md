@@ -6,8 +6,8 @@
 ## Context
 
 A product often needs a website, a mobile app and a backend that must agree on data and look. Separate hand-written
-clients drift from the API, themes drift from the brand, and each app invents its own folder layout. AI agents make
-this worse unless the rules are explicit and checked.
+clients drift from the API, themes drift from the brand, and each app invents its own folder layout. AI agents make this
+worse unless the rules are explicit and checked.
 
 ## Decision
 

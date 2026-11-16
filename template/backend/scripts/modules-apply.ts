@@ -103,6 +103,8 @@ for (const id of ids) {
   migration ||= !!setup.database?.migration;
 }
 
+// The MongoDB flavour has no Drizzle tasks: its schema lives in src/shared/db/models.ts and migrations/.
+const sql = "db:generate" in (JSON.parse(await read(join(backend, "deno.json"))).tasks ?? {});
 run(["install"], root);
 // Modules add types to the contract; regenerate the TypeScript client now so the backend compiles. (`deno task sync`
 // does this too and also refreshes the other stacks' clients.)
@@ -120,8 +122,8 @@ if (
     "packages/api_ts/src/schema.d.ts",
   ], root);
 }
-if (authSchema) run(["task", "db:auth-schema"], backend);
-if (migration) {
+if (authSchema && sql) run(["task", "db:auth-schema"], backend);
+if (migration && sql) {
   run(["task", "db:generate", "--name", `add_${ids.join("_").replaceAll("-", "_")}`], backend);
   run(["task", "diagrams"], backend);
 }

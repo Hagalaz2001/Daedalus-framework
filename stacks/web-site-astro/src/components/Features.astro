@@ -1,0 +1,36 @@
+---
+import { features } from '../lib/content'
+import Container from './Container.astro'
+import Icon from './Icon.astro'
+---
+
+<section class="py-24">
+  <Container>
+    <h2 class="max-w-2xl font-display text-4xl font-semibold tracking-tight sm:text-5xl">Built for the moment you need the note back.</h2>
+    <div class="mt-14 grid gap-px overflow-hidden rounded-lg border border-border bg-border grid-cols-1 md:grid-cols-3">
+      <div class="bg-surface p-8 md:col-span-2 md:p-10">
+        <Icon name="zap" class="size-6 text-primary" />
+        <h3 class="mt-5 font-display text-2xl font-semibold">{features.search.title}</h3>
+        <p class="mt-2 max-w-md text-text-muted">{features.search.body}</p>
+        <p class="mt-8 font-display text-6xl font-semibold tracking-tight">Type<span class="text-primary">.</span> See<span class="text-primary">.</span></p>
+        <p class="text-sm text-text-muted">Results update on every keystroke.</p>
+      </div>
+      <div class="bg-surface p-8 md:p-10">
+        <Icon name="keyboard" class="size-6 text-primary" />
+        <h3 class="mt-5 font-display text-2xl font-semibold">{features.capture.title}</h3>
+        <p class="mt-2 text-text-muted">{features.capture.body}</p>
+      </div>
+      <div class="bg-surface p-8 md:col-span-3 md:flex md:items-center md:justify-between md:gap-12 md:p-10">
+        <div class="max-w-xl">
+          <Icon name="download" class="size-6 text-primary" />
+          <h3 class="mt-5 font-display text-2xl font-semibold">{features.own.title}</h3>
+          <p class="mt-2 text-text-muted">{features.own.body}</p>
+        </div>
+        <pre class="mt-6 overflow-x-auto rounded-md border border-border bg-surface-muted px-5 py-4 font-mono text-sm md:mt-0">notes/
+  2026-11-14-launch-checklist.md
+  2026-11-16-onboarding.md
+  oat-milk.md</pre>
+      </div>
+    </div>
+  </Container>
+</section>

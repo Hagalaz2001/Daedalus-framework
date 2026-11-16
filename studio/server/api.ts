@@ -8,6 +8,9 @@ import { guardedAssetDownload, loadStitchSdk } from "./design/projectDesignStitc
 import { createPlans, type PlannedFile, runCheck } from "./export.ts";
 import { type ExportRequest, prepareExport } from "./exportFlow.ts";
 import { createJobs, type StudioEvent } from "./jobs.ts";
+import type { Hardware } from "../shared/localAi.ts";
+import { createLocalAi } from "./localAi.ts";
+import { createProviderManager } from "./providerManager.ts";
 import { readFlow, writeFlow } from "./flow.ts";
 import type { StudioEnv } from "./env.ts";
 import type { Provider } from "./providers/types.ts";
@@ -25,14 +28,18 @@ const MIME: Record<string, string> = {
 export interface ApiOptions {
   root: string;
   env: StudioEnv;
-  provider: Provider;
+  /** A fixed provider (tests, embedding). Omit it to use the automatic provider manager. */
+  provider?: Provider;
+  /** Test hooks: fetch used for Lemonade/Ollama probes and the hardware probe. */
+  fetchImpl?: typeof fetch;
+  collectHardware?: () => Promise<Hardware>;
   /** Built UI folder; when missing the server answers API calls only. */
   uiDir: string | null;
   stitchLoader?: typeof loadStitchSdk;
 }
 
 export function createApi(opts: ApiOptions) {
-  const { root, env, provider } = opts;
+  const { root, env } = opts;
   const freshCtx = (): ProjectContext => readContext(root);
   const subscribers = new Set<ReadableStreamDefaultController<Uint8Array>>();
   const enc = new TextEncoder();
@@ -48,6 +55,21 @@ export function createApi(opts: ApiOptions) {
       }
     },
   };
+  const localAi = createLocalAi({
+    env,
+    fetchImpl: opts.fetchImpl,
+    collect: opts.collectHardware,
+    emit: (progress) => bus.emit({ type: "local-ai", progress }),
+  });
+  const manager = opts.provider ? null : createProviderManager({ env, localAi, fetchImpl: opts.fetchImpl });
+  const provider: Provider = opts.provider ?? manager!.provider;
+  const providerState = async () =>
+    manager ? manager.describe() : {
+      selected: provider.id,
+      active: provider.id,
+      banner: null,
+      options: [{ id: provider.id, label: provider.label, available: true, detail: "Fixed by the host.", note: provider.note ?? null }],
+    };
   const jobs = createJobs({ ctx: freshCtx, provider, bus });
   const handler = createDesignHandler({
     root,
@@ -98,6 +120,8 @@ export function createApi(opts: ApiOptions) {
       });
     }
     if (path === "/api/flow" && req.method === "GET") return json(await readFlow(root));
+    if (path === "/api/providers" && req.method === "GET") return json(await providerState());
+    if (path === "/api/local-ai/status" && req.method === "GET") return json(await localAi.status());
     if (req.method !== "POST") return fail("Not found", 404);
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     if (!body) return fail("Send a JSON body.");
@@ -122,6 +146,21 @@ export function createApi(opts: ApiOptions) {
         }
         case "/api/flow":
           return json(await writeFlow(root, body));
+        case "/api/provider":
+          if (!manager) throw new Error("The provider is fixed by the host.");
+          manager.select(body.id as never);
+          return json(await providerState());
+        case "/api/local-ai/setup":
+          await localAi.setUp(typeof body.model === "string" ? body.model : undefined);
+          manager?.invalidate();
+          return json({ started: true });
+        case "/api/local-ai/cancel":
+          localAi.cancel();
+          return json({ ok: true });
+        case "/api/local-ai/unload":
+          await localAi.unload();
+          manager?.invalidate();
+          return json({ ok: true });
         case "/api/check":
           return json(await runCheck(root));
         default:

@@ -1,0 +1,17 @@
+{
+  "name": "daedalus-website",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Documentation site and showcase for Daedalus. Content is generated from the repository by scripts/sync-docs.ts.",
+  "license": "MIT",
+  "dependencies": {
+    "@astrojs/starlight": "0.43.1",
+    "@fontsource-variable/fraunces": "5.3.0",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "astro": "7.4.12",
+    "astro-mermaid": "2.2.0",
+    "mermaid": "12.3.0"
+  }
+}

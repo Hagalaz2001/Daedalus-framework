@@ -2,8 +2,9 @@ paths:
   /admin/resources:
     get:
       operationId: listAdminResources
-      summary: Tables the admin panel can manage, with their columns (the panel builds its screens from this).
-      tags: [admin]
+      summary: "Tables the admin panel can manage, with their columns (the panel builds its screens from this)."
+      tags:
+        - admin
       responses:
         "200":
           description: Resources
@@ -11,111 +12,169 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/AdminResource" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "403": { $ref: "#/components/responses/Problem" }
-  /admin/{resource}:
-    parameters:
-      - name: resource
-        in: path
-        required: true
-        schema: { type: string, pattern: "^[a-z][a-z_]{0,40}$" }
+                items:
+                  $ref: "#/components/schemas/AdminResource"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+  "/admin/{resource}":
     get:
       operationId: listAdminRows
-      tags: [admin]
+      tags:
+        - admin
       parameters:
+        - name: resource
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z][a-z_]{0,40}$"
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Cursor"
         - name: q
           in: query
           description: Case-insensitive text search over the resource's text columns.
-          schema: { type: string, maxLength: 100 }
+          schema:
+            type: string
+            maxLength: 100
       responses:
         "200":
-          description: One page of rows, newest first
+          description: "One page of rows, newest first"
           headers:
             X-Next-Cursor:
               description: Cursor for the next page; absent when there is none.
-              schema: { type: string }
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/AdminRow" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "403": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
-  /admin/{resource}/{id}:
-    parameters:
-      - name: resource
-        in: path
-        required: true
-        schema: { type: string, pattern: "^[a-z][a-z_]{0,40}$" }
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, maxLength: 64 }
+                items:
+                  $ref: "#/components/schemas/AdminRow"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+  "/admin/{resource}/{id}":
     get:
       operationId: getAdminRow
-      tags: [admin]
+      tags:
+        - admin
       responses:
         "200":
           description: The row
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AdminRow" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "403": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
+              schema:
+                $ref: "#/components/schemas/AdminRow"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+      parameters:
+        - &ref_0
+          name: resource
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z][a-z_]{0,40}$"
+        - &ref_1
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 64
     patch:
       operationId: updateAdminRow
       summary: Change editable columns only; anything else is a 400.
-      tags: [admin]
+      tags:
+        - admin
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AdminRow" }
+            schema:
+              $ref: "#/components/schemas/AdminRow"
       responses:
         "200":
           description: The updated row
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AdminRow" }
-        "400": { $ref: "#/components/responses/Problem" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "403": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
+              schema:
+                $ref: "#/components/schemas/AdminRow"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+      parameters:
+        - *ref_0
+        - *ref_1
     delete:
       operationId: deleteAdminRow
-      tags: [admin]
+      tags:
+        - admin
       responses:
         "204":
           description: Deleted (soft where the table has deleted_at)
-        "400": { $ref: "#/components/responses/Problem" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "403": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+      parameters:
+        - *ref_0
+        - *ref_1
 components:
   schemas:
     AdminColumn:
       type: object
-      required: [name, type, nullable, editable]
+      required:
+        - name
+        - type
+        - nullable
+        - editable
       properties:
-        name: { type: string }
-        type: { type: string, description: "string, number, boolean, date or json" }
-        nullable: { type: boolean }
-        editable: { type: boolean }
+        name:
+          type: string
+        type:
+          type: string
+          description: "string, number, boolean, date or json"
+        nullable:
+          type: boolean
+        editable:
+          type: boolean
     AdminResource:
       type: object
-      required: [name, label, columns, deletable]
+      required:
+        - name
+        - label
+        - columns
+        - deletable
       properties:
-        name: { type: string }
-        label: { type: string }
-        deletable: { type: boolean }
+        name:
+          type: string
+        label:
+          type: string
+        deletable:
+          type: boolean
         columns:
           type: array
-          items: { $ref: "#/components/schemas/AdminColumn" }
+          items:
+            $ref: "#/components/schemas/AdminColumn"
     AdminRow:
       type: object
       description: A row as column name to value.

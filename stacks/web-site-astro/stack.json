@@ -1,0 +1,30 @@
+{
+  "id": "web-site-astro",
+  "kind": "web",
+  "label": "Website (Astro, static, SEO)",
+  "description": "Marketing site and blog: Astro 7 with static output, content collections, interactive islands in React or Vue, Tailwind v4, the shared UI kit, canonical/Open Graph/JSON-LD, sitemap, robots, generated OG images.",
+  "defaultAppDir": "apps/site",
+  "workspaceMember": true,
+  "packages": ["packages/api_ts"],
+  "variants": {
+    "key": "islands",
+    "default": "react",
+    "values": {
+      "react": {
+        "packages": ["shared:web-shared/packages/ui"],
+        "overlay": "variants/react",
+        "tokens": "deno run -A packages/ui/scripts/tokens.mjs"
+      },
+      "vue": {
+        "packages": ["shared:web-shared/packages/ui-vue"],
+        "overlay": "variants/vue",
+        "tokens": "deno run -A packages/ui-vue/scripts/tokens.mjs"
+      }
+    }
+  },
+  "placeholders": { "{displayName}": ["src/lib/site.ts", "README.md"], "{islands}": ["README.md"] },
+  "tasks": { "dev:site": "deno task --cwd {appDir} dev" },
+  "check": ["deno task --cwd {appDir} check"],
+  "boundaries": { "lang": "ts", "src": "src" },
+  "requires": { "backend": "optional" }
+}

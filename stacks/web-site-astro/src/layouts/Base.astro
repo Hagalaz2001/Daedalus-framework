@@ -1,0 +1,55 @@
+---
+import '../styles/global.css'
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import { absoluteUrl, fullTitle, jsonLd, siteGraph, type PageMeta } from '../lib/seo'
+import { siteConfig } from '../lib/site'
+import { themeInitScript } from '../lib/theme-script'
+
+interface Props extends PageMeta {
+  /** Extra schema.org objects for this page (Article, FAQPage...). */
+  schema?: Record<string, unknown>[]
+  home?: boolean
+}
+const { title, description, path, type = 'website', image, noindex = false, schema = [], home = false } = Astro.props
+const site = Astro.site ?? new URL('http://localhost:4321')
+const pageTitle = fullTitle(title, home)
+const canonical = absoluteUrl(path, site)
+// One default image per project; with og: 'per-page' pages pass their own and the site falls back to /og/site.png.
+const ogImage = absoluteUrl(image ?? (siteConfig.og === 'per-page' ? '/og/site.png' : '/og-default.png'), site)
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <script is:inline set:html={themeInitScript} />
+    <script is:inline type="application/ld+json" set:html={jsonLd(siteGraph(site))} />
+    {schema.map((s) => <script is:inline type="application/ld+json" set:html={jsonLd(s)} />)}
+  </head>
+  <body>
+    <Header />
+    <main id="main"><slot /></main>
+    <Footer />
+  </body>
+</html>

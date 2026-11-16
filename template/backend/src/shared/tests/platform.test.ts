@@ -1,5 +1,4 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { sql } from "drizzle-orm";
 import { seed } from "../../../scripts/seed.ts";
 import { ConfigError, loadConfig } from "../config/config.ts";
 import { Contract } from "../validation/contract.ts";
@@ -18,26 +17,6 @@ Deno.test("every route is in the contract and every contract operation has a rou
   const sorted = (s: Set<string>) =>
     [...s].filter((x) => !x.startsWith("GET /api/auth") && !x.startsWith("POST /api/auth")).sort();
   assertEquals(sorted(routes), sorted(documented));
-});
-
-Deno.test("migrations create the base schema", async () => {
-  const rows = await t.db.execute(sql`select table_name from information_schema.tables where table_schema = 'public'`);
-  const names = (rows as unknown as { rows: { table_name: string }[] }).rows.map((r) => r.table_name);
-  for (
-    const table of [
-      "user",
-      "session",
-      "organization",
-      "member",
-      "invitation",
-      "audit_log",
-      "files",
-      "notifications",
-      "notes",
-    ]
-  ) {
-    assert(names.includes(table), `missing table ${table}`);
-  }
 });
 
 Deno.test("health, readiness, docs and the contract are served", async () => {

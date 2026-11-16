@@ -1,0 +1,35 @@
+---
+import SiteMenu from '../islands/SiteMenu.astro'
+import ThemeToggle from '../islands/ThemeToggle.astro'
+import { buttonVariants, cn } from '../lib/kit'
+import { siteConfig } from '../lib/site'
+import Container from './Container.astro'
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/'
+const current = (href: string) => (path === href || path.startsWith(`${href}/`) ? 'page' : undefined)
+---
+
+<header class="sticky top-0 z-40 border-b border-border/70 bg-surface/85 backdrop-blur">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-on-primary">Skip to content</a>
+  <Container class="flex h-16 items-center justify-between gap-6">
+    <a href="/" class="font-display text-xl font-semibold tracking-tight whitespace-nowrap">{siteConfig.name}</a>
+    <nav aria-label="Main" class="hidden items-center gap-1 md:flex">
+      {
+        siteConfig.nav.map((n) => (
+          <a
+            href={n.href}
+            aria-current={current(n.href)}
+            class="inline-flex h-11 items-center rounded-md px-3.5 text-[0.95rem] font-medium text-text-muted transition-colors hover:text-text aria-[current=page]:text-text aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-8"
+          >
+            {n.label}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="flex items-center gap-1">
+      <ThemeToggle />
+      <a href={siteConfig.appUrl} class={cn(buttonVariants(), 'hidden sm:inline-flex')}>Open the app</a>
+      <SiteMenu nav={siteConfig.nav.map((n) => ({ ...n, current: current(n.href) === 'page' }))} appUrl={siteConfig.appUrl} />
+    </div>
+  </Container>
+</header>

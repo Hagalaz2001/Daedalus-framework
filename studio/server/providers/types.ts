@@ -24,7 +24,7 @@ export interface CallInput {
 }
 
 export interface Provider {
-  id: "anthropic" | "ollama" | "fake";
+  id: "anthropic" | "lemonade" | "ollama" | "fake";
   label: string;
   /** Shown in the UI next to the provider name. */
   note?: string;

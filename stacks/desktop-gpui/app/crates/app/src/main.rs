@@ -26,7 +26,9 @@ fn main() {
     if !instance.is_single() {
         return;
     }
-    let open = std::env::args().skip_while(|a| a != "--open").nth(1);
+    // Launch options: `--open <route>` starts on a screen, `--theme light|dark|system` overrides the saved theme for this run only.
+    let flag = |name: &str| std::env::args().skip_while(|a| a != name).nth(1);
+    let (open, theme_override) = (flag("--open"), flag("--theme"));
 
     gpui_kit::application().with_assets(gpui_kit::assets::Assets).run(move |cx: &mut App| {
         gpui_kit::init(cx);
@@ -35,7 +37,8 @@ fn main() {
             eprintln!("cannot open settings ({e}); using a temporary file");
             Storage::open_at(std::env::temp_dir().join(format!("{APP_ID}.redb")), APP_ID).expect("temporary settings file")
         });
-        theme::apply(store.theme_mode(), cx);
+        let theme_override = theme_override.as_deref().map(app_core::ThemeMode::parse);
+        theme::apply(theme_override.unwrap_or_else(|| store.theme_mode()), cx);
         let services = Services::new(store);
 
         cx.bind_keys([
@@ -71,8 +74,10 @@ fn main() {
         let mut options = TitleBar::window_options();
         options.window_bounds = Some(WindowBounds::Windowed(bounds));
         options.window_min_size = Some(size(px(880.0), px(560.0)));
-        gpui_kit::open_window(options, cx, move |window, cx| cx.new(|cx| AppRoot::new(APP_NAME, services, open, window, cx)))
-            .expect("open window");
+        gpui_kit::open_window(options, cx, move |window, cx| {
+            cx.new(|cx| AppRoot::new(APP_NAME, services, open, theme_override, window, cx))
+        })
+        .expect("open window");
         cx.activate(true);
     });
     drop(instance);

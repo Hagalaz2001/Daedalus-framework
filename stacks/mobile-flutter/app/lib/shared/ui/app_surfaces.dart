@@ -11,7 +11,7 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = FCard(child: child);
+    final card = FCard(child: Padding(padding: const EdgeInsets.all(16), child: child));
     if (!danger) return card;
     return DecoratedBox(
       decoration: BoxDecoration(

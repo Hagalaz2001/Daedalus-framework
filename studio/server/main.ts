@@ -3,8 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApi } from "./api.ts";
 import { ensureDemoProject } from "./demo.ts";
-import { loadEnv } from "./env.ts";
-import { createProvider } from "./providers/index.ts";
+import { loadEnv, validateEnv } from "./env.ts";
 
 const studioDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = Deno.args;
@@ -29,23 +28,32 @@ const env = loadEnv([join(studioDir, ".env"), join(root, ".env")]);
 if (arg("port")) env.port = Number(arg("port"));
 if (arg("provider")) env.provider = arg("provider")!;
 
-let provider;
 try {
-  provider = createProvider(env);
+  validateEnv(env);
 } catch (e) {
-  console.error(`\n${e instanceof Error ? e.message : e}\n`);
+  console.error(`
+${e instanceof Error ? e.message : e}
+`);
   Deno.exit(1);
 }
 
 const dist = join(studioDir, "ui", "dist");
-const built = (() => {
+const isBuilt = () => {
   try {
     return Deno.statSync(join(dist, "index.html")).isFile;
   } catch {
     return false;
   }
-})();
-const api = createApi({ root, env, provider, uiDir: built ? dist : null });
+};
+// First run: build the UI once (a few seconds). Later runs reuse ui/dist; `deno task build` rebuilds it.
+if (!isBuilt()) {
+  console.log("Building the studio UI (first run)...");
+  const build = await new Deno.Command(Deno.execPath(), { args: ["task", "build"], cwd: studioDir, stdout: "inherit", stderr: "inherit" })
+    .output();
+  if (!build.success) console.error("The UI build failed; the API still runs.");
+}
+const built = isBuilt();
+const api = createApi({ root, env, uiDir: built ? dist : null });
 
 Deno.serve({
   hostname: "127.0.0.1",
@@ -53,7 +61,7 @@ Deno.serve({
   onListen: ({ port }) => {
     console.log(`Daedalus Studio  http://127.0.0.1:${port}`);
     console.log(`  project   ${root}`);
-    console.log(`  provider  ${provider.label}${provider.note ? ` (${provider.note})` : ""}`);
+    console.log(`  provider  ${env.provider}${env.provider === "auto" ? " (your key, then local AI, then demo fixtures)" : ""}`);
     if (!built) console.log("  UI is not built yet: run `deno task studio:build` first.");
   },
 }, (req) => api.handle(req, env.port));

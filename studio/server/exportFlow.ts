@@ -105,7 +105,7 @@ export async function prepareExport(
   }
   const notes: string[] = [];
   if (req.screenshots) {
-    const shots = await screenshotSet(html, `${req.feature}-${req.screen.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()}`);
+    const shots = await screenshotSet(html, `${req.screen.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()}`);
     files.push(...shots.files);
     if (shots.skipped) notes.push(shots.skipped);
   }

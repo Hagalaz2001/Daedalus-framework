@@ -1,0 +1,16 @@
+---
+import { buttonVariants, cn } from '../lib/kit'
+import Container from './Container.astro'
+---
+
+<section class="py-12">
+  <Container>
+    <div class="rounded-lg bg-primary px-8 py-16 text-on-primary sm:px-16">
+      <h2 class="max-w-xl font-display text-4xl font-semibold tracking-tight sm:text-5xl">Your next thought deserves a place to land.</h2>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/pricing" class={cn(buttonVariants({ size: 'lg' }), 'bg-on-primary text-primary hover:bg-on-primary/90')}>Start free</a>
+        <a href="/contact" class={cn(buttonVariants({ size: 'lg', variant: 'ghost' }), 'text-on-primary hover:bg-on-primary/15')}>Ask us anything</a>
+      </div>
+    </div>
+  </Container>
+</section>

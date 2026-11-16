@@ -63,7 +63,8 @@ class AppSelect<T> extends StatelessWidget {
       spacing: 4,
       children: [
         Text(label, style: context.theme.typography.body.sm.copyWith(fontWeight: FontWeight.w600)),
-        AppCard(
+        DecoratedBox(
+          decoration: BoxDecoration(border: Border.all(color: context.theme.colors.border), borderRadius: BorderRadius.circular(10)),
           child: AppListRow(
             title: current.label,
             semanticsLabel: '$label: ${current.label}',

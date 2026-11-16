@@ -5,22 +5,72 @@
   "defaultAppDir": "apps/mobile",
   "appSource": "app",
   "workspaceMember": true,
-  "packages": ["packages/api_ts"],
+  "packages": [
+    "packages/api_ts"
+  ],
   "tasks": {
-    "dev:mobile": { "cwd": "{appDir}", "run": "deno task start" },
-    "build:mobile-web": { "cwd": "{appDir}", "run": "deno task export:web" }
+    "dev:mobile": {
+      "cwd": "{appDir}",
+      "run": "deno task start"
+    },
+    "build:mobile-web": {
+      "cwd": "{appDir}",
+      "run": "deno task export:web"
+    }
   },
   "replace": [
-    { "files": ["package.json"], "from": "\"name\": \"mobile\"", "to": "\"name\": \"{appName}\"" },
-    { "files": ["app.json"], "from": "\"name\": \"App\"", "to": "\"name\": \"{displayName}\"" },
-    { "files": ["app.json"], "from": "\"slug\": \"mobile\"", "to": "\"slug\": \"{appSlug}\"" },
-    { "files": ["app.json"], "from": "\"scheme\": \"mobile\"", "to": "\"scheme\": \"{appName}\"" },
-    { "from": "com.example.mobile", "to": "{bundleId}" }
+    {
+      "files": [
+        "package.json"
+      ],
+      "from": "\"name\": \"mobile\"",
+      "to": "\"name\": \"{appName}\""
+    },
+    {
+      "files": [
+        "app.json"
+      ],
+      "from": "\"name\": \"App\"",
+      "to": "\"name\": \"{displayName}\""
+    },
+    {
+      "files": [
+        "app.json"
+      ],
+      "from": "\"slug\": \"mobile\"",
+      "to": "\"slug\": \"{appSlug}\""
+    },
+    {
+      "files": [
+        "app.json"
+      ],
+      "from": "\"scheme\": \"mobile\"",
+      "to": "\"scheme\": \"{appName}\""
+    },
+    {
+      "from": "com.example.mobile",
+      "to": "{bundleId}"
+    }
   ],
   "tokens": "scripts/tokens.ts",
   "check": [
-    { "cwd": "{appDir}", "run": "deno task check" }
+    {
+      "cwd": "{appDir}",
+      "run": "deno task check"
+    }
   ],
-  "boundaries": { "lang": "ts", "src": "src" },
-  "requires": { "backend": "optional" }
+  "boundaries": {
+    "lang": "ts",
+    "src": "src"
+  },
+  "requires": {
+    "backend": "optional"
+  },
+  "audit": {
+    "ignore": [
+      "GHSA-3g3m-2fjr-6pw4",
+      "GHSA-g3hv-75wg-m249"
+    ],
+    "reason": "dev-only transitive deps of Jest/Expo tooling, not shipped in the app; re-check monthly"
+  }
 }

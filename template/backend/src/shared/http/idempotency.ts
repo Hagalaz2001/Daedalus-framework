@@ -1,7 +1,6 @@
-import { and, eq } from "drizzle-orm";
 import type { MiddlewareHandler } from "hono";
 import type { Db } from "../db/client.ts";
-import { idempotencyKeys } from "../db/schema.ts";
+import { idempotencyStore } from "../db/idempotency-store.ts";
 import { AppError, badRequest, conflict } from "../errors/problem.ts";
 import type { AppEnv } from "./types.ts";
 
@@ -25,12 +24,9 @@ export const idempotency = (db: Db): MiddlewareHandler<AppEnv> => async (c, next
   if (key.length < 8 || key.length > 128) throw badRequest("Idempotency-Key must be 8-128 characters");
 
   const hash = await sha256(`${c.req.method} ${new URL(c.req.url).pathname} ${await c.req.raw.clone().text()}`);
-  const claimed = await db.insert(idempotencyKeys).values({ userId: user.id, key, requestHash: hash })
-    .onConflictDoNothing().returning();
-  if (claimed.length === 0) {
-    const [prev] = await db.select().from(idempotencyKeys).where(
-      and(eq(idempotencyKeys.userId, user.id), eq(idempotencyKeys.key, key)),
-    );
+  const store = idempotencyStore(db);
+  if (!(await store.claim(user.id, key, hash))) {
+    const prev = await store.get(user.id, key);
     if (prev?.requestHash !== hash) {
       throw new AppError(422, "Unprocessable Content", "Idempotency-Key was already used with a different request");
     }
@@ -41,10 +37,9 @@ export const idempotency = (db: Db): MiddlewareHandler<AppEnv> => async (c, next
 
   await next();
   if (c.res.status < 500) {
-    await db.update(idempotencyKeys).set({ status: c.res.status, body: await c.res.clone().text() })
-      .where(and(eq(idempotencyKeys.userId, user.id), eq(idempotencyKeys.key, key)));
+    await store.finish(user.id, key, c.res.status, await c.res.clone().text());
   } else {
     // A server error must stay retryable.
-    await db.delete(idempotencyKeys).where(and(eq(idempotencyKeys.userId, user.id), eq(idempotencyKeys.key, key)));
+    await store.release(user.id, key);
   }
 };

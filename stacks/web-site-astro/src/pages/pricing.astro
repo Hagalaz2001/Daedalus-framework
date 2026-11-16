@@ -1,0 +1,27 @@
+---
+import Container from '../components/Container.astro'
+import Faq from '../components/Faq.astro'
+import PricingTable from '../islands/PricingTable.astro'
+import Base from '../layouts/Base.astro'
+import { faqs } from '../lib/content'
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
+]
+---
+
+<Base title="Pricing" description="Free for personal use. Pro and Team when you need history, sharing and support." path="/pricing" schema={schema}>
+  <Container class="pt-16 sm:pt-24">
+    <h1 class="max-w-2xl font-display text-5xl font-semibold tracking-tight sm:text-6xl">Pay when it earns its place.</h1>
+    <p class="mt-5 max-w-xl text-xl text-text-muted">Start free and stay free for as long as a personal notebook is all you need.</p>
+    <div id="start" class="mt-14 scroll-mt-24"><PricingTable /></div>
+    <section class="mt-28 grid gap-10 grid-cols-1 lg:grid-cols-[1fr_2fr]" aria-labelledby="faq">
+      <h2 id="faq" class="font-display text-3xl font-semibold tracking-tight">Questions, answered</h2>
+      <Faq />
+    </section>
+  </Container>
+</Base>

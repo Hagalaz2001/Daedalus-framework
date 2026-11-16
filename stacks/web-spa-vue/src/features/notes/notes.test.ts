@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/vue'
+import { screen, waitFor } from '@app/ui-vue/testing'
 import userEvent from '@testing-library/user-event'
 import { expectNoA11yViolations } from '@app/ui-vue/testing'
 import type { Note } from '@/shared/api'

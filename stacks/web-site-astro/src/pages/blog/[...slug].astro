@@ -1,0 +1,60 @@
+---
+import { render } from 'astro:content'
+import Container from '../../components/Container.astro'
+import Base from '../../layouts/Base.astro'
+import { absoluteUrl } from '../../lib/seo'
+import { siteConfig } from '../../lib/site'
+import { formatPostDate, getPosts, readingMinutes } from '../../lib/posts'
+
+export async function getStaticPaths() {
+  return (await getPosts()).map((post) => ({ params: { slug: post.id }, props: { post } }))
+}
+
+const { post } = Astro.props
+const { Content } = await render(post)
+const site = Astro.site ?? new URL('http://localhost:4321')
+const url = absoluteUrl(`/blog/${post.id}`, site)
+const image = siteConfig.og === 'per-page' ? `/og/${post.id}.png` : undefined
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'BlogPosting',
+        headline: post.data.title,
+        description: post.data.description,
+        datePublished: post.data.date.toISOString().slice(0, 10),
+        author: { '@type': 'Person', name: post.data.author },
+        publisher: { '@id': `${absoluteUrl('/', site)}#org` },
+        mainEntityOfPage: url,
+        image: absoluteUrl(image ?? '/og-default.png', site),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Journal', item: absoluteUrl('/blog', site) },
+          { '@type': 'ListItem', position: 2, name: post.data.title, item: url },
+        ],
+      },
+    ],
+  },
+]
+---
+
+<Base title={post.data.title} description={post.data.description} path={`/blog/${post.id}`} type="article" image={image} schema={schema}>
+  <Container class="pt-12 sm:pt-20">
+    <nav aria-label="Breadcrumb" class="mb-8 text-sm">
+      <a href="/blog" class="inline-flex min-h-11 items-center text-text-muted underline underline-offset-4 hover:text-text">Journal</a>
+    </nav>
+    <article>
+      <header class="mb-12 max-w-3xl">
+        <h1 class="font-display text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">{post.data.title}</h1>
+        <p class="mt-4 text-xl text-text-muted">{post.data.description}</p>
+        <p class="mt-6 text-sm text-text-muted">
+          {post.data.author} · <time datetime={post.data.date.toISOString()}>{formatPostDate(post.data.date)}</time> · {readingMinutes(post.body ?? '')} min read
+        </p>
+      </header>
+      <div class="prose-site"><Content /></div>
+    </article>
+  </Container>
+</Base>

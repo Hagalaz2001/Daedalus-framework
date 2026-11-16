@@ -1,4 +1,5 @@
-import { useColorScheme } from "nativewind";
+import { useColorScheme as useNativeWind } from "nativewind";
+import { useColorScheme as useDeviceScheme } from "react-native";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getItem, setItem } from "../lib/storage";
 import { type Palette, tokens } from "./tokens.g";
@@ -19,28 +20,34 @@ const ThemeContext = createContext<Theme | null>(null);
 
 /** Light/dark follows the device unless the person picked one. NativeWind flips the CSS variables from global.css. */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const { setColorScheme } = useNativeWind();
+  const device = useDeviceScheme();
   const [mode, setModeState] = useState<ThemeMode>("system");
 
   useEffect(() => {
-    // Apply the saved choice, or "system" so the web build (class-based dark mode) follows the device too.
     void getItem(KEY).then((v) => {
-      const saved = v === "light" || v === "dark" || v === "system" ? v : "system";
-      setModeState(saved);
-      setColorScheme(saved);
+      if (v === "light" || v === "dark" || v === "system") setModeState(v);
     });
-  }, [setColorScheme]);
+  }, []);
+
+  // NativeWind needs an explicit light or dark (class-based dark mode on web), so resolve "system" here.
+  const scheme = mode === "system" ? (device === "dark" ? "dark" : "light") : mode;
+  useEffect(() => {
+    try {
+      setColorScheme(scheme);
+    } catch {
+      // Under Jest there is no compiled Tailwind config, so NativeWind refuses manual schemes; classes are not tested.
+    }
+  }, [scheme, setColorScheme]);
 
   const setMode = useCallback((m: ThemeMode) => {
     setModeState(m);
-    setColorScheme(m);
     void setItem(KEY, m);
-  }, [setColorScheme]);
+  }, []);
 
   const value = useMemo<Theme>(() => {
-    const scheme = colorScheme === "dark" ? "dark" : "light";
     return { scheme, mode, setMode, colors: tokens[scheme], radius: tokens.radius, space: tokens.space };
-  }, [colorScheme, mode, setMode]);
+  }, [scheme, mode, setMode]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

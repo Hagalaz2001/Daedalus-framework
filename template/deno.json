@@ -14,6 +14,7 @@
     "git:setup": "deno run -A scripts/git-setup.mjs",
     "add-app": "deno run -A scripts/daedalus.ts",
     "studio": "deno run -A scripts/daedalus.ts studio",
+    "doctor": "deno run -A scripts/daedalus.ts doctor",
     "add-module": "deno run -A scripts/daedalus.ts module",
     "add-pack": "deno run -A scripts/daedalus.ts pack"
   },

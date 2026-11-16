@@ -1,0 +1,35 @@
+@import "@fontsource-variable/fraunces/opsz.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/* Daedalus identity: parchment and bronze by day, night stone and lamp-lit bronze after dark. */
+:root {
+  --d-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --d-sans: "Geist Variable", system-ui, sans-serif;
+  --d-mono: "Geist Mono Variable", ui-monospace, monospace;
+
+  --d-bg: #0d1013;
+  --d-bg-2: #12161a;
+  --d-surface: #161b20;
+  --d-ink: #f2ecdf;
+  --d-muted: #a8a193;
+  --d-line: #272d34;
+  --d-accent: #e8a463;
+  --d-accent-ink: #1a1007;
+  --d-aegean: #78b7dc;
+  --d-glow: rgb(232 164 99 / 0.14);
+  --d-shadow: 0 30px 80px -30px rgb(0 0 0 / 0.7);
+}
+:root[data-theme="light"] {
+  --d-bg: #f5f0e6;
+  --d-bg-2: #efe8da;
+  --d-surface: #fbf8f1;
+  --d-ink: #1c1812;
+  --d-muted: #5f574b;
+  --d-line: #ddd4c2;
+  --d-accent: #a34c1b;
+  --d-accent-ink: #fff8ef;
+  --d-aegean: #1d5079;
+  --d-glow: rgb(163 76 27 / 0.1);
+  --d-shadow: 0 30px 70px -30px rgb(60 40 10 / 0.35);
+}

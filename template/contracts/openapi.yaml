@@ -115,15 +115,15 @@ paths:
         "403": { $ref: "#/components/responses/Problem" }
         "422": { $ref: "#/components/responses/Problem" }
   /notes/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
-      - $ref: "#/components/parameters/OrganizationId"
     get:
       operationId: getNote
       tags: [notes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/OrganizationId"
       responses:
         "200":
           description: The note
@@ -135,6 +135,12 @@ paths:
     patch:
       operationId: updateNote
       tags: [notes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/OrganizationId"
       requestBody:
         required: true
         content:
@@ -153,6 +159,12 @@ paths:
       operationId: deleteNote
       summary: Soft delete (the row stays with `deleted_at` set).
       tags: [notes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/OrganizationId"
       responses:
         "204":
           description: Deleted

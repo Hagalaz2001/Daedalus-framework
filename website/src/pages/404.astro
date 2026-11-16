@@ -1,0 +1,17 @@
+---
+import Base from "../layouts/Base.astro";
+import { url } from "../lib/site";
+---
+<Base title="Page not found | Daedalus" description="This page is not part of the Daedalus site." path="/404/">
+  <section style="min-height: 60vh; display: grid; align-content: center">
+    <div class="wrap">
+      <p class="kicker">404</p>
+      <h1 style="font-size: clamp(2.4rem, 6vw, 4.2rem)">You have wandered off the thread</h1>
+      <p class="lead">That page does not exist, or it moved. Head back to the start of the labyrinth.</p>
+      <div class="cta" style="margin-top: 1.5rem">
+        <a class="btn primary" href={url("/")}>Home</a>
+        <a class="btn" href={url("/getting-started/introduction/")}>Documentation</a>
+      </div>
+    </div>
+  </section>
+</Base>

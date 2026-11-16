@@ -1,8 +1,8 @@
 # Working with AI agents
 
-AI-assisted development is the default way of working in projects made with Daedalus. It sits on top of
-traditional engineering and is meant to shorten the path from intent to a verified change, not to replace the
-discipline that keeps a codebase healthy.
+AI-assisted development is the default way of working in projects made with Daedalus. It sits on top of traditional
+engineering and is meant to shorten the path from intent to a verified change, not to replace the discipline that keeps
+a codebase healthy.
 
 **Responsibility.** This is AI-assisted development. The person using it makes every decision and is responsible for
 what is built and shipped; the maintainers of Daedalus and the AI tools are not liable. See `DISCLAIMER.md`.
@@ -11,16 +11,16 @@ Human in the loop: `docs/RESPONSIBLE-AI.md`. Spec first: `docs/AI-KIT.md` and `s
 
 ## 1. Who does what
 
-| Human | AI agent |
-|---|---|
-| Sets intent: what, for whom, how it is judged | Proposes a plan against `PLAN.md` and the architecture |
-| Decides trade-offs, scope, design direction | Implements, writes tests, regenerates clients |
-| Reviews every change before merge | Runs `deno task check`, looks at the running app, reports failures plainly |
-| Approves deploys, spending, data deletion, pushes | Stops and asks before any of those |
+| Human                                             | AI agent                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------- |
+| Sets intent: what, for whom, how it is judged     | Proposes a plan against `PLAN.md` and the architecture                     |
+| Decides trade-offs, scope, design direction       | Implements, writes tests, regenerates clients                              |
+| Reviews every change before merge                 | Runs `deno task check`, looks at the running app, reports failures plainly |
+| Approves deploys, spending, data deletion, pushes | Stops and asks before any of those                                         |
 
-The agent works from files the repository provides: `AGENTS.md` (rules, also read through `CLAUDE.md` and
-`GEMINI.md`), `.blueprint.json` (which apps exist), `docs/ARCHITECTURE.md`, `DESIGN.md`, `PLAN.md` and each app's
-README. If an instruction an agent needs is missing from those files, add it there instead of repeating it in chat.
+The agent works from files the repository provides: `AGENTS.md` (rules, also read through `CLAUDE.md` and `GEMINI.md`),
+`.blueprint.json` (which apps exist), `docs/ARCHITECTURE.md`, `DESIGN.md`, `PLAN.md` and each app's README. If an
+instruction an agent needs is missing from those files, add it there instead of repeating it in chat.
 
 ## 2. The loop
 
@@ -30,8 +30,8 @@ README. If an instruction an agent needs is missing from those files, add it the
 4. **Implement in parallel where the folders are separate.** The `add-feature` skill starts `backend-dev`, `web-dev`,
    `mobile-dev` agents, each owning one folder. Separate features run in separate sessions with
    `claude --worktree <name>`.
-5. **Verify.** `deno task check` passes, then the change is seen working: browser at narrow and wide widths,
-   emulator, or desktop window. Screenshots are looked at, not just taken.
+5. **Verify.** `deno task check` passes, then the change is seen working: browser at narrow and wide widths, emulator,
+   or desktop window. Screenshots are looked at, not just taken.
 6. **Review gate.** `design-reviewer` on the screenshots, a human reads the diff.
 7. **Record.** Bugs found go to `docs/QA.md`; a decision that changes a rule goes to `docs/adr/`.
 
@@ -42,8 +42,8 @@ A change is not done until all of these hold:
 - `deno task check` is green (this includes boundary lint and every app's tests and builds).
 - The UI was looked at and follows `DESIGN.md`; accessibility basics hold (contrast, labels, focus, touch size).
 - A human reviewed the diff.
-- A human approved anything outward-facing or hard to undo: deploys, store uploads, pushes to shared branches, paid
-  API use, data deletion, sending messages.
+- A human approved anything outward-facing or hard to undo: deploys, store uploads, pushes to shared branches, paid API
+  use, data deletion, sending messages.
 
 ## 4. What stays non-negotiable
 

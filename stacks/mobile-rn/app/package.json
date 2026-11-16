@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "tokens": "deno run -A ../../scripts/tokens/mobile-rn.ts .",
     "typecheck": "tsc --noEmit",
-    "lint": "deno lint app src",
+    "lint": "deno lint --config deno.lint.json app src",
     "test": "jest --runInBand",
     "export:android": "expo export --platform android",
     "export:web": "expo export --platform web",

@@ -110,12 +110,21 @@ a place to host releases.
 |---|---|
 | Release exe | 6.1 MiB (6,377,472 bytes) |
 | NSIS installer | 2.39 MiB |
-| Idle memory | **not measured yet** (see below) |
+| Idle memory (sign-in screen, 20 s after launch) | 7 processes (app + WebView2): Working Set summed 371 MB, private bytes summed 199 MB |
 
-For scale, an Electron hello-world ships a full Chromium and Node (commonly reported at 70 to 100 MB packaged, with
-well over 100 MB of RAM at idle). Those are public ballpark figures, not measurements made here. Tauri uses the
-WebView2 runtime already installed in Windows, so the memory of the `msedgewebview2` child processes still counts
-toward the total.
+How it was measured: the release exe was started on a private Windows desktop (`CreateDesktop`, never displayed, so nothing
+appeared on screen or the taskbar), waited 6 s, captured its window with `PrintWindow`, waited 20 s more, then summed
+`WorkingSet64` and `PrivateMemorySize64` over the app process and every descendant (`msedgewebview2.exe`) and terminated
+the tree. Summed Working Set counts pages shared between the WebView2 processes more than once, so private bytes is the
+fairer number. Sign-in screen only, no data loaded; one run.
+
+For scale, public Electron figures vary widely: about 168 MB idle for one window in
+[this write-up](https://dev.to/gethopp/tauri-vs-electron-performance-bundle-size-and-the-real-trade-offs-1el4),
+128 MB in a [Better Stack comparison](https://betterstack.com/community/guides/scaling-nodejs/tauri-vs-electron-vs-deno-vs-electrobun/),
+and a Windows 11 test that found Electron and Tauri close (149 vs 142 MB). Those are other people's measurements with other
+methods and are **not** comparable to the figure above; no Electron app was measured here. Take away: on Windows a Tauri
+app is not dramatically lighter than Electron at idle, because WebView2 is also Chromium. Its wins are the 2.4 MiB installer
+and the small binary; for the lowest memory pick `desktop-gpui`.
 
 ## Verified, and not verified
 
@@ -123,9 +132,23 @@ Verified from a freshly generated project (`deno run -A new-project.ts <dir> --d
 lint, 14 Vitest tests, production build; Rust fmt, clippy with warnings denied, 6 unit tests plus the ignored test
 against the real Windows Credential Manager (passes); `cargo tauri build` end to end including the NSIS installer.
 
-**Not verified:** the app was never launched in this session, so there are no screenshots, no idle-memory figure, no
-test of the installer, no sign-in against a running backend through the Rust HTTP plugin, and the hidden-until-painted
-window and title bar theme behaviour were not observed. macOS and Linux were not built. Auto-update is not wired.
+## Screenshots
+
+Captured with headless Edge (Playwright) against the built `dist/` at the app's window size (1180 x 760), with the API
+mocked in the page and the native layer absent. They show **app UI (web view content)** only: no title bar, no
+window chrome, no native behaviour. Files are in `docs/screenshots/`: `sign-in`, `dashboard`, `notes`, `note-detail`,
+`note-form`, `settings`, `profile`, `not-found`, each as `-light` and `-dark`.
+
+![Dashboard, light: app UI (web view content)](docs/screenshots/dashboard-light.png)
+![Notes, dark: app UI (web view content)](docs/screenshots/notes-dark.png)
+
+One capture of the real native window (title bar, WebView2 content), taken off-screen on the private desktop:
+
+![Sign-in in the native window, dark](docs/screenshots/native-window-signin-dark.png)
+
+**Not verified:** the installer was built but never run, there was no sign-in against a running backend through the Rust HTTP
+plugin, and the window was seen only in the one off-screen capture above (the hidden-until-painted logic and the title bar
+theme behaved as designed there, but were not exercised further). macOS and Linux were not built. Auto-update is not wired.
 
 ## Limits
 

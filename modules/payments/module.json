@@ -3,9 +3,21 @@
   "title": "Payments (Stripe)",
   "status": "thin",
   "summary": "Stripe Checkout for subscriptions plus a verified webhook that keeps each organization's billing status in Postgres. Test mode only until you have reviewed it.",
-  "requires": { "backend": true },
+  "requires": {
+    "backend": true,
+    "db": "postgres"
+  },
   "files": "files",
-  "install": [{ "cwd": ".", "run": "deno task --cwd backend modules:apply payments" }],
-  "routes": ["GET /billing", "POST /billing/checkout", "POST /webhooks/stripe"],
+  "install": [
+    {
+      "cwd": ".",
+      "run": "deno task --cwd backend modules:apply payments"
+    }
+  ],
+  "routes": [
+    "GET /billing",
+    "POST /billing/checkout",
+    "POST /webhooks/stripe"
+  ],
   "docs": "docs/modules/payments.md"
 }

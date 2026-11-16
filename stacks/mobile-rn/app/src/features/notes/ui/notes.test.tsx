@@ -15,7 +15,7 @@ const notes: Note[] = [
 ];
 
 describe("filterNotes", () => {
-  it("searches, limits by range and sorts", async () => {
+  it("searches, limits by range and sorts", () => {
     expect(filterNotes(notes, "milk", "all", "newest", now).map((n) => n.id)).toEqual(["1"]);
     expect(filterNotes(notes, "", "week", "newest", now).map((n) => n.id)).toEqual(["1", "2"]);
     expect(filterNotes(notes, "", "all", "oldest", now).map((n) => n.id)).toEqual(["3", "2", "1"]);

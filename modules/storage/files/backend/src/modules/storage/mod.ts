@@ -5,7 +5,8 @@ import { requireTenant } from "../../shared/auth/session.ts";
 import { uuidv7 } from "../../shared/db/columns.ts";
 import { files } from "../../shared/db/schema.ts";
 import { AppError, badRequest, notFound } from "../../shared/errors/problem.ts";
-import { keyset, pageParams, slicePage } from "../../shared/http/pagination.ts";
+import { keyset } from "../../shared/db/keyset.ts";
+import { pageParams, slicePage } from "../../shared/http/pagination.ts";
 import type { AppEnv, Module } from "../../shared/http/types.ts";
 import { type ObjectStore, s3FromEnv } from "./s3.ts";
 

@@ -19,6 +19,7 @@ Usage:
   daedalus describe <stack|module|pack|preset> <id>
   daedalus docs <query>
   daedalus studio [--project <dir>]
+  daedalus doctor [args]                    check this machine (toolchains, local AI); exit 1 below the minimum
   daedalus mcp                              start the MCP server on stdio
 
 Add --json to any command for machine-readable output. Exit codes: 0 ok, 1 failed, 2 invalid input.
@@ -46,6 +47,9 @@ switch (cmd) {
     Deno.exit(await run([cmd, ...rest]));
   case "studio":
     forward(["task", "--cwd", join(here, "studio"), "start", ...(rest.includes("--project") ? [] : ["--project", Deno.cwd()]), ...rest]);
+    break;
+  case "doctor":
+    forward(["task", "--cwd", join(here, "studio"), "doctor", ...rest]);
     break;
   case "mcp":
     forward(["run", "-A", join(here, "mcp.ts")]);

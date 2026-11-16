@@ -32,7 +32,32 @@ export interface StackDef {
   placeholders?: Record<string, string[]>;
   check: Cmd[];
   boundaries?: { lang: "ts" | "dart"; src: string };
+  /**
+   * Variants selected by a generator flag (today `islands` for the Astro site): the chosen value adds its `packages`,
+   * copies its `overlay` folder (relative to the stack folder) over the app, and replaces `tokens`.
+   */
+  variants?: {
+    key: "islands";
+    default: string;
+    values: Record<string, { packages?: string[]; overlay?: string; tokens?: string }>;
+  };
+  /** Advisories `deno audit` may report for this stack (e.g. dev-only tooling). `reason` is required and printed on every check. */
+  audit?: AuditIgnore;
   requires?: { backend?: "optional" | "required" | "none" };
+}
+
+export interface AuditIgnore {
+  ignore: string[];
+  reason: string;
+}
+
+export const ADVISORY_ID = /^(GHSA(-[23456789cfghjmpqrvwx]{4}){3}|CVE-\d{4}-\d{4,})$/;
+
+export function validateAudit(a: AuditIgnore | undefined, where: string) {
+  if (!a) return;
+  assertValid(Array.isArray(a.ignore) && a.ignore.length > 0, `${where}: audit.ignore must be a non-empty list`);
+  for (const id of a.ignore) assertValid(typeof id === "string" && ADVISORY_ID.test(id), `${where}: audit.ignore entry "${id}" is not a GHSA or CVE id`);
+  assertValid(typeof a.reason === "string" && a.reason.trim().length >= 10, `${where}: audit.reason is required (say why the advisory is acceptable)`);
 }
 
 export interface ResolvedCmd {
@@ -50,12 +75,15 @@ export interface AppEntry {
   /** Command, run from the project root, that writes the theme file from design/tokens.json. */
   tokens?: string;
   boundaries?: { lang: "ts" | "dart"; src: string };
+  audit?: AuditIgnore;
 }
 export interface Manifest {
   version: 2;
   name: string;
   backend: boolean;
   ui?: string;
+  /** Database flavour of the backend: postgres (default) or mongodb. */
+  db?: string;
   apps: AppEntry[];
   /** Applied modules and packs, with the commands they add to sync and check. */
   extras?: Extra[];
@@ -88,6 +116,7 @@ export function loadStack(blueprintDir: string, id: string): StackDef & { root: 
   assertValid(def.id === id, `${f}: id "${def.id}" does not match folder "${id}"`);
   assertValid(["web", "mobile", "desktop", "shared"].includes(def.kind), `${f}: kind must be web, mobile, desktop or shared`);
   if (def.kind !== "shared") {
+    validateAudit(def.audit, f);
     assertValid(isAppDir(def.defaultAppDir), `${f}: defaultAppDir must look like apps/<name>`);
     assertValid(Array.isArray(def.check), `${f}: check must be an array`);
   }
@@ -216,6 +245,9 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
   assertValid(!existsSync(dest), `${o.appDir} already exists`);
   const vars = varsFor({ ...o });
   const workspace: string[] = [];
+  const choice = stack.variants ? (o.islands ?? stack.variants.default) : undefined;
+  const variant = stack.variants && choice ? stack.variants.values[choice] : undefined;
+  if (stack.variants) assertValid(!!variant, `--${stack.variants.key} must be one of: ${Object.keys(stack.variants.values).join(", ")} (got "${choice}")`);
 
   // The app is the stack "app" folder, else its single apps/<name>, else the stack folder itself minus packages.
   let src = join(stack.root, stack.appSource ?? "app");
@@ -233,7 +265,11 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
   const NOT_APP = new Set(["stack.json", "packages"]);
   cpSync(src, dest, { recursive: true, filter: (f) => copyFilter(f) && !(rootCopy && NOT_APP.has(basename(f)) && dirname(f) === src) });
 
-  for (const p of stack.packages ?? []) {
+  // The variant overlay replaces files of the app copy; the variants/ folder itself never ships.
+  if (variant?.overlay) cpSync(join(stack.root, variant.overlay), dest, { recursive: true, filter: copyFilter });
+  rmSync(join(dest, "variants"), { recursive: true, force: true });
+
+  for (const p of [...(stack.packages ?? []), ...(variant?.packages ?? [])]) {
     const m = /^(stack|shared):(.+)$/.exec(p);
     if (!m) continue;
     const parts = m[2].split("/");
@@ -257,12 +293,13 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
   applyReplacements(dest, rules, vars);
   for (const m of stack.move ?? []) moveDir(dest, subst(m.from, vars), subst(m.to, vars));
 
+  const tokenSrc = variant?.tokens ?? stack.tokens;
   let tokens: string | undefined;
-  if (stack.tokens && /\s/.test(stack.tokens)) tokens = subst(stack.tokens, vars);
-  else if (stack.tokens) {
+  if (tokenSrc && /\s/.test(tokenSrc)) tokens = subst(tokenSrc, vars);
+  else if (tokenSrc) {
     const script = `scripts/tokens/${stack.id}.ts`;
     mkdirSync(join(projectDir, "scripts", "tokens"), { recursive: true });
-    cpSync(join(stack.root, stack.tokens), join(projectDir, script));
+    cpSync(join(stack.root, tokenSrc), join(projectDir, script));
     tokens = `deno run -A ${script} ${o.appDir}`;
   }
 
@@ -282,6 +319,7 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
       check: stack.check.map((c) => resolveCmd(c, vars)),
       sync: (stack.sync ?? []).map((c) => resolveCmd(c, vars)),
       tokens,
+      audit: stack.audit,
       boundaries: stack.boundaries ?? (existsSync(join(dest, "src", "features")) ? { lang: "ts", src: "src" } : undefined),
     },
     tasks,
@@ -335,7 +373,7 @@ export interface OverlayDef {
   install?: Cmd[];
   sync?: Cmd[];
   check?: Cmd[];
-  requires?: { backend?: boolean | string; stacks?: string[]; modules?: string[] };
+  requires?: { backend?: boolean | string; stacks?: string[]; modules?: string[]; db?: string };
   /** Markdown file (relative to the overlay folder) appended to the project AGENTS.md under "## Pack: <name>". */
   rules?: string;
   /** Applied to every new project unless `--packs none`. */
@@ -389,6 +427,10 @@ export function applyOverlay(
   assertValid(!(o.manifest.extras ?? []).some((e) => e.kind === o.kind && e.name === o.name), `${o.kind} "${o.name}" is already applied`);
   const def = JSON.parse(readFileSync(f, "utf8")) as OverlayDef;
   const req = def.requires ?? {};
+  if (req.db) {
+    const db = o.manifest.db ?? "postgres";
+    assertValid(db === req.db, `${o.kind} "${o.name}" needs --db ${req.db}, this project uses ${db}`);
+  }
   if (req.backend) assertValid(o.manifest.backend, `${o.kind} "${o.name}" needs the backend (generate with --backend hono)`);
   for (const s of req.stacks ?? []) assertValid(o.manifest.apps.some((a) => a.stack === s), `${o.kind} "${o.name}" needs the ${s} stack`);
   const vars = varsFor({ appDir: "apps/app", projectName: o.manifest.name });
@@ -430,4 +472,37 @@ export function applyOverlay(
     workspace: def.workspace ?? [],
     install: (def.install ?? []).map((c) => resolveCmd(c, vars)),
   };
+}
+
+// ---------- database flavours ----------
+export const DB_FLAVOURS = ["postgres", "mongodb"] as const;
+
+export interface DbDef {
+  files?: string;
+  overwrite?: boolean;
+  remove?: string[];
+  install?: Cmd[];
+  env?: Record<string, string>;
+}
+
+/**
+ * Applies `dbs/<name>/db.json` to a project: copy `files` (overwriting when `overwrite` is set), delete the `remove`
+ * paths, append `env` to `.env.example`, and return the install commands. `postgres` is the template itself.
+ */
+export function applyDb(blueprintDir: string, projectDir: string, name: string): ResolvedCmd[] {
+  assertValid((DB_FLAVOURS as readonly string[]).includes(name), `--db must be postgres or mongodb, got: ${name}`);
+  if (name === "postgres") return [];
+  const dir = join(blueprintDir, "dbs", name);
+  assertValid(existsSync(join(dir, "db.json")), `Unknown database flavour "${name}"`);
+  const def = JSON.parse(readFileSync(join(dir, "db.json"), "utf8")) as DbDef;
+  cpSync(join(dir, def.files ?? "files"), projectDir, { recursive: true, force: def.overwrite === true });
+  for (const p of def.remove ?? []) rmSync(join(projectDir, p), { recursive: true, force: true });
+  const env = Object.entries(def.env ?? {});
+  if (env.length) {
+    const f = join(projectDir, ".env.example");
+    const old = existsSync(f) ? readFileSync(f, "utf8").replace(/\s*$/, "\n") : "";
+    writeFileSync(f, old + env.map(([k, v]) => `${k}=${v}\n`).join(""));
+  }
+  const vars = varsFor({ appDir: "apps/app" });
+  return (def.install ?? []).map((c) => resolveCmd(c, vars));
 }

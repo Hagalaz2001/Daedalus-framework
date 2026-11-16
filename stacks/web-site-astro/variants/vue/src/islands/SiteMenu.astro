@@ -1,0 +1,11 @@
+---
+import SiteMenu from './vue/SiteMenu.vue'
+
+interface Props {
+  nav: { href: string; label: string; current: boolean }[]
+  appUrl: string
+}
+const { nav, appUrl } = Astro.props
+---
+
+<SiteMenu client:idle nav={nav} appUrl={appUrl} />

@@ -1,11 +1,9 @@
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { sql } from "drizzle-orm";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { bearer, organization } from "better-auth/plugins";
 import type { Config } from "../config/config.ts";
 import type { Db } from "../db/client.ts";
 import { uuidv7 } from "../db/columns.ts";
-import * as authSchema from "../db/auth-schema.ts";
+import { authDatabase, createPersonalSpace, removeOrphanedSpaces } from "../db/auth-adapter.ts";
 import { mailer } from "../mail/mailer.ts";
 
 export interface AuthUser {
@@ -41,40 +39,20 @@ export function createAuth(
     secret: config.authSecret,
     baseURL: config.authUrl,
     trustedOrigins: config.trustedOrigins,
-    database: drizzleAdapter(db, { provider: "pg", schema: authSchema }),
+    database: authDatabase(db),
     advanced: { database: { generateId: () => uuidv7() } },
     databaseHooks: {
       user: {
         create: {
-          after: async (user) => {
-            const orgId = uuidv7();
-            await db.insert(authSchema.organization).values({
-              id: orgId,
-              name: `${user.name}'s space`,
-              slug: `u-${orgId.slice(-12)}`,
-              createdAt: new Date(),
-            });
-            await db.insert(authSchema.member).values({
-              id: uuidv7(),
-              organizationId: orgId,
-              userId: user.id,
-              role: "owner",
-              createdAt: new Date(),
-            });
-          },
+          after: async (user) => await createPersonalSpace(db, user),
         },
       },
     },
     user: {
       deleteUser: {
         enabled: true,
-        // Rows that reference the user cascade or are set null (see the schema). Organizations the user was the
-        // only member of would be left orphaned with their content, so they go first.
-        beforeDelete: async (user) => {
-          await db.delete(authSchema.organization).where(sql`${authSchema.organization.id} in (
-            select organization_id from member group by organization_id
-            having count(*) = 1 and bool_and(user_id = ${user.id}))`);
-        },
+        // Cascades and orphaned personal spaces: see removeOrphanedSpaces.
+        beforeDelete: async (user) => await removeOrphanedSpaces(db, user.id),
       },
     },
     ...extra,

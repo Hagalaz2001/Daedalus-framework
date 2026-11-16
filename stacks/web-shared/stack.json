@@ -2,7 +2,10 @@
   "id": "web-shared",
   "kind": "shared",
   "label": "Shared web UI kits (@app/ui, @app/ui-vue)",
-  "description": "Not selectable on its own. Copied to packages/ui whenever web-spa or web-site is chosen; both apps import it. Owns the tokens -> Tailwind theme script.",
-  "packages": ["packages/ui"],
+  "description": "Not selectable on its own. Holds the React kit (packages/ui) and the Vue kit (packages/ui-vue) that the web stacks copy in. Owns the tokens -> Tailwind theme script.",
+  "packages": [
+    "packages/ui",
+    "packages/ui-vue"
+  ],
   "tokens": "deno run -A packages/ui/scripts/tokens.mjs"
 }

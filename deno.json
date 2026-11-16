@@ -1,14 +1,19 @@
 {
   "tasks": {
+    "website:dev": "deno task --cwd website dev",
+    "website:build": "deno task --cwd website build",
+    "showcase": "deno task --cwd website showcase",
     "new": "deno run -A new-project.ts",
-    "test": "deno test -A lib/ new-project_test.ts mcp_test.ts template/scripts/ packs/",
+    "test": "deno test -A lib/ new-project_test.ts mcp_test.ts template/scripts/ packs/ modules/modules_test.ts website/scripts/",
     "oss:check": "deno run -A tools/oss-check.ts",
-    "check": "deno task test && deno task oss:check && deno audit"
+    "check": "deno task test && deno task oss:check && deno audit",
+    "doctor": "deno task --cwd studio doctor"
   },
   "fmt": {
     "lineWidth": 120,
     "exclude": [
       "*.mjs",
+      "modules/*/files/**/ui-templates",
       "packs/infra/files/infra/helm",
       "setup",
       "stacks",
@@ -18,6 +23,7 @@
   "lint": {
     "exclude": [
       "*.mjs",
+      "modules/*/files/**/ui-templates",
       "packs/infra/files/infra/helm",
       "setup",
       "stacks",

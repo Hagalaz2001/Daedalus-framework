@@ -5,6 +5,14 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { listModules } from "./verify.ts";
 
+function* walk(dir: string): Generator<string> {
+  for (const e of Deno.readDirSync(dir)) {
+    const p = join(dir, e.name);
+    if (e.isDirectory) yield* walk(p);
+    else if (e.name.endsWith(".ts") || e.name.endsWith(".tsx")) yield p;
+  }
+}
+
 const here = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
 const read = (...p: string[]) => JSON.parse(Deno.readTextFileSync(join(here, ...p)));
 
@@ -20,6 +28,14 @@ for (const name of listModules()) {
     for (const f of ["mod.ts", "setup.json"]) assert(existsSync(join(code, f)), f);
     assert(existsSync(join(code, "tests")), "has tests");
     assertEquals(def.install[0].run, `deno task --cwd backend modules:apply ${name}`);
+
+    // A module whose code uses Drizzle or SQL cannot run on the MongoDB flavour and must say so.
+    const sqlOnly = [...walk(code)].some((p) => /drizzle-orm|pg-boss|pg-core/.test(Deno.readTextFileSync(p)));
+    assertEquals(
+      def.requires?.db === "postgres",
+      sqlOnly,
+      "requires.db must be postgres exactly when the code uses SQL",
+    );
 
     const setup = read(name, "files", "backend", "src", "modules", name, "setup.json");
     if (setup.contract) assert(parse(Deno.readTextFileSync(join(code, setup.contract))), "contract fragment parses");

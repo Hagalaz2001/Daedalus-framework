@@ -1,0 +1,18 @@
+{
+  "name": "mongodb",
+  "title": "MongoDB with Mongoose",
+  "summary": "Replaces the PostgreSQL layer (Drizzle, PGlite) with MongoDB (Mongoose, Better Auth's MongoDB adapter); local development and tests run a managed mongod, no install.",
+  "files": "files",
+  "overwrite": true,
+  "remove": [
+    "backend/drizzle",
+    "backend/drizzle.config.ts",
+    "backend/auth.cli.ts",
+    "backend/src/shared/db/schema.ts",
+    "backend/src/shared/db/auth-schema.ts",
+    "backend/src/shared/db/keyset.ts",
+    "backend/src/modules/notes/schema.ts"
+  ],
+  "install": [{ "cwd": ".", "run": "deno install" }, { "cwd": ".", "run": "deno task --cwd backend diagrams" }],
+  "env": { "MONGODB_URI": "mongodb://localhost:27017/app" }
+}

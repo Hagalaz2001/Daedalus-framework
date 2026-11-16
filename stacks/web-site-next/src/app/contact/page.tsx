@@ -8,7 +8,7 @@ export const metadata = pageMetadata({ title: 'Contact', description: 'Questions
 export default function ContactPage() {
   return (
     <Container className="pt-16 sm:pt-24">
-      <div className="grid gap-14 lg:grid-cols-[1fr_1.1fr]">
+      <div className="grid gap-14 grid-cols-1 lg:grid-cols-[1fr_1.1fr]">
         <div>
           <h1 className="font-display text-5xl font-semibold tracking-tight sm:text-6xl">Say hello.</h1>
           <p className="mt-5 max-w-md text-xl text-text-muted">A real person reads every message. We usually answer within two working days.</p>

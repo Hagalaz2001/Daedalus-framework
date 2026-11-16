@@ -20,6 +20,6 @@ flowchart LR
   P1 --> MON["Monitor<br/>logs, errors, readiness, backups"]
 ```
 
-Migrations run when the first new backend instance starts, so deploy the backend before the clients that need new
-fields and follow the zero-downtime rules in [../DATABASE.md](../DATABASE.md). Targets, secrets and the incident
-checklist: [../OPERATIONS.md](../OPERATIONS.md).
+Migrations run when the first new backend instance starts, so deploy the backend before the clients that need new fields
+and follow the zero-downtime rules in [../DATABASE.md](../DATABASE.md). Targets, secrets and the incident checklist:
+[../OPERATIONS.md](../OPERATIONS.md).

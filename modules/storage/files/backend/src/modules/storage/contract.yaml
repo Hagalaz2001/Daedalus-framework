@@ -2,8 +2,9 @@ paths:
   /files:
     get:
       operationId: listFiles
-      summary: Uploaded files of the organization, newest first.
-      tags: [files]
+      summary: "Uploaded files of the organization, newest first."
+      tags:
+        - files
       parameters:
         - $ref: "#/components/parameters/OrganizationId"
         - $ref: "#/components/parameters/Limit"
@@ -14,115 +15,188 @@ paths:
           headers:
             X-Next-Cursor:
               description: Cursor for the next page; absent when there is none.
-              schema: { type: string }
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: "#/components/schemas/FileRecord" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "403": { $ref: "#/components/responses/Problem" }
+                items:
+                  $ref: "#/components/schemas/FileRecord"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "403":
+          $ref: "#/components/responses/Problem"
     post:
       operationId: createUpload
-      summary: Start an upload. PUT the bytes to `upload.url`, then call completeUpload.
-      tags: [files]
+      summary: "Start an upload. PUT the bytes to `upload.url`, then call completeUpload."
+      tags:
+        - files
       parameters:
         - $ref: "#/components/parameters/OrganizationId"
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/NewFile" }
+            schema:
+              $ref: "#/components/schemas/NewFile"
       responses:
         "201":
           description: Upload started
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/UploadTicket" }
-        "400": { $ref: "#/components/responses/Problem" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "503": { $ref: "#/components/responses/Problem" }
-  /files/{id}/complete:
+              schema:
+                $ref: "#/components/schemas/UploadTicket"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "503":
+          $ref: "#/components/responses/Problem"
+  "/files/{id}/complete":
     post:
       operationId: completeUpload
       summary: Confirm the bytes arrived; the file becomes ready.
-      tags: [files]
+      tags:
+        - files
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
         - $ref: "#/components/parameters/OrganizationId"
       responses:
         "200":
           description: File is ready
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/FileRecord" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
-        "422": { $ref: "#/components/responses/Problem" }
-  /files/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string, format: uuid }
-      - $ref: "#/components/parameters/OrganizationId"
+              schema:
+                $ref: "#/components/schemas/FileRecord"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+  "/files/{id}":
     get:
       operationId: getFile
       summary: A file with a short-lived download URL.
-      tags: [files]
+      tags:
+        - files
       responses:
         "200":
           description: File and download URL
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/FileDownload" }
-        "401": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
+              schema:
+                $ref: "#/components/schemas/FileDownload"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+      parameters:
+        - &ref_0
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - &ref_1
+          $ref: "#/components/parameters/OrganizationId"
     delete:
       operationId: deleteFile
-      tags: [files]
+      tags:
+        - files
       responses:
         "204":
           description: Deleted
-        "401": { $ref: "#/components/responses/Problem" }
-        "404": { $ref: "#/components/responses/Problem" }
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+      parameters:
+        - *ref_0
+        - *ref_1
 components:
   schemas:
     NewFile:
       type: object
-      required: [filename, contentType, sizeBytes]
+      required:
+        - filename
+        - contentType
+        - sizeBytes
       properties:
-        filename: { type: string, minLength: 1, maxLength: 200 }
-        contentType: { type: string, minLength: 3, maxLength: 100 }
-        sizeBytes: { type: integer, minimum: 1 }
+        filename:
+          type: string
+          minLength: 1
+          maxLength: 200
+        contentType:
+          type: string
+          minLength: 3
+          maxLength: 100
+        sizeBytes:
+          type: integer
+          minimum: 1
     FileRecord:
       type: object
-      required: [id, filename, contentType, status, createdAt]
+      required:
+        - id
+        - filename
+        - contentType
+        - status
+        - createdAt
       properties:
-        id: { type: string }
-        filename: { type: string }
-        contentType: { type: string }
-        sizeBytes: { type: integer }
-        status: { type: string, enum: [pending, ready] }
-        createdAt: { type: string, format: date-time }
+        id:
+          type: string
+        filename:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+        status:
+          type: string
+          enum:
+            - pending
+            - ready
+        createdAt:
+          type: string
+          format: date-time
     UploadTicket:
       type: object
-      required: [file, upload]
+      required:
+        - file
+        - upload
       properties:
-        file: { $ref: "#/components/schemas/FileRecord" }
+        file:
+          $ref: "#/components/schemas/FileRecord"
         upload:
           type: object
-          required: [url, method, expiresIn]
+          required:
+            - url
+            - method
+            - expiresIn
           properties:
-            url: { type: string }
-            method: { type: string, enum: [PUT] }
-            expiresIn: { type: integer, description: Seconds the URL stays valid. }
+            url:
+              type: string
+            method:
+              type: string
+              enum:
+                - PUT
+            expiresIn:
+              type: integer
+              description: Seconds the URL stays valid.
     FileDownload:
       type: object
-      required: [file, downloadUrl]
+      required:
+        - file
+        - downloadUrl
       properties:
-        file: { $ref: "#/components/schemas/FileRecord" }
-        downloadUrl: { type: string }
+        file:
+          $ref: "#/components/schemas/FileRecord"
+        downloadUrl:
+          type: string

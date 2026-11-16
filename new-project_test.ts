@@ -29,3 +29,17 @@ Deno.test("json: docs search returns ranked paths", async () => {
   assertEquals(json.ok, true);
   assert(json.results.length > 0 && typeof json.results[0].path === "string" && typeof json.results[0].score === "number");
 });
+
+Deno.test("json: a Postgres-only module is refused with --db mongodb (exit 2) before anything is written", async () => {
+  const dir = `${Deno.makeTempDirSync()}/never-created`;
+  const { code, json } = await cli("new", dir, "--yes", "--db", "mongodb", "--modules", "jobs", "--backend", "hono");
+  assertEquals([code, json.error.kind], [2, "usage"]);
+  assert(json.error.message.includes("--db postgres"));
+  assertEquals(Deno.statSync(dir.replace("/never-created", "")).isDirectory, true);
+  assertEquals((() => { try { Deno.statSync(dir); return true; } catch { return false; } })(), false);
+});
+
+Deno.test("json: --db mongodb needs the backend", async () => {
+  const { code } = await cli("new", `${Deno.makeTempDirSync()}/x`, "--yes", "--db", "mongodb", "--backend", "none");
+  assertEquals(code, 2);
+});

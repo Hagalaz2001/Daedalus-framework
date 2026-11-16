@@ -3,6 +3,7 @@ import { join } from "jsr:@std/path@1";
 import {
   addToManifest,
   type AppEntry,
+  validateAudit,
   applyOverlay,
   applyReplacements,
   defaultOverlays,
@@ -163,6 +164,46 @@ Deno.test("overlay: rules are appended to AGENTS.md and settings.json is merged"
     assert(Deno.readTextFileSync(join(project, "AGENTS.md")).includes("## Pack: safety\n\nNever ship unreviewed."));
     assertEquals(JSON.parse(Deno.readTextFileSync(join(project, ".claude/settings.json"))).hooks.Stop.length, 2);
     assertEquals(defaultOverlays(bp, "pack"), ["safety"]);
+  } finally {
+    Deno.removeSync(bp, { recursive: true });
+    Deno.removeSync(project, { recursive: true });
+  }
+});
+
+Deno.test("audit ignore needs valid advisory ids and a reason", () => {
+  validateAudit(undefined, "s");
+  validateAudit({ ignore: ["GHSA-3g3m-2fjr-6pw4", "CVE-2026-118773"], reason: "dev-only test tooling, not shipped" }, "s");
+  assertThrows(() => validateAudit({ ignore: [], reason: "long enough reason" }, "s"));
+  assertThrows(() => validateAudit({ ignore: ["lodash"], reason: "long enough reason" }, "s"));
+  assertThrows(() => validateAudit({ ignore: ["GHSA-3g3m-2fjr-6pw4"], reason: "" }, "s"), Error, "reason");
+});
+
+Deno.test("variants: overlay replaces app files, variant packages and tokens apply, variants/ is removed", () => {
+  const bp = Deno.makeTempDirSync();
+  const project = Deno.makeTempDirSync();
+  try {
+    const root = join(bp, "stacks/site");
+    Deno.mkdirSync(join(root, "src"), { recursive: true });
+    Deno.mkdirSync(join(root, "variants/vue/src"), { recursive: true });
+    Deno.mkdirSync(join(root, "variants/react"), { recursive: true });
+    Deno.mkdirSync(join(bp, "stacks/shared/packages/ui-vue"), { recursive: true });
+    Deno.writeTextFileSync(join(bp, "stacks/shared/packages/ui-vue/package.json"), "{}");
+    Deno.writeTextFileSync(join(root, "src/a.ts"), "base");
+    Deno.writeTextFileSync(join(root, "variants/vue/src/a.ts"), "vue");
+    const stack = {
+      id: "site", kind: "web" as const, defaultAppDir: "apps/site", workspaceMember: true, root, check: [],
+      variants: { key: "islands" as const, default: "react", values: {
+        react: { overlay: "variants/react", tokens: "run react" },
+        vue: { overlay: "variants/vue", packages: ["shared:shared/packages/ui-vue"], tokens: "run vue" },
+      } },
+    };
+    const r = composeStack({ projectDir: project, blueprintDir: bp, stack, appDir: "apps/site", islands: "vue" });
+    assertEquals(Deno.readTextFileSync(join(project, "apps/site/src/a.ts")), "vue");
+    assertEquals(Deno.statSync(join(project, "packages/ui-vue/package.json")).isFile, true);
+    assertEquals(r.entry.tokens, "run vue");
+    assertEquals(r.workspace, ["./packages/ui-vue", "./apps/site"]);
+    assertEquals(Array.from(Deno.readDirSync(join(project, "apps/site"))).some((e) => e.name === "variants"), false);
+    assertThrows(() => composeStack({ projectDir: project, blueprintDir: bp, stack, appDir: "apps/other", islands: "svelte" }), Error, "islands");
   } finally {
     Deno.removeSync(bp, { recursive: true });
     Deno.removeSync(project, { recursive: true });

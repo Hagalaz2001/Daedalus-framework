@@ -1,5 +1,5 @@
 import type { UseQueryReturnType } from '@tanstack/vue-query'
-import { render, screen } from '@testing-library/vue'
+import { render, screen } from '@app/ui-vue/testing'
 import userEvent from '@testing-library/user-event'
 import { h, ref } from 'vue'
 import QueryBoundary from './QueryBoundary.vue'

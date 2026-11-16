@@ -1,7 +1,8 @@
 # Database diagram
 
 Generated from the Drizzle schema by `deno task diagrams`. Do not edit by hand; change the schema and run the task.
-A solid crow's foot is a required reference, a circle an optional one. Conventions are in [../DATABASE.md](../DATABASE.md).
+
+A solid crow's foot is a required reference, a circle an optional one. Conventions: [../DATABASE.md](../DATABASE.md).
 
 ```mermaid
 erDiagram

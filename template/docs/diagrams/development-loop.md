@@ -12,5 +12,5 @@ flowchart LR
   F --> G["CI runs the same checks"]
 ```
 
-Rules that keep the loop short: never edit generated files (change the source and sync); every screen has loading,
-empty and error states; every feature ships tests; a schema change ships with its migration and a refreshed ERD.
+Rules that keep the loop short: never edit generated files (change the source and sync); every screen has loading, empty
+and error states; every feature ships tests; a schema change ships with its migration and a refreshed ERD.

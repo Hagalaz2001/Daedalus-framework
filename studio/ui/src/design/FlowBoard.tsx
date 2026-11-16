@@ -12,9 +12,35 @@ interface Arrow {
   label?: string;
 }
 
-const COLS = 3;
+const MAX_COLS = 3;
 const GAP = 120;
 const CAPTION = 30;
+
+/** Screens in flow order: arrows decide (sources first); screens without arrows keep creation order. Cycles fall back to creation order. */
+export function flowOrder<T extends { slug: string; manifest: { created: string } }>(
+  screens: T[],
+  arrows: { from: string; to: string }[],
+): T[] {
+  const byTime = [...screens].sort((a, b) => a.manifest.created.localeCompare(b.manifest.created));
+  const incoming = new Map(byTime.map((s) => [s.slug, 0]));
+  for (const a of arrows) if (incoming.has(a.from) && incoming.has(a.to)) incoming.set(a.to, incoming.get(a.to)! + 1);
+  const out: T[] = [];
+  const done = new Set<string>();
+  const queue = byTime.filter((s) => incoming.get(s.slug) === 0);
+  while (queue.length) {
+    const s = queue.shift()!;
+    if (done.has(s.slug)) continue;
+    done.add(s.slug);
+    out.push(s);
+    for (const a of arrows) {
+      if (a.from !== s.slug || !incoming.has(a.to)) continue;
+      incoming.set(a.to, incoming.get(a.to)! - 1);
+      if (incoming.get(a.to) === 0) queue.push(byTime.find((x) => x.slug === a.to)!);
+    }
+  }
+  for (const s of byTime) if (!done.has(s.slug)) out.push(s);
+  return out;
+}
 
 /** The version of a screen that represents it on the board: the newest written file. */
 export const representative = (screen: DesignScreen): string | null =>
@@ -71,16 +97,22 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
     }
   }, []);
 
-  const zoom = Math.min(0.42, 380 / frame.width);
+  const [boxW, setBoxW] = useState(1100);
+  const boxRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) new ResizeObserver(([e]) => setBoxW(e?.contentRect.width ?? 1100)).observe(node);
+  }, []);
+  const ordered = useMemo(() => flowOrder(screens, arrows), [screens, arrows]);
+  const zoom = Math.max(0.18, Math.min(0.6, (boxW - 80 - GAP * (MAX_COLS - 1)) / MAX_COLS / frame.width));
   const cw = frame.width * zoom;
   const ch = frame.height * zoom;
+  const COLS = Math.max(1, Math.min(5, Math.floor((boxW - 80 + GAP) / (cw + GAP))));
   const pos = useMemo(
     () =>
-      new Map(screens.map((s, i) => [s.slug, { x: 40 + (i % COLS) * (cw + GAP), y: 40 + Math.floor(i / COLS) * (ch + CAPTION + GAP) }])),
-    [screens, cw, ch],
+      new Map(ordered.map((s, i) => [s.slug, { x: 40 + (i % COLS) * (cw + GAP), y: 40 + Math.floor(i / COLS) * (ch + CAPTION + GAP) }])),
+    [ordered, cw, ch, COLS],
   );
-  const width = 80 + Math.min(COLS, screens.length) * (cw + GAP);
-  const height = 80 + Math.ceil(screens.length / COLS) * (ch + CAPTION + GAP);
+  const width = 80 + Math.min(COLS, ordered.length) * (cw + GAP);
+  const height = 80 + Math.ceil(ordered.length / COLS) * (ch + CAPTION + GAP);
 
   const click = (slug: string) => {
     if (!connect) return onOpen(slug);
@@ -144,7 +176,7 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
           ))}
         </ul>
       </div>
-      <div className="canvas-grid min-h-0 flex-1 overflow-auto">
+      <div ref={boxRef} className="canvas-grid min-h-0 flex-1 overflow-auto">
         <div className="relative" style={{ width, height }}>
           <svg className="pointer-events-none absolute inset-0" width={width} height={height} aria-hidden>
             <defs>
@@ -154,9 +186,15 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
             </defs>
             {arrows.map((a) => {
               const g = path(a);
-              return g
-                ? <path key={`${a.from}>${a.to}`} d={g.d} fill="none" stroke="var(--brand)" strokeWidth="2" markerEnd="url(#arrow-head)" />
-                : null;
+              if (!g) return null;
+              return (
+                <g key={`${a.from}>${a.to}`}>
+                  <path d={g.d} fill="none" stroke="var(--brand)" strokeWidth="2" markerEnd="url(#arrow-head)" />
+                  {a.label
+                    ? <text x={g.mx} y={g.my - 10} textAnchor="middle" fontSize="12" fontWeight="500" fill="var(--fg)">{a.label}</text>
+                    : null}
+                </g>
+              );
             })}
           </svg>
           {screens.map((s) => {

@@ -20,7 +20,7 @@ export default function PricingPage() {
       <div id="start" className="mt-14 scroll-mt-24">
         <PricingTable />
       </div>
-      <section className="mt-28 grid gap-10 lg:grid-cols-[1fr_2fr]" aria-labelledby="faq">
+      <section className="mt-28 grid gap-10 grid-cols-1 lg:grid-cols-[1fr_2fr]" aria-labelledby="faq">
         <h2 id="faq" className="font-display text-3xl font-semibold tracking-tight">
           Questions, answered
         </h2>

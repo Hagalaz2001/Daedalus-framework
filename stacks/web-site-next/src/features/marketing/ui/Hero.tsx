@@ -49,7 +49,7 @@ function ProductPreview() {
 export function Hero() {
   return (
     <section className="pt-16 pb-12 sm:pt-24">
-      <Container className="grid items-center gap-14 lg:grid-cols-[1.05fr_1fr]">
+      <Container className="grid items-center gap-14 grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <h1 className="font-display text-5xl leading-[1.02] font-semibold tracking-tight sm:text-7xl">
             Write it down.

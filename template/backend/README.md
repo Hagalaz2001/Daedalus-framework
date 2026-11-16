@@ -1,7 +1,8 @@
 # Backend
 
-Hono on Deno, PostgreSQL through Drizzle, accounts through Better Auth. Contract first: `contracts/openapi.yaml` is the
-API; the backend validates every request against it and a test fails when a route and the contract disagree.
+Hono on Deno, PostgreSQL through Drizzle (or MongoDB through Mongoose: `--db mongodb`), accounts through Better Auth.
+Contract first: `contracts/openapi.yaml` is the API; the backend validates every request against it and a test fails
+when a route and the contract disagree.
 
 ```
 deno task --cwd backend dev          # watch mode on http://localhost:8787 (PGlite database in backend/.data/)

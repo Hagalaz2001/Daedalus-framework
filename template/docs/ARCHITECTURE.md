@@ -1,7 +1,7 @@
 # Architecture
 
-The rules every app in this repository follows, whatever its stack. They are the same on purpose: a person or an
-agent who knows one app can work in another. What can be checked by a script is checked by `deno task check`.
+The rules every app in this repository follows, whatever its stack. They are the same on purpose: a person or an agent
+who knows one app can work in another. What can be checked by a script is checked by `deno task check`.
 
 ## 1. Shape of the repository
 
@@ -53,8 +53,8 @@ Boundary rules, enforced by `deno task lint:boundaries`:
 
 - Code outside a feature imports it only through its public entry (`features/<name>` or `features/<name>/index` in
   TypeScript, `features/<name>/<name>.dart` in Dart).
-- A feature never imports another feature's internals. If two features need the same code, move that code to
-  `shared/` (TypeScript) or `core/` (Dart).
+- A feature never imports another feature's internals. If two features need the same code, move that code to `shared/`
+  (TypeScript) or `core/` (Dart).
 - `shared/` and `core/` never import a feature.
 - Application wiring (routes, `main`, providers at the root) is the only place that composes features.
 
@@ -99,22 +99,22 @@ are the checks. `deno task lint:boundaries` covers TypeScript and Dart only.
 
 ## 5. Error handling
 
-- Handle errors at boundaries: the data layer converts network and parsing failures into one typed error
-  (kind, user-facing message, optional retry hint). Backend routes validate input at the edge and return the
-  contract's `Error` shape.
-- State exposes `loading | data | empty | error` explicitly; UI renders each of the four. No screen shows a blank
-  area while loading or a raw exception.
+- Handle errors at boundaries: the data layer converts network and parsing failures into one typed error (kind,
+  user-facing message, optional retry hint). Backend routes validate input at the edge and return the contract's `Error`
+  shape.
+- State exposes `loading | data | empty | error` explicitly; UI renders each of the four. No screen shows a blank area
+  while loading or a raw exception.
 - Never swallow an error silently. Either handle it (retry, fallback, message) or let it reach the boundary.
 - Do not log secrets, tokens or personal data.
 
 ## 6. Testing pyramid
 
-| Level | What | Where | How many |
-|---|---|---|---|
-| Unit | pure logic, mappers, state | next to the code | many, fast |
-| Component / widget | one screen with a fake data layer, all four states | next to the code | one per screen |
-| Contract / API | backend routes through `app.request(...)` against an in-memory database | `backend/test/` | one per operation |
-| End to end | one happy path per app in the real runtime | per stack README | few |
+| Level              | What                                                                    | Where            | How many          |
+| ------------------ | ----------------------------------------------------------------------- | ---------------- | ----------------- |
+| Unit               | pure logic, mappers, state                                              | next to the code | many, fast        |
+| Component / widget | one screen with a fake data layer, all four states                      | next to the code | one per screen    |
+| Contract / API     | backend routes through `app.request(...)` against an in-memory database | `backend/test/`  | one per operation |
+| End to end         | one happy path per app in the real runtime                              | per stack README | few               |
 
 Every feature ships unit and component tests. A change to the contract updates the backend test first. Tests use fakes
 of the data layer, not the network.
@@ -135,6 +135,6 @@ of the data layer, not the network.
 - No shared UI code between stacks; share the contract and the tokens.
 - No new top-level folder or app without `deno task add-app` and an ADR when it changes the rules above.
 
-Decisions that changed or added to these rules are recorded in `docs/adr/`. Related documents: `docs/DATABASE.md`
+Decisions that changed or added to these rules are recorded in `docs/adr/`. Related documents: `docs/diagrams/README.md` (diagram index), `docs/DATABASE.md`
 (schema and migrations), `docs/MODULES.md` (optional feature modules), `docs/OPERATIONS.md` (deploy, monitoring,
 backups) and `docs/diagrams/`.

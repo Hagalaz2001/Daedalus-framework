@@ -30,7 +30,8 @@ Read `docs/RESPONSIBLE-AI.md`. A human owns every change; never deploy, move mon
   `deno test`; dependencies live in `deno.json` workspaces and `deno.lock`. Never run or write npm, npx, pnpm or yarn
   commands, and never create their lockfiles or workspace files. `npm:` specifiers in Deno imports and dependency
   lists in `package.json` are fine. `deno task lint:deno-only` enforces this. `deno task check` also runs `deno audit`; fix or upgrade a
-  vulnerable dependency instead of ignoring it. Pin `next`, `astro`, `react`, `react-dom`, `vue`, `hono` and
+  vulnerable dependency instead of ignoring it. The only exception is a dev-only advisory a stack lists under
+  `audit.ignore` in its manifest with a reason; check prints those on every run. Never add a global ignore. Pin `next`, `astro`, `react`, `react-dom`, `vue`, `hono` and
   `better-auth` to exact versions (no `^`, `~` or ranges).
 - **Every screen has loading, empty and error states, and every feature ships tests.**
 

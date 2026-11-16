@@ -3,7 +3,7 @@ import type { Db } from "../../shared/db/client.ts";
 import { notFound } from "../../shared/errors/problem.ts";
 import { slicePage } from "../../shared/http/pagination.ts";
 import * as repo from "./repository.ts";
-import type { NoteRow } from "./schema.ts";
+import type { NoteRow } from "./repository.ts";
 
 // API shapes come from contracts/openapi.yaml through `deno task sync`; never hand-write them.
 export type Note = Schemas["Note"];

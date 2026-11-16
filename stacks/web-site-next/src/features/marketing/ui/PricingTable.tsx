@@ -22,7 +22,7 @@ export function PricingTable() {
         />
         <Badge tone="success">Save 20%</Badge>
       </div>
-      <div className="mt-10 grid items-start gap-6 lg:grid-cols-3">
+      <div className="mt-10 grid items-start gap-6 grid-cols-1 lg:grid-cols-3">
         {plans.map((p) => {
           const price = billing === 'yearly' ? p.yearly : p.monthly
           return (

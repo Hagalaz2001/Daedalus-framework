@@ -52,7 +52,8 @@ export function createFakeProvider(delayMs = Number(Deno.env.get("STUDIO_FAKE_DE
       let result: unknown;
       if (input.tool.name === "write_designs") {
         const brief = fenced(input.user, "BRIEF") ?? input.user;
-        const index = Number(between(input.user, /Design variant (\d+) of/) ?? 1) - 1;
+        const direction = between(input.user, /direction "[^"]+" \(d(\d+)\)/);
+        const index = Number(between(input.user, /Design variant (\d+) of/) ?? direction ?? 1) - 1;
         result = { files: fixtureDesigns(brief, filesFrom(input.user), tokensFor(input), index) };
       } else if (input.tool.name === "write_patch") {
         result = patchFor(fenced(input.user, "INSTRUCTION") ?? "");

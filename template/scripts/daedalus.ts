@@ -25,7 +25,9 @@ if (!daedalus) {
 }
 // `studio` runs the Daedalus design studio against this project; everything else goes to the generator.
 const [cmd, ...rest] = args;
-const invocation = cmd === "studio"
+const invocation = cmd === "doctor"
+  ? ["task", "--cwd", join(daedalus, "studio"), "doctor", ...rest]
+  : cmd === "studio"
   ? ["task", "--cwd", join(daedalus, "studio"), "start", "--project", Deno.cwd(), ...rest]
   : ["run", "-A", join(daedalus, "new-project.ts"), cmd === "module" ? "add-module" : cmd === "pack" ? "add-pack" : "add-app", ...(cmd === "module" || cmd === "pack" ? rest : args), "--project", Deno.cwd()];
 const r = new Deno.Command(Deno.execPath(), { args: invocation, stdout: "inherit", stderr: "inherit" }).outputSync();

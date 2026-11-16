@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "../../../../packages/ui/src/styles/tokens.css";
+@import "../../../../packages/ui/src/styles/index.css";
+@import "./prose.css";
+/* Tailwind skips node_modules, so name the kit's source for class detection. */
+@source "../../../../packages/ui/src";

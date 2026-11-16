@@ -16,7 +16,7 @@ flowchart LR
     WORK["Job workers"]
   end
   subgraph Services
-    DB[("PostgreSQL<br/>PGlite locally")]
+    DB[("PostgreSQL or MongoDB<br/>PGlite or a managed mongod locally")]
     S3[("Object storage<br/>S3-compatible")]
     MAIL["Email provider"]
     PUSH["Push: Expo, FCM, web push"]
@@ -38,6 +38,6 @@ flowchart LR
   API -.-> OBS
 ```
 
-One contract feeds every client, so adding a client never changes the backend. Bytes of files go straight between clients
-and object storage; the API only hands out signed URLs. Jobs, mail, push, payments and telemetry appear when their
-module is installed ([../MODULES.md](../MODULES.md)).
+One contract feeds every client, so adding a client never changes the backend. Bytes of files go straight between
+clients and object storage; the API only hands out signed URLs. Jobs, mail, push, payments and telemetry appear when
+their module is installed ([../MODULES.md](../MODULES.md)).

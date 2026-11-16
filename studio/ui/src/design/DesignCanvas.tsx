@@ -74,7 +74,7 @@ function Frame({ slug, item, html, width, height, radius, zoom, selected, warnin
   const blocked = item.info && !item.info.ok;
   const { ref, near } = useNearViewport<HTMLDivElement>();
   return (
-    <figure className="m-0 shrink-0">
+    <figure className="m-0 my-auto shrink-0">
       <button
         type="button"
         onClick={onSelect}

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/vue'
+import { render, screen } from './testing'
 import userEvent from '@testing-library/user-event'
 import { Home, Settings } from '@lucide/vue'
 import { defineComponent, h, ref } from 'vue'

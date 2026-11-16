@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/vue'
+import { cleanup } from './testing'
 import { afterEach } from 'vitest'
 
 afterEach(cleanup)

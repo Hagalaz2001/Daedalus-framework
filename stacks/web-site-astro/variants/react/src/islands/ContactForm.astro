@@ -1,0 +1,10 @@
+---
+import ContactForm from './react/ContactForm'
+
+interface Props {
+  endpoint: string
+}
+const { endpoint } = Astro.props
+---
+
+<ContactForm client:load endpoint={endpoint} />

@@ -1,9 +1,8 @@
-import { and, asc, eq } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { forbidden, unauthorized } from "../errors/problem.ts";
 import type { Config } from "../config/config.ts";
 import type { Db } from "../db/client.ts";
-import { member } from "../db/auth-schema.ts";
+import { findMembership } from "../db/membership.ts";
 import type { AppEnv } from "../http/types.ts";
 import type { AuthLike, AuthUser } from "./auth.ts";
 
@@ -36,12 +35,7 @@ export async function requireTenant(c: Context<AppEnv>, db: Db): Promise<Tenant>
   const user = requireUser(c);
   const wanted = c.req.header("x-organization-id");
   if (wanted && !UUID.test(wanted)) throw forbidden("X-Organization-Id must be a UUID");
-  const [row] = await db
-    .select({ organizationId: member.organizationId, role: member.role })
-    .from(member)
-    .where(and(eq(member.userId, user.id), wanted ? eq(member.organizationId, wanted) : undefined))
-    .orderBy(asc(member.id))
-    .limit(1);
+  const row = await findMembership(db, user.id, wanted);
   if (!row) {
     throw forbidden(wanted ? "You are not a member of this organization" : "You do not belong to any organization");
   }

@@ -27,7 +27,7 @@ export function PlanDialog({ plan, title, busy, error, onWrite, onCancel }: {
             {changed.length} {changed.length === 1 ? "file" : "files"} to write. Nothing is written until you confirm.
           </span>
         </header>
-        <div className="grid min-h-0 flex-1 grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)]">
           <ul className="overflow-auto border-r border-border p-2">
             {plan.files.map((f) => (
               <li key={f.path}>

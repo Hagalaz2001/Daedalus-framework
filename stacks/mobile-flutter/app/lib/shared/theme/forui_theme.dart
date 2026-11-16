@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 
-/// Forui theme built from design/tokens.json (through app_core's AppColors), light and dark.
+/// Forui theme built from design/tokens.json (through app_core: AppColors for light, AppColorsDark for dark).
 ///
-/// The dark palette is derived from the light one: the ink colour becomes the canvas, paper becomes the text and
-/// accents are lifted for contrast. design/tokens.json cannot override it on the Flutter side yet.
+/// Presets set the dark palette with `colorDark`; the tokens script derives any missing role.
 FThemeData appFTheme(Brightness brightness) => FThemeData(
       colors: _colors(brightness),
       touch: true,
@@ -72,23 +71,18 @@ class _Palette {
         danger: AppColors.danger,
       );
 
-  factory _Palette.dark() {
-    Color lift(Color c) => Color.lerp(c, Colors.white, 0.3)!;
-    final surface = Color.lerp(AppColors.text, Colors.black, 0.35)!;
-    final primary = lift(AppColors.primary);
-    return _Palette(
-      primary: primary,
-      onPrimary: _on(primary),
-      surface: surface,
-      surfaceMuted: Color.lerp(surface, Colors.white, 0.07)!,
-      text: Color.lerp(AppColors.surface, surface, 0.04)!,
-      textMuted: Color.lerp(AppColors.surface, surface, 0.35)!,
-      border: Color.lerp(surface, Colors.white, 0.16)!,
-      success: lift(AppColors.success),
-      warning: lift(AppColors.warning),
-      danger: lift(AppColors.danger),
-    );
-  }
+  factory _Palette.dark() => const _Palette(
+        primary: AppColorsDark.primary,
+        onPrimary: AppColorsDark.onPrimary,
+        surface: AppColorsDark.surface,
+        surfaceMuted: AppColorsDark.surfaceMuted,
+        text: AppColorsDark.text,
+        textMuted: AppColorsDark.textMuted,
+        border: AppColorsDark.border,
+        success: AppColorsDark.success,
+        warning: AppColorsDark.warning,
+        danger: AppColorsDark.danger,
+      );
 
   final Color primary, onPrimary, surface, surfaceMuted, text, textMuted, border, success, warning, danger;
 }

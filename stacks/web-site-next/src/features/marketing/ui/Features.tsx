@@ -7,7 +7,7 @@ export function Features() {
     <section className="py-24">
       <Container>
         <h2 className="max-w-2xl font-display text-4xl font-semibold tracking-tight sm:text-5xl">Built for the moment you need the note back.</h2>
-        <div className="mt-14 grid gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-3">
+        <div className="mt-14 grid gap-px overflow-hidden rounded-lg border border-border bg-border grid-cols-1 md:grid-cols-3">
           <div className="bg-surface p-8 md:col-span-2 md:p-10">
             <Zap className="size-6 text-primary" aria-hidden />
             <h3 className="mt-5 font-display text-2xl font-semibold">{features.search.title}</h3>

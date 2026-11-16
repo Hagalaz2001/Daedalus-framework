@@ -1,7 +1,9 @@
 import { and, eq, ilike, isNull } from "drizzle-orm";
 import type { Db } from "../../shared/db/client.ts";
-import { keyset } from "../../shared/http/pagination.ts";
+import { keyset } from "../../shared/db/keyset.ts";
 import { type NoteRow, notes } from "./schema.ts";
+
+export type { NoteRow };
 
 // Data access only: SQL lives here, never in routes. Every function takes the organization id and filters by it,
 // so a handler cannot read or write another tenant's rows by forgetting a condition.
@@ -24,6 +26,12 @@ export async function list(
     )
     .orderBy(page.order)
     .limit(opts.limit + 1);
+}
+
+/** Including soft-deleted rows: for tests and admin tools, never for request handling. */
+export async function rawGet(db: Db, id: string): Promise<NoteRow | undefined> {
+  const [row] = await db.select().from(notes).where(eq(notes.id, id));
+  return row;
 }
 
 export async function find(db: Db, organizationId: string, id: string): Promise<NoteRow | undefined> {

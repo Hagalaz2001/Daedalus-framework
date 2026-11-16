@@ -1,5 +1,5 @@
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query'
-import { render } from '@testing-library/vue'
+import { render } from '@app/ui-vue/testing'
 import { createPinia } from 'pinia'
 import type { Component } from 'vue'
 import { createMemoryHistory } from 'vue-router'

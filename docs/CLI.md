@@ -18,10 +18,12 @@ The `daedalus` command (`cli.ts`). Install: `deno install -g -A -n daedalus <pat
 | `daedalus describe <stack\|module\|pack\|preset> <id>` | Manifest and README of one item. |
 | `daedalus docs <query>` | Search Daedalus documentation. |
 | `daedalus studio [--project DIR]` | Run the design studio. |
+| `daedalus doctor [args]` | Check the machine (toolchains, local AI); exit 1 when below the minimum. |
 | `daedalus mcp` | MCP server on stdio ([INTEGRATIONS.md](INTEGRATIONS.md)). |
 
 `new`, `add-app`, `add-module` and `add-pack` take `--no-check` to skip the final `deno task check`. `new` takes `--yes`
-to accept defaults instead of asking.
+to accept defaults instead of asking, and `--db postgres|mongodb` (default `postgres`; modules that need Postgres are refused
+with `mongodb`, exit 2).
 
 ## Non-interactive and JSON mode
 
@@ -50,7 +52,7 @@ Step     { cmd: string, cwd: string, ok: boolean, exitCode: number, tail?: strin
 
 Failure  { ok: false, error: { kind: "usage" | "step-failed" | "internal", message: string }, steps: Step[] }
 
-new      { ok: true, command: "new", dir, stacks: string[], apps: { stack, dir }[], backend: boolean,
+new      { ok: true, command: "new", dir, stacks: string[], apps: { stack, dir }[], backend: boolean, db: string,
            modules: string[], packs: string[], ui: string, next: string[], steps }
 add-app  { ok: true, command: "add-app", dir, app: { stack, dir }, steps }
 add-module / add-pack

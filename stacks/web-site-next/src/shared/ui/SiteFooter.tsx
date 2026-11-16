@@ -13,7 +13,7 @@ export async function SiteFooter() {
   const status = await getApiStatus()
   return (
     <footer className="mt-32 border-t border-border bg-surface-muted/50">
-      <Container className="grid gap-12 py-14 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+      <Container className="grid gap-12 py-14 grid-cols-1 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <p className="font-display text-xl font-semibold">{siteConfig.name}</p>
           <p className="mt-3 max-w-xs text-text-muted">{siteConfig.tagline}.</p>

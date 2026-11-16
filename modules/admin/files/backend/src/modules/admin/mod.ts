@@ -3,7 +3,8 @@ import type { PgColumn } from "drizzle-orm/pg-core";
 import { Hono } from "hono";
 import { requirePlatformAdmin } from "../../shared/auth/session.ts";
 import { badRequest, notFound } from "../../shared/errors/problem.ts";
-import { keyset, pageParams, slicePage } from "../../shared/http/pagination.ts";
+import { keyset } from "../../shared/db/keyset.ts";
+import { pageParams, slicePage } from "../../shared/http/pagination.ts";
 import type { AppEnv, Module } from "../../shared/http/types.ts";
 import { describe, type Resource, resources } from "./resources.ts";
 

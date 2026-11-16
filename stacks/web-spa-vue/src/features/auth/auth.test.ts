@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/vue'
+import { screen } from '@app/ui-vue/testing'
 import userEvent from '@testing-library/user-event'
 import { renderScreen } from '@/test-utils'
 import { validateCredentials } from './model/validation'

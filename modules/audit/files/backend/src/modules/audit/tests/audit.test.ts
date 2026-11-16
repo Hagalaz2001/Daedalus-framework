@@ -1,6 +1,4 @@
 import { assert, assertEquals } from "@std/assert";
-import { member } from "../../../shared/db/auth-schema.ts";
-import { uuidv7 } from "../../../shared/db/columns.ts";
 import { createTestApp } from "../../../shared/testing.ts";
 
 const t = await createTestApp();
@@ -29,13 +27,7 @@ Deno.test("successful writes are recorded with actor, operation, entity and requ
 Deno.test("only owners and admins read the log; a plain member gets 403", async () => {
   const orgId = (await (await t.app.request("/me", { headers: owner.headers })).json()).organizations[0].id;
   const id = (await (await t.app.request("/me", { headers: colleague.headers })).json()).id;
-  await t.db.insert(member).values({
-    id: uuidv7(),
-    organizationId: orgId,
-    userId: id,
-    role: "member",
-    createdAt: new Date(),
-  });
+  await t.addMember(orgId, id, "member");
   const res = await t.app.request("/audit-log", { headers: { ...colleague.headers, "x-organization-id": orgId } });
   assertEquals(res.status, 403);
 });

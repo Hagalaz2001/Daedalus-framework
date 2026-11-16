@@ -2,6 +2,8 @@
 
 The AI-assisted framework for building web, mobile and desktop apps. You steer.
 
+Website and docs: https://hagalaz2001.github.io/Daedalus-framework/
+
 > **AI-assisted framework.** Daedalus is an AI-assisted development framework. AI output can be wrong, insecure or non-compliant. You are responsible for everything you ship; the maintainers, contributors and AI providers are not liable. Packs and checklists are aids, not legal, financial, medical, safety or regulatory advice. See [DISCLAIMER.md](DISCLAIMER.md).
 
 Daedalus is a project generator and framework for products that need a backend, a website, a mobile app or a desktop app, built
@@ -17,7 +19,7 @@ checks and workflow in every one, with AI agents as part of the team.
 Requirements: [Deno](https://deno.com) 2.9 or newer, Git. Flutter SDK for Flutter apps, Rust for desktop apps.
 
 ```
-git clone https://github.com/daedalus-framework/daedalus-framework.git daedalus
+git clone https://github.com/Hagalaz2001/Daedalus-framework.git daedalus
 cd daedalus
 deno install -g -A -n daedalus cli.ts      # optional: puts `daedalus` on your PATH
 daedalus new ../shop --name "Acme Shop" --id com.example.shop \
@@ -31,10 +33,11 @@ project (the same as the `deno task` equivalents below).
 | Flag | Values | Default |
 |---|---|---|
 | `--web` | `spa`, `spa-vue`, `site`, `site-next`, `none`; combinable with commas | `none` |
-| `--islands` | `react`, `vue`: UI framework for interactive parts of the Astro site | `react` |
+| `--islands` | `react`, `vue`: UI framework for interactive parts of the Astro site (only `site` is affected) | `react` |
 | `--mobile` | `flutter`, `rn`, `none` | `none` |
 | `--desktop` | `gpui`, `tauri`, `none` | `none` |
 | `--backend` | `hono`, `none` | `hono` |
+| `--db` | `postgres`, `mongodb` (needs the backend). Modules that need Postgres are refused with `mongodb` (exit 2). | `postgres` |
 | `--modules` | comma-separated module names from `modules/` (see `template/docs/MODULES.md`) | none |
 | `--packs` | comma-separated domain packs from `packs/` ([packs/README.md](packs/README.md)) | none |
 | `--ui` | `clean`, `editorial` (token preset) | `clean` |
@@ -116,7 +119,8 @@ Change an API in this order: contract, `sync`, backend with a test, then each ap
 | `deno task add-app <stack> <name>` | Add another app of any stack |
 | `deno task add-module <name>` | Apply an optional feature module |
 | `deno task add-pack <name>` | Apply a domain pack |
-| `deno task studio` | Run the design studio from the Daedalus checkout against this project |
+| `deno task studio` | Run the design studio from the Daedalus checkout against this project (local models: [docs/LOCAL-AI.md](docs/LOCAL-AI.md)) |
+| `deno task doctor` | Check this machine: toolchains and local AI; exit 1 below the minimum |
 | `deno task secrets` | Scan for secrets (also the pre-commit hook) |
 | `deno audit` | Fail on known vulnerabilities in dependencies (part of `deno task check`) |
 | `deno task git:setup` | Set repository identity, hooks and remote |
@@ -152,6 +156,7 @@ Each `stacks/<id>/stack.json` describes one stack:
 | `install`, `sync` | Commands run after copying, and during `deno task sync` |
 | `tokens` | Script (copied to `scripts/tokens/`) or a command that writes the app's theme from `design/tokens.json` |
 | `check` | Commands `deno task check` runs for the app |
+| `audit` | `{ "ignore": ["GHSA-..."], "reason": "..." }`: advisories `deno audit` may report for this stack (dev-only tooling); the reason is required and printed on every check. There is no global ignore list. |
 | `boundaries` | `{ "lang": "ts" or "dart", "src": "<folder>" }` for `lint:boundaries` |
 | `requires` | `{ "backend": "optional" }` |
 
@@ -169,7 +174,7 @@ AGENTS.md tells agents not to reach for npm.
 
 `deno task check` runs `deno audit` and fails on known vulnerabilities, in generated projects, in this repository and in
 CI. Frameworks are pinned to exact versions, with no `^`, `~` or range: `next`, `astro`, `react`, `react-dom`, `vue`,
-`hono` and `better-auth`. `deno task lint:deno-only` fails on a range for these in any `package.json`. Upgrade them
+`hono` and `better-auth`. `deno task lint:deno-only` fails on a range for these in any `package.json`. It also fails when two manifests in the project pin different versions of the same framework (for example `better-auth` in the web app and in the backend). Upgrade them
 deliberately: change the version, run `deno task check`, read the changelog. Deno's 24-hour minimum dependency age
 stays on. Flutter and Rust use their own tools, called from `deno task`.
 

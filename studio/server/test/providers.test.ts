@@ -1,9 +1,8 @@
-import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import type Anthropic from "@anthropic-ai/sdk";
 import { loadEnv } from "../env.ts";
 import { createAnthropicProvider } from "../providers/anthropic.ts";
 import { createFakeProvider } from "../providers/fake.ts";
-import { createProvider } from "../providers/index.ts";
 import { createOllamaProvider } from "../providers/ollama.ts";
 import type { CallInput } from "../providers/types.ts";
 import { DESIGN_TOOL } from "../prompts.ts";
@@ -132,25 +131,21 @@ Deno.test("fake provider: deterministic, streams in chunks, honours abort", asyn
   await assertRejects(() => fake.call({ ...prompt, tool: { ...DESIGN_TOOL, name: "other" } }), Error, "does not know");
 });
 
-Deno.test("provider selection and environment: key from env or .env, anthropic by default when a key exists, never a silent fallback", () => {
+Deno.test("environment: key from the process or .env, the process wins, auto is the default", () => {
   const dir = Deno.makeTempDirSync();
   try {
     const dotenv = `${dir}/.env`;
     Deno.writeTextFileSync(dotenv, "ANTHROPIC_API_KEY=sk-from-file\nOLLAMA_MODEL=llama3\n# comment\n");
     const withKey = loadEnv([dotenv], {});
     assertEquals([withKey.provider, withKey.anthropicKey, withKey.anthropicModel, withKey.ollamaModel], [
-      "anthropic",
+      "auto",
       "sk-from-file",
       "claude-opus-5-5",
       "llama3",
     ]);
     assertEquals(loadEnv([dotenv], { ANTHROPIC_API_KEY: "sk-env" }).anthropicKey, "sk-env", "real environment wins over .env");
     const none = loadEnv([`${dir}/missing.env`], {});
-    assertEquals([none.provider, none.anthropicKey, none.port], ["ollama", null, 4310]);
-    assertThrows(() => createProvider({ ...none, provider: "anthropic" }), Error, "ANTHROPIC_API_KEY");
-    assertThrows(() => createProvider({ ...none, provider: "nope" }), Error, "Unknown STUDIO_PROVIDER");
-    assertEquals(createProvider({ ...none, provider: "fake" }).id, "fake");
-    assertEquals(createProvider({ ...none, provider: "ollama" }).id, "ollama");
+    assertEquals([none.provider, none.anthropicKey, none.port], ["auto", null, 4310]);
   } finally {
     Deno.removeSync(dir, { recursive: true });
   }

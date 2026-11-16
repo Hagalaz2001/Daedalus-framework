@@ -14,9 +14,17 @@ import { DesignDirections } from "./design/DesignDirections.tsx";
 import { EditPanel } from "./design/EditPanel.tsx";
 import { ExportPanel } from "./design/ExportPanel.tsx";
 import { FlowBoard } from "./design/FlowBoard.tsx";
+import { ModelPanel, NoAiBanner } from "./design/ModelPanel.tsx";
 import { PlanDialog } from "./design/PlanDialog.tsx";
 import { SystemView } from "./design/SystemView.tsx";
-import { designApi as api, type DesignListWithJobs, type PlanView, type StudioConfig } from "./design/designApi.ts";
+import {
+  designApi as api,
+  type DesignListWithJobs,
+  type LocalProgress,
+  type PlanView,
+  type ProviderState,
+  type StudioConfig,
+} from "./design/designApi.ts";
 import { type BridgeMessage, selectorOfInstruction } from "./design/designBridge.ts";
 import { clearLiveWrite, publishLiveWrite, wasStreamed } from "./design/designStreamStore.ts";
 
@@ -93,6 +101,9 @@ export function Studio() {
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   const [theme, toggleTheme] = useTheme();
+  const [providers, setProviders] = useState<ProviderState | null>(null);
+  const [modelOpen, setModelOpen] = useState(false);
+  const [localProgress, setLocalProgress] = useState<LocalProgress | null>(null);
 
   const observer = useRef<ResizeObserver | null>(null);
   const canvasRef = useCallback((node: HTMLElement | null) => {
@@ -115,14 +126,16 @@ export function Studio() {
       inFlight.current = false;
     }
   }, []);
+  const reloadProviders = useCallback(() => api.providers().then(setProviders, () => undefined), []);
   const reloadConfig = useCallback(() => api.config().then(setConfig, (r) => setError(message(r))), []);
 
   useEffect(() => {
     void reloadConfig();
+    void reloadProviders();
     void refresh();
     const timer = setInterval(() => document.visibilityState !== "hidden" && void refresh(), REFRESH_MS);
     return () => clearInterval(timer);
-  }, [refresh, reloadConfig]);
+  }, [refresh, reloadConfig, reloadProviders]);
 
   // Live writes: partial HTML of the file the model is writing right now builds itself on the artboard.
   useEffect(() => {
@@ -134,6 +147,10 @@ export function Studio() {
         if (data.done) setTimeout(() => clearLiveWrite(data.key!), 15_000);
       }
       if (data.type === "job") void refresh();
+      if (data.type === "local-ai") {
+        setLocalProgress((data as unknown as { progress: LocalProgress | null }).progress);
+        void reloadProviders();
+      }
     };
     return () => source.close();
   }, [refresh]);
@@ -239,7 +256,7 @@ export function Studio() {
 
   // --- frame size and zoom ------------------------------------------------------------------------------------
   const frame = device === "auto" ? TARGET_FRAMES[screen?.manifest.target ?? "web-desktop"] : FRAMES[device];
-  const fit = Math.min(1, Math.max(0.25, Math.min((canvasSize.w - 96) / (frame.width * 1.3), (canvasSize.h - 140) / frame.height)));
+  const fit = Math.min(1, Math.max(0.25, Math.min((canvasSize.w - 96) / (frame.width * 1.12), (canvasSize.h - 140) / frame.height)));
   const zoom = manualZoom ?? fit;
   const stepZoom = (dir: 1 | -1) =>
     setManualZoom(dir === 1 ? (ZOOMS.find((z) => z > zoom + 0.01) ?? 1) : ([...ZOOMS].reverse().find((z) => z < zoom - 0.01) ?? 0.25));
@@ -376,8 +393,8 @@ export function Studio() {
   if (!config || !list) return <div className="grid h-full place-items-center text-foreground-subtle">{error ?? "Loading studio..."}</div>;
 
   return (
-    <div className="grid h-full grid-rows-[52px_minmax(0,1fr)]">
-      <header className="flex items-center gap-4 border-b border-border bg-panel px-4">
+    <div className="flex h-full flex-col">
+      <header className="flex h-[52px] shrink-0 items-center gap-4 border-b border-border bg-panel px-4">
         <Logo />
         <span className="hidden rounded-md border border-border px-2 py-0.5 text-ui-xs text-foreground-subtle sm:inline">
           {config.name}
@@ -427,19 +444,28 @@ export function Studio() {
             {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
           </Button>
         </div>
-        <span
-          className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-ui-xs"
-          title={config.provider.note ?? undefined}
+        <button
+          type="button"
+          onClick={() => {
+            void reloadProviders();
+            setModelOpen(true);
+          }}
+          className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-ui-xs hover:bg-surface-hover"
+          title="Choose the AI model"
         >
-          <span className={cn("size-1.5 rounded-full", running ? "animate-pulse bg-warn" : "bg-ok")} aria-hidden />
-          {config.provider.label}
-          {config.provider.id === "ollama" ? <span className="text-warn">lower quality</span> : null}
-        </span>
+          <span
+            className={cn("size-1.5 rounded-full", running ? "animate-pulse bg-warn" : providers?.banner ? "bg-warn" : "bg-ok")}
+            aria-hidden
+          />
+          {providers?.options.find((o) => o.id === providers.active)?.label ?? config.provider.label}
+          {providers?.active === "ollama" || providers?.active === "lemonade" ? <span className="text-warn">local</span> : null}
+        </button>
       </header>
+      {providers?.banner === "no-ai" ? <NoAiBanner onOpen={() => setModelOpen(true)} /> : null}
 
       <div
         className={cn(
-          "grid min-h-0",
+          "grid min-h-0 flex-1",
           view === "variants" && hasScreen ? "grid-cols-[272px_minmax(0,1fr)_344px]" : "grid-cols-[272px_minmax(0,1fr)]",
         )}
       >
@@ -625,6 +651,16 @@ export function Studio() {
           : null}
       </div>
 
+      {modelOpen && providers
+        ? (
+          <ModelPanel
+            state={providers}
+            progress={localProgress}
+            onChange={() => void reloadProviders()}
+            onClose={() => setModelOpen(false)}
+          />
+        )
+        : null}
       {plan
         ? (
           <PlanDialog

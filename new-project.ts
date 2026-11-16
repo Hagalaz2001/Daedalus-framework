@@ -1,7 +1,7 @@
 // Daedalus generator: create a project from template/ + chosen stacks, or add an app, module or pack to one.
 // Usually run through `daedalus` (cli.ts); `deno run -A new-project.ts ...` is the same thing.
 //   deno run -A new-project.ts <dir> --name "Shop" --id com.yourco.shop --web spa|spa-vue|site|site-next|none (comma-combinable)
-//        --mobile flutter|rn|none --desktop gpui|tauri|none --backend hono|none [--ui clean|editorial] [--modules a,b] [--packs a,b]
+//        --mobile flutter|rn|none --desktop gpui|tauri|none --backend hono|none [--db postgres|mongodb] [--ui clean|editorial] [--modules a,b] [--packs a,b]
 //        [--git-name N --git-email E --remote URL] [--no-check]
 //   deno run -A new-project.ts add-module <name>[,<name>] [--project <dir>]   (same for add-pack)
 //   deno run -A new-project.ts add-app <stack> <name> [--project <dir>] [--id com.yourco.app] [--display "Name"]
@@ -12,8 +12,10 @@ import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 import {
   addToManifest,
+  applyDb,
   applyOverlay,
   assertValid,
+  DB_FLAVOURS,
   composeStack,
   copyTree,
   type Cmd,
@@ -206,6 +208,7 @@ function newProject(argv: string[]): Result {
       mobile: { type: "string" },
       desktop: { type: "string" },
       backend: { type: "string" },
+      db: { type: "string" },
       ui: { type: "string" },
       modules: { type: "string" },
       packs: { type: "string" },
@@ -229,6 +232,9 @@ function newProject(argv: string[]): Result {
   const desktop = values.desktop ?? (interactive ? ask("Desktop: gpui | tauri | none", "none") : "none");
   const backend = values.backend ?? (interactive ? ask("Backend: hono | none", "hono") : "hono");
   assertValid(backend === "hono" || backend === "none", `--backend must be hono or none, got: ${backend}`);
+  const db = values.db ?? "postgres";
+  assertValid((DB_FLAVOURS as readonly string[]).includes(db), `--db must be postgres or mongodb, got: ${db}`);
+  assertValid(db === "postgres" || backend === "hono", `--db ${db} needs --backend hono`);
   const ui = values.ui ?? "clean";
   const presetFile = join(here, "template/design/presets", `${ui}.json`);
   assertValid(existsSync(presetFile), `Unknown --ui preset "${ui}" (see template/design/presets)`);
@@ -249,6 +255,12 @@ function newProject(argv: string[]): Result {
     const wanted = selected(kind, values);
     const have = listOverlays(here, kind);
     for (const n of wanted) assertValid(have.includes(n), `Unknown ${kind} "${n}" (available: ${have.join(", ") || "none"})`);
+    if (kind === "module") {
+      for (const n of wanted) {
+        const need = (JSON.parse(readFileSync(join(here, "modules", n, "module.json"), "utf8")).requires ?? {}).db;
+        assertValid(!need || need === db, `module "${n}" needs --db ${need}, but --db ${db} was chosen`);
+      }
+    }
   }
   say(`Creating ${target} with: ${ids.join(", ") || "no apps"}${backend === "hono" ? " + hono backend" : ""}`);
 
@@ -263,7 +275,7 @@ function newProject(argv: string[]): Result {
   const dj = join(target, "deno.json");
   let denoJson = readJson<DenoJson>(dj);
   if (backend === "none") denoJson.workspace = (denoJson.workspace ?? []).filter((w) => w !== "./backend");
-  let manifest: Manifest = { version: 2, name: slug, backend: backend === "hono", ui, apps: [] };
+  let manifest: Manifest = { version: 2, name: slug, backend: backend === "hono", ui, db, apps: [] };
 
   const usedDirs = new Set<string>();
   const installs: { cwd: string; run: string }[] = [];
@@ -278,6 +290,7 @@ function newProject(argv: string[]): Result {
     const vars = varsFor({ appDir, displayName: name, bundleId });
     installs.push(...(s.install ?? []).map((c: Cmd) => resolveCmd(c, vars)));
   }
+  if (backend === "hono") installs.push(...applyDb(here, target, db));
   for (const kind of ["module", "pack"] as const) {
     const r = applyExtras(target, kind, selected(kind, values), manifest, denoJson);
     ({ manifest, denoJson } = r);
@@ -317,6 +330,7 @@ Next:
     modules: selected("module", values),
     packs: selected("pack", values),
     ui,
+    db,
     next: ["Describe the product under \"This project\" in AGENTS.md", "Ask which git identity and remote to use before the first commit"],
   };
 }

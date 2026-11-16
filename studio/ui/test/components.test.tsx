@@ -199,3 +199,53 @@ test("copy table: placeholders and plurals", () => {
     assert.ok(!leftovers.test(String(text)), String(text));
   }
 });
+
+test("flow order follows the arrows, then creation order, and survives cycles", async () => {
+  const { flowOrder } = await import("../src/design/FlowBoard.tsx");
+  const s = (slug: string, created: string) => ({ slug, manifest: { created } });
+  const screens = [s("overview", "2"), s("sign-in", "1"), s("orders", "3"), s("settings", "4")];
+  assert.deepEqual(flowOrder(screens, [{ from: "overview", to: "orders" }]).map((x) => x.slug), [
+    "sign-in",
+    "overview",
+    "settings",
+    "orders",
+  ]);
+  assert.deepEqual(flowOrder(screens, [{ from: "sign-in", to: "overview" }, { from: "overview", to: "orders" }]).map((x) => x.slug), [
+    "sign-in",
+    "settings",
+    "overview",
+    "orders",
+  ]);
+  assert.deepEqual(flowOrder(screens, []).map((x) => x.slug), ["sign-in", "overview", "orders", "settings"]);
+  assert.equal(flowOrder(screens, [{ from: "orders", to: "overview" }, { from: "overview", to: "orders" }]).length, 4);
+});
+
+test("model panel lists every provider with its state; the no-AI banner offers Local AI set-up", async () => {
+  const { ModelPanel, NoAiBanner } = await import("../src/design/ModelPanel.tsx");
+  const state = {
+    selected: "auto",
+    active: "lemonade",
+    banner: null,
+    options: [
+      {
+        id: "anthropic" as const,
+        label: "Anthropic claude-opus-5-5",
+        available: false,
+        detail: "Set ANTHROPIC_API_KEY in studio/.env to use it.",
+        note: null,
+      },
+      { id: "lemonade" as const, label: "Local AI (Lemonade)", available: true, detail: "Ready: user.M.", note: "Runs on this computer" },
+      { id: "fake" as const, label: "Demo fixtures", available: true, detail: "Deterministic sample designs.", note: null },
+    ],
+  };
+  const html = renderToStaticMarkup(<ModelPanel state={state} progress={null} onChange={noop} onClose={noop} />);
+  assert.match(html, /role="dialog"/);
+  assert.match(html, /Automatic/);
+  assert.match(html, /Local AI on this computer/);
+  assert.match(html, /Ready: user\.M\./);
+  assert.match(html, /in use/);
+  assert.match(html, /<input[^>]*disabled[^>]*name="provider"|name="provider"[^>]*disabled/, "an unavailable provider cannot be picked");
+  const banner = renderToStaticMarkup(<NoAiBanner onOpen={noop} />);
+  assert.match(banner, /No AI is configured/);
+  assert.match(banner, /Set up Local AI/);
+});

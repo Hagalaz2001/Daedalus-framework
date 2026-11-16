@@ -49,6 +49,28 @@ export function findUnpinned(packageJson: string): string[] {
   return out;
 }
 
+/** Exact versions declared for each PINNED framework in a package.json or deno.json text, as `name -> versions`. */
+export function pinnedVersions(file: string, text: string): Map<string, Set<string>> {
+  const found = new Map<string, Set<string>>();
+  const add = (name: string, version: string) => {
+    if (PINNED.includes(name) && /^\d/.test(version)) found.set(name, (found.get(name) ?? new Set()).add(version));
+  };
+  try {
+    const json = JSON.parse(text);
+    if (file.endsWith("package.json")) {
+      for (const g of ["dependencies", "devDependencies", "peerDependencies"]) for (const [n, v] of Object.entries(json[g] ?? {})) add(n, String(v));
+    } else {
+      for (const spec of Object.values(json.imports ?? {})) {
+        const m = /^npm:(@?[^@]+)@(\d[^/]*)/.exec(String(spec));
+        if (m) add(m[1], m[2]);
+      }
+    }
+  } catch {
+    // not JSON: nothing to read
+  }
+  return found;
+}
+
 export function listFiles(root: string, rel = ""): string[] {
   return readdirSync(join(root, rel), { withFileTypes: true }).flatMap((e) => {
     const r = rel ? `${rel}/${e.name}` : e.name;
@@ -60,10 +82,16 @@ export function listFiles(root: string, rel = ""): string[] {
 /** Returns one message per violation under `root`. `ignore` lists relative paths that may quote forbidden text. */
 export function scanDenoOnly(root: string, ignore: RegExp[] = []): string[] {
   const problems: string[] = [];
+  const versions = new Map<string, Map<string, string>>(); // framework -> version -> first file
   for (const f of listFiles(root)) {
     if (ignore.some((r) => r.test(f))) continue;
     if (FORBIDDEN_FILES.some((r) => r.test(f))) problems.push(`${f}: npm/pnpm/yarn file; use deno.json and deno.lock`);
     else if (TEXT.test(f) && !SKIP_FILES.test(f)) {
+      if (/(^|\/)(package|deno)\.json$/.test(f)) {
+        for (const [name, vs] of pinnedVersions(f, readFileSync(join(root, f), "utf8"))) {
+          for (const v of vs) versions.set(name, (versions.get(name) ?? new Map()).set(v, versions.get(name)?.get(v) ?? f));
+        }
+      }
       if (/(^|\/)package\.json$/.test(f)) {
         for (const u of findUnpinned(readFileSync(join(root, f), "utf8"))) problems.push(`${f}: ${u} must be an exact version (no ^, ~ or range)`);
       }
@@ -71,6 +99,9 @@ export function scanDenoOnly(root: string, ignore: RegExp[] = []): string[] {
         problems.push(`${f}:${h.line}: npm-family command (${h.text.slice(0, 80)}); use deno install / deno task / deno run`);
       }
     }
+  }
+  for (const [name, vs] of versions) {
+    if (vs.size > 1) problems.push(`${name}: mixed versions ${[...vs].map(([v, f]) => `${v} (${f})`).join(" vs ")}; use one version across the project`);
   }
   return problems;
 }

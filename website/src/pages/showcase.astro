@@ -1,0 +1,159 @@
+---
+import { getImage } from "astro:assets";
+import Base from "../layouts/Base.astro";
+import Themed from "../components/Themed.astro";
+import { shot, showcase, type ShowcaseItem, url } from "../lib/site";
+
+// Large variants for the lightbox, built at the same time as the thumbnails.
+async function big(path: string | undefined, shape: string) {
+  const src = shot(path);
+  if (!src) return undefined;
+  return (await getImage({ src, width: shape === "phone" ? 780 : 1600, format: "webp", quality: 82 })).src;
+}
+
+const platforms = await Promise.all(
+  showcase.platforms.map(async (p) => {
+    const groups = new Map<string, { label: string; items: (ShowcaseItem & { zl?: string; zd?: string })[] }>();
+    for (const i of p.items as ShowcaseItem[]) {
+      const g = groups.get(i.stack) ?? { label: i.stackLabel, items: [] };
+      g.items.push({ ...i, zl: await big(i.light ?? i.single, i.shape), zd: await big(i.dark ?? i.single, i.shape) });
+      groups.set(i.stack, g);
+    }
+    return { ...p, groups: [...groups.values()] };
+  }),
+);
+const total = platforms.reduce((n, p) => n + p.items.length, 0);
+const title = "Showcase: apps made with Daedalus";
+const description = `${total} real screens from the Daedalus stacks: website, web app, mobile, desktop and studio, in light and dark.`;
+---
+<Base title={title} description={description} path="/showcase/" nav="showcase">
+  <div class="wrap sc-head">
+    <p class="kicker">Made with Daedalus</p>
+    <h1>What the stacks produce</h1>
+    <p class="lead">
+      Screenshots captured from the running starter apps, in light and dark, at the sizes the stacks ship. Nothing here is a
+      mock-up. Where an app has not been launched yet, the card says so.
+    </p>
+  </div>
+
+  <div class="tabs">
+    <nav class="tabs-in" aria-label="Platforms">
+      {platforms.map((p) => <a href={`#${p.id}`} data-tab={p.id}>{p.title}<small>{p.items.length || "soon"}</small></a>)}
+    </nav>
+  </div>
+
+  {platforms.map((p) => (
+    <section class="plat" id={p.id}>
+      <div class="wrap">
+        <div>
+          <header>
+            <h2>{p.title}</h2>
+            <p class="lead">{p.blurb}</p>
+          </header>
+          {p.groups.map((g) => (
+            <>
+              <p class="group-label">{g.label}</p>
+              <div class:list={["gallery", g.items[0].shape === "phone" && "phones"]}>
+                {g.items.map((i) => (
+                  <figure class="tile">
+                    <button type="button" data-open data-light={i.zl} data-dark={i.zd} data-caption={`${i.caption} (${i.stackLabel})`} data-shape={i.shape} data-themed={i.light ? "1" : "0"} aria-label={`Enlarge: ${i.caption}, ${i.stackLabel}`}>
+                      <Themed item={i} alt={`${i.caption}, ${i.stackLabel}`} widths={i.shape === "phone" ? [200, 360] : [480, 720]} sizes={i.shape === "phone" ? "(min-width: 40rem) 12.5rem, 30vw" : "(min-width: 70rem) 23rem, (min-width: 40rem) 45vw, 92vw"} />
+                    </button>
+                    <figcaption>{i.caption}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </>
+          ))}
+          {p.pending.length > 0 && (
+            <>
+              {p.items.length > 0 && <p class="group-label">Coming soon</p>}
+              <div class="gallery">
+                {p.pending.map((c) => (
+                  <div class="soon"><span>Coming soon</span><b>{c.label}</b><p>{c.note}</p></div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <div class="wrap">
+    <div class="howto">
+      <b>Add more screens.</b> Stacks write PNGs named <code>&lt;screen&gt;[-&lt;width&gt;]-light.png</code> and <code>-dark.png</code> to
+      <code>stacks/&lt;id&gt;/docs/screenshots/</code>. Run <code>deno task showcase</code> in the repository root, then rebuild the site;
+      new screens appear here and the "coming soon" cards turn into galleries.
+    </div>
+  </div>
+  <div style="height: 4rem"></div>
+
+  <dialog class="lb" id="lb" aria-label="Screenshot viewer">
+    <div class="lb-in">
+      <div class="lb-bar">
+        <p id="lb-cap"></p>
+        <div>
+          <button type="button" id="lb-light" aria-pressed="false">Light</button>
+          <button type="button" id="lb-dark" aria-pressed="true">Dark</button>
+          <button type="button" id="lb-prev" aria-label="Previous screenshot">&larr;</button>
+          <button type="button" id="lb-next" aria-label="Next screenshot">&rarr;</button>
+          <button type="button" id="lb-close" aria-label="Close">Close</button>
+        </div>
+      </div>
+      <div class="lb-view" id="lb-view"><img id="lb-img" alt="" /></div>
+    </div>
+  </dialog>
+</Base>
+
+<script>
+  const dlg = document.getElementById("lb") as HTMLDialogElement;
+  const img = document.getElementById("lb-img") as HTMLImageElement;
+  const view = document.getElementById("lb-view") as HTMLElement;
+  const cap = document.getElementById("lb-cap") as HTMLElement;
+  const light = document.getElementById("lb-light") as HTMLButtonElement;
+  const dark = document.getElementById("lb-dark") as HTMLButtonElement;
+  const tiles = [...document.querySelectorAll<HTMLButtonElement>("[data-open]")];
+  let index = 0;
+  let theme: "light" | "dark" = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  let opener: HTMLElement | null = null;
+
+  function show() {
+    const t = tiles[index];
+    const themed = t.dataset.themed === "1";
+    img.src = (themed && theme === "light" ? t.dataset.light : t.dataset.dark) ?? t.dataset.light ?? "";
+    img.alt = t.dataset.caption ?? "";
+    cap.textContent = `${t.dataset.caption}${themed ? "" : " (single theme)"}`;
+    view.classList.toggle("phone", t.dataset.shape === "phone");
+    for (const [b, v] of [[light, "light"], [dark, "dark"]] as const) {
+      b.setAttribute("aria-pressed", String(theme === v));
+      b.disabled = !themed;
+    }
+  }
+  tiles.forEach((t, i) => t.addEventListener("click", () => {
+    index = i;
+    opener = t;
+    theme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+    show();
+    dlg.showModal();
+  }));
+  const step = (n: number) => { index = (index + n + tiles.length) % tiles.length; show(); };
+  light.addEventListener("click", () => { theme = "light"; show(); });
+  dark.addEventListener("click", () => { theme = "dark"; show(); });
+  document.getElementById("lb-prev")!.addEventListener("click", () => step(-1));
+  document.getElementById("lb-next")!.addEventListener("click", () => step(1));
+  document.getElementById("lb-close")!.addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+  dlg.addEventListener("close", () => opener?.focus());
+  dlg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") step(-1);
+    if (e.key === "ArrowRight") step(1);
+  });
+
+  // Highlight the tab for the platform in view.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>("[data-tab]")];
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) if (en.isIntersecting) links.forEach((l) => l.classList.toggle("on", l.dataset.tab === en.target.id));
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  document.querySelectorAll("section.plat[id]").forEach((s) => io.observe(s));
+</script>

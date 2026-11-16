@@ -1,7 +1,7 @@
 export interface Config {
   env: "development" | "test" | "production";
   port: number;
-  /** Real Postgres when set; otherwise PGlite (in-process) at `pgliteDir`. */
+  /** Real database when set (Postgres: DATABASE_URL; MongoDB flavour: MONGODB_URI); otherwise the embedded one in `pgliteDir`. */
   databaseUrl: string | undefined;
   pgliteDir: string;
   authSecret: string;
@@ -59,7 +59,7 @@ export function loadConfig(env: Record<string, string | undefined> = Deno.env.to
   return {
     env: mode as Config["env"],
     port,
-    databaseUrl: env["DATABASE_URL"] || undefined,
+    databaseUrl: env["DATABASE_URL"] || env["MONGODB_URI"] || undefined,
     pgliteDir: env["PGLITE_DIR"] || ".data/pglite",
     authSecret,
     authUrl: env["BETTER_AUTH_URL"] || `http://localhost:${port}`,

@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
+import { sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
@@ -12,6 +13,9 @@ import postgres from "postgres";
 export type Db = PgDatabase<PgQueryResultHKT>;
 
 const migrationsFolder = fileURLToPath(new URL("../../../drizzle", import.meta.url));
+
+/** Cheapest round trip, for the readiness probe. */
+export const ping = async (db: Db) => void await db.execute(sql`select 1`);
 
 export interface DbHandle {
   db: Db;

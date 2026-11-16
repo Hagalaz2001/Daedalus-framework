@@ -23,7 +23,8 @@ import type { Provider } from "./providers/types.ts";
 
 export type StudioEvent =
   | { type: "write"; key: string; html: string; done: boolean }
-  | { type: "job"; id: string; state: "running" | "done" | "error"; message?: string };
+  | { type: "job"; id: string; state: "running" | "done" | "error"; message?: string }
+  | { type: "local-ai"; progress: import("./localAi.ts").LocalProgress | null };
 
 export interface Bus {
   emit(event: StudioEvent): void;

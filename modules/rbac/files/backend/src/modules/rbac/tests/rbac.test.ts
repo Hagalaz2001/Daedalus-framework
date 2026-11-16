@@ -1,6 +1,4 @@
 import { assert, assertEquals } from "@std/assert";
-import { member } from "../../../shared/db/auth-schema.ts";
-import { uuidv7 } from "../../../shared/db/columns.ts";
 import { createTestApp } from "../../../shared/testing.ts";
 import { can, permissionsFor } from "../policy.ts";
 
@@ -11,13 +9,7 @@ const colleague = await t.signUp("colleague");
 // Put the colleague into the owner's organization as a plain member.
 const orgId = (await (await t.app.request("/me", { headers: owner.headers })).json()).organizations[0].id;
 const colleagueId = (await (await t.app.request("/me", { headers: colleague.headers })).json()).id;
-await t.db.insert(member).values({
-  id: uuidv7(),
-  organizationId: orgId,
-  userId: colleagueId,
-  role: "member",
-  createdAt: new Date(),
-});
+await t.addMember(orgId, colleagueId, "member");
 const asColleague = { ...colleague.headers, "x-organization-id": orgId };
 
 Deno.test("policy: owners and admins manage, members do not delete", () => {

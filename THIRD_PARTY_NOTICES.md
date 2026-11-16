@@ -67,3 +67,29 @@ Record name, URL, licence, what was copied and where, in the first table, in the
 - Source: https://github.com/material-foundation/material-color-utilities (npm `@material/material-color-utilities` 0.4.0)
 - Licence: Apache-2.0, Copyright Google LLC (full text in `studio/shared/design/vendor/LICENSE-material-color-utilities.txt`)
 - Used in: `studio/shared/design/vendor/material-color-utilities.js` (bundled because the package's extensionless ESM imports don't resolve under Deno)
+
+## Daedalus Studio dependencies
+
+Installed by Deno from `studio/deno.json` (exact versions pinned), not copied into this repository.
+
+| Package | Licence | Used for |
+|---|---|---|
+| @anthropic-ai/sdk | Apache-2.0 | Default model provider |
+| @google/stitch-sdk | Apache-2.0 | Optional Google Stitch engine (bring your own key) |
+| playwright-core | Apache-2.0 | Screenshots with an installed Chrome or Edge |
+| cheerio | MIT | Server-side HTML sanitiser and patching |
+| react, react-dom, vite, @vitejs/plugin-react, tailwindcss, @tailwindcss/vite | MIT | Studio UI |
+| lucide-react | ISC | Studio icons |
+| @std/assert, @std/dotenv | MIT | Deno standard library |
+
+Prior art reviewed for ideas, no code copied: OpenUI (Apache-2.0), Onlook (Apache-2.0), Excalidraw (MIT), react-live
+(MIT), Sandpack (Apache-2.0). tldraw is under its own non-OSI licence and is not used.
+
+## Local AI (not bundled)
+
+Daedalus Studio can use [Lemonade](https://github.com/lemonade-sdk/lemonade) (Apache-2.0, licence read from its
+repository on 2026-11-17) as a local model server. It is installed by the user and called over HTTP; none of its code
+is included. The studio can ask Lemonade to download these models from Hugging Face on the user's request; they are
+not stored here: Qwen3.5-4B and Qwen3.8-27B (Apache-2.0, Qwen team; GGUF conversions by bartowski and Unsloth) and
+MiMo-V2.6-Distill-Qwen-9B (MIT, Xiaomi; GGUF conversion by bartowski). The speed tip and model sizes in
+`docs/LOCAL-AI.md` come from the maintainer's own measurements.

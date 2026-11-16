@@ -1,0 +1,20 @@
+---
+import CtaBand from '../components/CtaBand.astro'
+import Container from '../components/Container.astro'
+import Features from '../components/Features.astro'
+import Hero from '../components/Hero.astro'
+import Base from '../layouts/Base.astro'
+import { siteConfig } from '../lib/site'
+---
+
+<Base title={siteConfig.tagline} description={siteConfig.description} path="/" home>
+  <Hero />
+  <Features />
+  <Container class="py-8">
+    <figure class="max-w-3xl">
+      <blockquote class="font-display text-3xl leading-snug font-medium tracking-tight sm:text-4xl">“I stopped organising and started finding. That was the whole upgrade.”</blockquote>
+      <figcaption class="mt-5 text-text-muted">Sample testimonial. Replace it with a real customer quote, or delete this block.</figcaption>
+    </figure>
+  </Container>
+  <CtaBand />
+</Base>

@@ -1,7 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import { eq } from "drizzle-orm";
 import { createTestApp } from "../../../shared/testing.ts";
-import { notes } from "../schema.ts";
+import * as repo from "../repository.ts";
 
 const t = await createTestApp();
 const ana = await t.signUp("ana");
@@ -39,7 +38,7 @@ Deno.test("create, read, update and soft-delete a note; responses match the cont
 
   assertEquals((await t.app.request(`/notes/${note.id}`, { method: "DELETE", headers: ana.headers })).status, 204);
   assertEquals((await t.app.request(`/notes/${note.id}`, { headers: ana.headers })).status, 404);
-  const [row] = await t.db.select().from(notes).where(eq(notes.id, note.id));
+  const row = await repo.rawGet(t.db, note.id);
   assert(row?.deletedAt, "soft delete keeps the row");
 });
 

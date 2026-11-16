@@ -4,7 +4,8 @@ import { requireTenant } from "../../shared/auth/session.ts";
 import type { Db } from "../../shared/db/client.ts";
 import { auditLog } from "../../shared/db/schema.ts";
 import { forbidden } from "../../shared/errors/problem.ts";
-import { keyset, pageParams, slicePage } from "../../shared/http/pagination.ts";
+import { keyset } from "../../shared/db/keyset.ts";
+import { pageParams, slicePage } from "../../shared/http/pagination.ts";
 import type { AppEnv, Module } from "../../shared/http/types.ts";
 import { Contract } from "../../shared/validation/contract.ts";
 

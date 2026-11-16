@@ -1,9 +1,11 @@
-# web-shared: the web UI kit (`@app/ui`)
+# web-shared: the web UI kits (`@app/ui`, `@app/ui-vue`)
 
-Not selectable on its own. When a project includes `web-spa` or `web-site`, Daedalus copies `packages/ui` into the
-project as a workspace package. Both apps import it, so the app and the website share one look.
+Not selectable on its own. When a project includes a web stack, Daedalus copies the matching kit into the project as a
+workspace package: `packages/ui` (React: `web-spa`, `web-site-next`, `web-site-astro` with React islands) or
+`packages/ui-vue` (Vue: `web-spa-vue`, `web-site-astro` with Vue islands). Apps in one project share one look.
 
-It is a shadcn/ui-style kit: components are plain source files you own and edit, built on Radix primitives, styled with
+The React kit is a shadcn/ui-style kit; the Vue kit (`packages/ui-vue`, shadcn-vue patterns on Reka UI and `@lucide/vue`) has the
+same components, classes and tokens, so both look identical. The React kit: components are plain source files you own and edit, built on Radix primitives, styled with
 Tailwind v4 utilities that read design tokens, and icons from Lucide. See `THIRD_PARTY.md`.
 
 ## Components
@@ -41,3 +43,14 @@ deno task --cwd packages/ui typecheck
 ```
 
 Next.js: modules that use hooks or Radix carry a `'use client'` directive, so the kit works from server components.
+
+## Vue kit
+
+`packages/ui-vue`: Button, IconButton, Input, Textarea, Field (slot prop `fieldProps`), TextField, Select, Checkbox, Switch,
+SegmentedControl, Card parts, ListRow, Dialog and SheetContent, Toaster and `toast`, Tabs, Avatar, Badge, Skeleton,
+SkeletonGroup, EmptyState, ErrorState, PageHeader, AppShell, ThemeToggle and `useTheme`. Tests: `deno task --cwd
+packages/ui-vue test` (Vitest, Testing Library DOM, axe); `@app/ui-vue/testing` exports a small `render`, `screen` and
+`expectNoA11yViolations` for app tests. Its type check runs vue-tsc against TypeScript 5.9 (`scripts/typecheck.mjs`).
+
+`packages/ui-vue/scripts/tokens.mjs` is a copy of `packages/ui/scripts/tokens.mjs` so Vue-only projects have the tokens
+step; the script writes `tokens.css` into every kit present. Keep the two files identical.

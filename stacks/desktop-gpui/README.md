@@ -29,7 +29,8 @@ outside the repo to keep build output (several GB) out of the project and to sha
 cd apps/desktop
 cargo run -p app                # debug build
 cargo build --release -p app    # optimised build (see "Release profile")
-cargo run -p app -- --open notes/new   # start on a screen (deep link: dashboard, notes, notes/<id>, settings, profile)
+cargo run -p app -- --open notes/new   # start on a screen (dashboard, notes, notes/<id>, notes/<id>/edit, settings, profile)
+cargo run -p app -- --theme dark       # theme for this run only (light, dark, system)
 ```
 
 ## Layout
@@ -140,10 +141,30 @@ Windows 10, Rust 1.99.1, release profile above.
 |---|---|---|
 | Release exe, stripped | 18.2 MB (`app.exe`, icon embedded) | the Electron runtime alone is roughly 150 MB unpacked |
 | NSIS installer | 6.7 MB (`cargo packager`, not signed, built but not run) | usually 70-100 MB |
-| Idle memory (Working Set) | **not measured yet** | usually 100-200 MB summed over its processes |
-| Cold build (release, fat LTO) | about 12 min on first build, about 8 min to relink after a change | n/a |
+| Idle memory, dashboard loaded, 24 s after launch | **46.5 MB Working Set, 61.6 MB private bytes** (one process, no webview) | see below |
+| Cold build (release, fat LTO) | about 12 min on first build, 5 to 8 min after a change | n/a |
 | Build output folder | about 12 GB for debug + test + release together | n/a |
 
-Idle memory and screenshots of the screens are pending: they need the app to open a window, which was not done after the
-maintainer asked that no window be opened without approval. Measure with
-`Get-Process app | Select WorkingSet64` after the dashboard has loaded and the process has been idle for a minute.
+How it was measured: the release exe ran on a private Windows desktop (`CreateDesktop`, never displayed, nothing on the screen or
+taskbar, no input sent), against a throwaway mock backend, with a demo session in the credential store that was removed
+afterwards. After 4 s it waited 20 s and read `WorkingSet64` / `PrivateMemorySize64` of the process, then terminated it.
+One run; the sign-in screen read 83 MB Working Set at 6 s, so numbers settle after startup.
+
+Public Electron figures for idle memory run from about 128 to 170 MB for a single-window app
+([example](https://dev.to/gethopp/tauri-vs-electron-performance-bundle-size-and-the-real-trade-offs-1el4),
+[another](https://betterstack.com/community/guides/scaling-nodejs/tauri-vs-electron-vs-deno-vs-electrobun/)), and more for real
+apps. Those are other people's measurements with other methods; no Electron app was measured here. A Tauri app measured the same
+way as above came to about 371 MB Working Set summed over its 7 processes (199 MB private), see `stacks/desktop-tauri`.
+
+## Screenshots
+
+Captured from the real release window on the private desktop with `PrintWindow`, 1136 x 748, against mock data
+(Acme Notes, a made-up user). Files are in `docs/screenshots/`: `signin`, `dashboard`, `notes`, `new-note`, `detail`, `edit`,
+`settings`, `profile`, `not-found`, each as `-light` and `-dark`. The Delete button in the detail view uses a placeholder icon.
+
+![Dashboard, light](docs/screenshots/dashboard-light.png)
+![Notes, light](docs/screenshots/notes-light.png)
+![Settings, dark](docs/screenshots/settings-dark.png)
+![New note, dark](docs/screenshots/new-note-dark.png)
+
+`--theme light|dark|system` and `--open <route>` are launch options (see Generate); they make off-screen captures like these possible.

@@ -58,6 +58,61 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return data as T;
 }
 
+export interface ProviderOption {
+  id: "anthropic" | "lemonade" | "ollama" | "fake";
+  label: string;
+  available: boolean;
+  detail: string;
+  note: string | null;
+}
+export interface ProviderState {
+  selected: string;
+  active: string;
+  banner: "no-ai" | null;
+  options: ProviderOption[];
+}
+export interface LocalProgress {
+  stage: "registering" | "downloading" | "loading" | "checking" | "done" | "failed" | "cancelled";
+  model: string;
+  percent: number | null;
+  bytesDownloaded: number | null;
+  bytesTotal: number | null;
+  error: string | null;
+}
+export interface LocalAiStatus {
+  base: string;
+  reachable: boolean;
+  version: string | null;
+  loaded: { model: string; context: number | null }[];
+  hardware: {
+    os: string;
+    arch: string;
+    cpu: string | null;
+    ramBytes: number;
+    freeDiskBytes: number | null;
+    gpus: { name: string; vramBytes: number }[];
+  };
+  assessment: {
+    tier: "recommended" | "workable" | "minimum" | "below-minimum";
+    reason: string | null;
+    checks: { level: "ok" | "warn" | "fail"; text: string }[];
+    bestQuality: "gpu" | "ram" | "ssd";
+  };
+  catalogue: {
+    name: string;
+    label: string;
+    licence: string;
+    bytes: number;
+    runBytes: number;
+    optional?: boolean;
+    installed: boolean;
+    loaded: boolean;
+    recommended: boolean;
+  }[];
+  progress: LocalProgress | null;
+  installUrl: string;
+}
+
 export const designApi = {
   config: async (): Promise<StudioConfig> => (await fetch("/api/config")).json(),
   run: <T>(command: DesignCommand | Record<string, unknown>) => post<T>("/api/design", { command }),
@@ -90,6 +145,14 @@ export const designApi = {
   prepareExport: (
     req: { slug: string; file: string; app: number; feature: string; screen: string; screenshots: boolean; force: boolean },
   ) => post<ExportResult>("/api/export/prepare", req),
+  providers: async (): Promise<ProviderState> => (await fetch("/api/providers")).json(),
+  selectProvider: (id: string) => post<ProviderState>("/api/provider", { id }),
+  localAi: {
+    status: async (): Promise<LocalAiStatus> => (await fetch("/api/local-ai/status")).json(),
+    setUp: (model?: string) => post<{ started: boolean }>("/api/local-ai/setup", model ? { model } : {}),
+    cancel: () => post<{ ok: boolean }>("/api/local-ai/cancel", {}),
+    unload: () => post<{ ok: boolean }>("/api/local-ai/unload", {}),
+  },
   check: () => post<{ ok: boolean; code: number | null; output: string }>("/api/check", {}),
 };
 

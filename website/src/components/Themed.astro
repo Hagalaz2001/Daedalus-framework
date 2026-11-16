@@ -1,0 +1,33 @@
+---
+// One screenshot in its light and dark variants; CSS shows the one matching the active theme.
+import { Image } from "astro:assets";
+import { shot, type ShowcaseItem } from "../lib/site";
+
+interface Props {
+  item?: ShowcaseItem;
+  alt: string;
+  widths?: number[];
+  sizes?: string;
+  eager?: boolean;
+  class?: string;
+}
+const { item, alt, widths = [480, 800, 1200], sizes = "100vw", eager = false, class: cls = "" } = Astro.props;
+const light = shot(item?.light ?? item?.single);
+const dark = shot(item?.dark ?? item?.single);
+const common = {
+  widths,
+  sizes,
+  format: "webp" as const,
+  quality: 78,
+  loading: eager ? ("eager" as const) : ("lazy" as const),
+  decoding: "async" as const,
+  fetchpriority: eager ? ("high" as const) : undefined,
+};
+---
+{light && dark && light === dark && <Image src={light} alt={alt} class={cls} {...common} />}
+{light && dark && light !== dark && (
+  <>
+    <Image src={light} alt={alt} class:list={["only-light", cls]} {...common} />
+    <Image src={dark} alt={alt} class:list={["only-dark", cls]} {...common} />
+  </>
+)}

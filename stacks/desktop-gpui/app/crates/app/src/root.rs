@@ -33,15 +33,25 @@ pub struct AppRoot {
     page: Option<AnyView>,
     booting: bool,
     focus: FocusHandle,
+    /// `--theme` launch option: wins over the saved setting for this run.
+    theme_override: Option<ThemeMode>,
     _page_subs: Vec<Subscription>,
     _appearance: Subscription,
 }
 
 impl AppRoot {
-    pub fn new(name: &str, services: Services, open: Option<String>, window: &mut Window, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        name: &str,
+        services: Services,
+        open: Option<String>,
+        theme_override: Option<ThemeMode>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let appearance = cx.observe_window_appearance(window, |this, _, cx| {
-            if this.services.store.theme_mode() == ThemeMode::System {
-                theme::apply(ThemeMode::System, cx);
+            let mode = this.theme_override.unwrap_or_else(|| this.services.store.theme_mode());
+            if mode == ThemeMode::System {
+                theme::apply(mode, cx);
             }
         });
         let this = Self {
@@ -52,6 +62,7 @@ impl AppRoot {
             page: None,
             booting: true,
             focus: cx.focus_handle(),
+            theme_override,
             _page_subs: vec![],
             _appearance: appearance,
         };

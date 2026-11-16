@@ -1,0 +1,13 @@
+{
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "sync": "deno run -A scripts/sync-docs.ts",
+    "showcase": "deno run -A scripts/showcase.ts",
+    "dev": "deno task sync && deno task showcase && deno run -A npm:astro@7.4.12 dev",
+    "build": "deno task sync && deno task showcase && deno run -A npm:astro@7.4.12 build",
+    "preview": "deno run -A npm:astro@7.4.12 preview",
+    "test": "deno test -A scripts/"
+  },
+  "fmt": { "lineWidth": 120 },
+  "lint": { "rules": { "exclude": ["no-explicit-any"] } }
+}

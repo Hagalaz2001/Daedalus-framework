@@ -1,6 +1,7 @@
 import { createApp, discoverModules } from "../app.ts";
 import { loadConfig } from "./config/config.ts";
 import { openTestDb } from "./db/client.ts";
+import { addMember } from "./db/membership.ts";
 import { silentLogger } from "./logging/logger.ts";
 
 /** A complete app on a throwaway in-memory Postgres (PGlite) with the real migrations and every installed module. */
@@ -32,6 +33,8 @@ export async function createTestApp(env: Record<string, string> = {}) {
     db,
     json,
     signUp,
+    /** Puts a user into an organization with a role (what accepting an invitation does). */
+    addMember: (organizationId: string, userId: string, role: string) => addMember(db, organizationId, userId, role),
     close: async () => {
       for (const m of modules) await m.stop?.();
       await close();
