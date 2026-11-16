@@ -31,6 +31,14 @@ interface Page {
 }
 
 const doc = (path: string) => () => stripFirstHeading(read(path));
+/** Every docs entry point opens with a plain-language box before the technical text. */
+const PLAIN_INTRO = `:::tip[In plain words]
+Daedalus helps you build a website, a phone app and a desktop app together, so they look and work like one product.
+AI does the building. You make the decisions. It is free and open source.
+New here? Try the [live demo](${BASE}demo/) first, then come back for the details.
+:::
+
+`;
 const pages: Page[] = [];
 const add = (p: Page) => pages.push(p);
 
@@ -44,9 +52,10 @@ add({
   body: () => {
     const r = readme();
     const pre = stripFirstHeading(r.split(/^## /m)[0]).trim();
-    return `${pre}\n\n${pickSection(r, "What you get")}`;
+    return `${PLAIN_INTRO}${pre}\n\n${pickSection(r, "What you get")}`;
   },
 });
+add({ slug: "getting-started/why-daedalus", title: "Why use Daedalus?", source: "docs/WHY.md", aliases: ["docs/WHY.md"], body: doc("docs/WHY.md") });
 add({
   slug: "getting-started/install",
   title: "Install and first project",
@@ -224,6 +233,25 @@ add({ slug: "contributing/code-of-conduct", title: "Code of conduct", source: "C
 add({ slug: "contributing/changelog", title: "Changelog", source: "CHANGELOG.md", aliases: ["CHANGELOG.md"], body: doc("CHANGELOG.md") });
 add({ slug: "contributing/third-party", title: "Third-party notices", source: "THIRD_PARTY_NOTICES.md", aliases: ["THIRD_PARTY_NOTICES.md"], body: doc("THIRD_PARTY_NOTICES.md") });
 add({ slug: "contributing/catalog", title: "Open-source catalog", source: "CATALOG.md", aliases: ["CATALOG.md"], body: doc("CATALOG.md") });
+
+// ---- Learn, Method, Developer guide (docs/learn, docs/METHOD.md, docs/diagrams, docs/dev) ----
+add({ slug: "learn/start-here", title: "Start here", source: "docs/learn/README.md", aliases: ["docs/learn"], body: () => PLAIN_INTRO + stripFirstHeading(read("docs/learn/README.md")) });
+for (const f of ["what-is-daedalus", "install", "first-app", "working-with-ai", "glossary", "faq", "troubleshooting"]) {
+  add({ slug: `learn/${f}`, source: `docs/learn/${f}.md`, body: doc(`docs/learn/${f}.md`) });
+}
+add({ slug: "method/the-method", title: "The Daedalus Method", source: "docs/METHOD.md", aliases: ["template/docs/METHOD.md"], body: doc("docs/METHOD.md") });
+add({
+  slug: "method/diagrams",
+  title: "Method diagrams",
+  description: "Mermaid diagrams: the cycle, roles, a flight, Definition of Done, idea to app, how the pieces fit, which stack.",
+  source: "docs/diagrams/README.md",
+  aliases: ["docs/diagrams", ...(has("docs/diagrams") ? readdirSync(join(repo, "docs/diagrams")).filter((n) => n.endsWith(".md")).map((n) => `docs/diagrams/${n}`) : [])],
+  body: () =>
+    ["method-cycle", "roles", "flight-timeline", "definition-of-done", "idea-to-app", "how-it-fits", "choose-stack"]
+      .filter((n) => has(`docs/diagrams/${n}.md`)).map((n) => demoteHeadings(read(`docs/diagrams/${n}.md`))).join("\n\n"),
+});
+add({ slug: "dev/start", title: "Developer guide", source: "docs/dev/README.md", aliases: ["docs/dev"], body: doc("docs/dev/README.md") });
+for (const f of ["cheatsheet", "recipes", "anatomy"]) add({ slug: `dev/${f}`, source: `docs/dev/${f}.md`, body: doc(`docs/dev/${f}.md`) });
 
 // ---- Write ----
 const live = pages.filter((p) => has(p.source) || p.source.startsWith("stacks/"));

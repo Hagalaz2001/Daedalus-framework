@@ -1,219 +1,168 @@
 ---
 import Base from "../layouts/Base.astro";
 import Themed from "../components/Themed.astro";
-import { facts, pick, REPO, url } from "../lib/site";
-
-// Square spiral: the labyrinth behind the hero. One path, so the "thread" can draw it in a single stroke.
-const u = 15;
-let [x, y, d] = [0, 0, 0];
-const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-let spiral = `M0 0`;
-for (let k = 1; k <= 56; k++) {
-  const n = Math.ceil(k / 2);
-  x += dirs[d][0] * n * u;
-  y += dirs[d][1] * n * u;
-  spiral += `L${x} ${y}`;
-  d = (d + 1) % 4;
-}
+import { pick, url } from "../lib/site";
+import "../styles/home.css";
 
 const hero = pick("web-spa", "dashboard");
-const phoneA = pick("mobile-rn", "05-home");
-const phoneB = pick("mobile-rn", "06-notes");
+const phone = pick("mobile-rn", "05-home");
 
 const strip = [
-  pick("web-site-next", "landing"),
-  pick("web-spa", "notes"),
-  pick("mobile-rn", "02-sign-in"),
-  pick("studio", "studio"),
-  pick("web-site-next", "pricing"),
-  pick("mobile-rn", "08-settings"),
-  pick("web-spa", "settings"),
+  pick("web-site-astro", "landing"),
+  pick("web-spa", "dashboard"),
+  pick("mobile-rn", "05-home"),
+  pick("desktop-gpui", "dashboard"),
 ].filter((i): i is NonNullable<typeof i> => Boolean(i));
 
-const stacks = [
-  { kind: "Web", title: "Web app", text: "React 19, Vite, Tailwind v4 and TanStack Query, or the same with Vue. For signed-in product UI.", chips: ["React", "Vue", "Vite", "Tailwind"], href: "/stacks/web-spa/" },
-  { kind: "Web", title: "Website", text: "Astro by default: static HTML, islands only where needed, nothing to attack on the server. Next.js when you need rendering per request.", chips: ["Astro", "Next.js", "SEO"], href: "/stacks/web-site-astro/" },
-  { kind: "Mobile", title: "React Native", text: "Expo and TypeScript, sharing the generated client and types with web and backend.", chips: ["Expo", "TypeScript"], href: "/stacks/mobile-rn/" },
-  { kind: "Mobile", title: "Flutter", text: "Riverpod and a generated Dart client, Material 3 theme from the same tokens.", chips: ["Dart", "Riverpod"], href: "/stacks/mobile-flutter/" },
-  { kind: "Desktop", title: "Rust + GPUI", text: "Native app with no webview and no Node. Feature crates with enforced boundaries.", chips: ["Rust", "GPUI"], href: "/stacks/desktop-gpui/" },
-  { kind: "Desktop", title: "Tauri", text: "A small Rust shell around the same React UI kit as your web app.", chips: ["Rust", "React"], href: "/stacks/desktop-tauri/" },
-  { kind: "Backend", title: "Hono API", text: "Contract-validated routes, PostgreSQL with Drizzle, accounts with Better Auth. Optional.", chips: ["Hono", "Drizzle", "Postgres"], href: "/stacks/backend/" },
-  { kind: "Extend", title: "Modules and packs", text: "Payments, jobs, search, roles and more as modules; fintech, health and game as domain packs.", chips: [`${facts.modules} modules`, `${facts.packs} packs`], href: "/modules/overview/" },
-];
-
-const guards = [
-  ["01", "Contract first", "One OpenAPI file validates the backend and generates every client. A test fails when a route and the contract disagree."],
-  ["02", "Boundaries that are enforced", "Features talk to each other only through a public entry. A lint step fails the build, so the structure survives a busy month."],
-  ["03", "One check before every commit", "deno task check runs sync, lints, type checks, tests, builds and a dependency audit across every app."],
-  ["04", "AI with a seatbelt", "Agent rules, a review gate and a responsible-AI guide ship in the repository. People set intent and review; the same checks gate both."],
-];
-
-const title = "Daedalus: one contract, every screen";
-const description = "Daedalus is an open-source, AI-assisted framework that generates web, mobile and desktop apps from one API contract and one set of design tokens.";
-const jsonPresets = facts.presets as any[];
+const title = "Daedalus: your website, phone app and desktop app, built together";
+const description = "Daedalus builds a website, a phone app and a desktop app from one plan. AI does the building, you make the decisions. Free and open source.";
 ---
 <Base title={title} description={description} path="/">
-  <section class="hero">
-    <svg class="labyrinth" viewBox="-440 -440 880 880" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">
-      <path d={spiral} pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1" />
-    </svg>
-    <div class="wrap hero-grid">
+  <section class="h-hero">
+    <div class="wrap h-hero-grid">
       <div>
-        <p class="kicker">Open-source framework, MIT</p>
-        <h1>One contract. Every screen. <em>You steer.</em></h1>
-        <p class="lead">
-          Daedalus writes the repository for your website, web app, mobile app and desktop app from a single API contract
-          and one set of design tokens, with the architecture, checks and AI-agent rules already in place.
+        <p class="h-eyebrow">Free and open source</p>
+        <h1>Your website and apps, built together.</h1>
+        <p class="h-lead">A website, a phone app and a desktop app from one plan. AI does the building. You make the decisions.</p>
+        <p class="h-cta">
+          <a class="btn primary big" href={url("/demo/")}>Watch it work</a>
+          <a class="h-link" href={url("/showcase/")}>See examples</a>
         </p>
-        <div class="cta">
-          <a class="btn primary" href={url("/getting-started/introduction/")}>Read the docs</a>
-          <a class="btn" href={url("/showcase/")}>See what it made</a>
-          <a class="btn" href={REPO} rel="noopener">GitHub</a>
-        </div>
-        <div class="cmd">
-          <code id="cmd"><span class="l"><span class="p">$ </span>git clone {REPO}.git daedalus</span><span class="l"><span class="p">$ </span>cd daedalus</span><span class="l"><span class="p">$ </span>deno run -A cli.ts new ../shop --name "Acme Shop" --web site,spa --mobile rn --backend hono</span></code>
-          <button class="copy" type="button" aria-label="Copy the install commands" data-copy>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5" /><path d="M16 8V6.5A2.500 2.500 0 0 0 13.500 4h-7A2.500 2.500 0 0 0 4 6.500v7A2.500 2.500 0 0 0 6.500 16H8" /></svg>
-          </button>
-        </div>
       </div>
-      <div class="stage" aria-label="Screens generated by Daedalus">
+      <div class="stage h-stage" aria-label="A website and a phone app made with Daedalus">
         <div class="browser">
-          <div class="browser-bar"><i></i><i></i><i></i><span>acme-notes.example</span></div>
-          <Themed item={hero} alt="Dashboard of a web app generated by Daedalus" widths={[640, 960, 1200]} sizes="(min-width: 62rem) 45vw, 92vw" eager />
+          <div class="browser-bar"><i></i><i></i><i></i></div>
+          <Themed item={hero} alt="A dashboard made with Daedalus, shown in a browser" widths={[640, 960, 1200]} sizes="(min-width: 62rem) 45vw, 92vw" eager />
         </div>
-        <div class="phone"><Themed item={phoneA} alt="Home screen of a React Native app generated by Daedalus" widths={[220, 340, 440]} sizes="(min-width: 62rem) 12vw, 30vw" eager /></div>
-        <div class="phone two"><Themed item={phoneB} alt="Notes list in the same mobile app" widths={[180, 300]} sizes="10vw" /></div>
-      </div>
-    </div>
-    <div class="wrap">
-      <div class="facts">
-        <div class="fact"><b>{facts.stacks}</b><span>stacks: web, mobile, desktop</span></div>
-        <div class="fact"><b>{facts.modules}</b><span>optional backend modules</span></div>
-        <div class="fact"><b>{facts.packs}</b><span>domain packs</span></div>
-        <div class="fact"><b>{facts.presets.length}</b><span>design presets</span></div>
+        <div class="phone"><Themed item={phone} alt="The same product as a phone app" widths={[220, 340, 440]} sizes="(min-width: 62rem) 12vw, 30vw" eager /></div>
       </div>
     </div>
   </section>
 
-  <section id="how">
+  <section class="h-sec">
     <div class="wrap">
-      <p class="kicker">How it fits together</p>
-      <h2>Two files at the centre of every project</h2>
-      <p class="lead">Change the API or the look in one place. <code>deno task sync</code> regenerates the clients and themes for every app, so web, mobile and desktop cannot drift apart.</p>
-      <div class="pipe">
-        <div class="pipe-col">
-          <div class="card"><h3>API contract</h3><p><code>contracts/openapi.yaml</code><br />Routes, types and errors, written once.</p></div>
-          <div class="card"><h3>Design tokens</h3><p><code>design/tokens.json</code><br />Colour, radius, spacing and fonts for light and dark.</p></div>
-        </div>
-        <div class="card core"><h3>deno task sync</h3><p>Generates a TypeScript client, a Dart client, and each stack's theme. Then <code>deno task check</code> gates everything: boundaries, types, tests, builds, audit.</p></div>
-        <div class="targets">
-          <div class="target"><b>Website</b><span>Astro or Next.js</span></div>
-          <div class="target"><b>Web app</b><span>React or Vue</span></div>
-          <div class="target"><b>Mobile</b><span>React Native or Flutter</span></div>
-          <div class="target"><b>Desktop</b><span>GPUI or Tauri</span></div>
-          <div class="target" style="grid-column: 1 / -1"><b>Backend</b><span>Hono, Drizzle, PostgreSQL, Better Auth</span></div>
-        </div>
+      <h2>What you get</h2>
+      <div class="h-cards">
+        <article class="h-card">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="9" width="30" height="21" rx="3" /><path d="M13 38h14M20 30v8" /><rect x="32" y="19" width="11" height="20" rx="3" class="a" /></svg>
+          <h3>One plan, every device</h3>
+          <p>A website, a phone app and a desktop app made together. Change something once and they all follow.</p>
+        </article>
+        <article class="h-card">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6l3.5 9.5L37 19l-9.5 3.500L24 32l-3.500-9.500L11 19l9.500-3.500z" class="a" /><path d="M37 30l1.800 4.200L43 36l-4.200 1.800L37 42l-1.800-4.200L31 36l4.200-1.800z" /></svg>
+          <h3>AI builds, you decide</h3>
+          <p>Say what you want in plain words. AI drafts it. You choose what you like and approve every change.</p>
+        </article>
+        <article class="h-card">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5l15 5v11c0 9-6 16-15 20C15 37 9 30 9 21V10z" /><path d="M17 24l5 5 9-10" class="a" /></svg>
+          <h3>Good looking and safe</h3>
+          <p>Clean design in light and dark, and safety checks built in from the very first day.</p>
+        </article>
       </div>
     </div>
   </section>
 
-  <section id="stacks">
-    <div class="wrap">
-      <p class="kicker">Pick your stacks</p>
-      <h2>Choose what the product needs, add the rest later</h2>
-      <p class="lead">The generator composes only the stacks you select. <code>deno task add-app</code> adds another one at any time, including a second app of the same kind.</p>
-      <div class="stacks">
-        {stacks.map((s) => (
-          <a class="stack" href={url(s.href)}>
-            <span class="tag">{s.kind}</span>
-            <h3>{s.title}</h3>
-            <p>{s.text}</p>
-            <ul class="chips">{s.chips.map((c) => <li>{c}</li>)}</ul>
-          </a>
-        ))}
+  <section class="h-sec h-tint">
+    <div class="wrap h-demo">
+      <div>
+        <h2>See it work in about a minute</h2>
+        <p class="h-lead">Type a request. Watch the design appear. Pick the one you like and see it on a website, a phone and a desktop.</p>
+        <p><a class="btn primary big" href={url("/demo/")}>Watch it work</a></p>
       </div>
+      <a class="h-poster" href={url("/demo/")} aria-label="Open the live demo">
+        <Themed item={pick("web-spa", "notes")} alt="" widths={[480, 800]} sizes="(min-width: 62rem) 40vw, 90vw" />
+        <span class="h-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.500v13l11-6.500z" /></svg></span>
+      </a>
     </div>
   </section>
 
-  <section id="made">
+  <section class="h-sec">
     <div class="wrap">
-      <p class="kicker">Made with Daedalus</p>
-      <h2>Real output, not mock-ups</h2>
-      <p class="lead">Every image here is a screenshot the stacks captured from their own running apps, in light and dark.</p>
+      <h2>Made with Daedalus</h2>
+      <p class="h-lead">Real screens from real apps, in light and dark.</p>
     </div>
-    <div class="strip" tabindex="0" role="region" aria-label="Screenshots, scroll sideways">
+    <div class="h-strip" tabindex="0" role="region" aria-label="Example screens, scroll sideways">
       {strip.map((i) => (
-        <figure class:list={[i.shape === "phone" && "phone-f"]}>
-          <div class="shot"><Themed item={i} alt={`${i.caption}, ${i.stackLabel}`} widths={i.shape === "phone" ? [200, 360] : [480, 760]} sizes={i.shape === "phone" ? "13rem" : "(min-width: 40rem) 30rem, 78vw"} /></div>
-          <figcaption><b>{i.caption}</b> · {i.stackLabel}</figcaption>
+        <figure class:list={[i.shape === "phone" && "is-phone"]}>
+          <Themed item={i} alt={i.caption} widths={i.shape === "phone" ? [200, 360] : [480, 760]} sizes={i.shape === "phone" ? "12rem" : "(min-width: 40rem) 28rem, 78vw"} />
         </figure>
       ))}
     </div>
-    <div class="wrap"><a class="btn" href={url("/showcase/")}>Open the full showcase</a></div>
+    <div class="wrap"><a class="btn big" href={url("/showcase/")}>See all examples</a></div>
   </section>
 
-  <section id="presets">
+  <section class="h-sec">
     <div class="wrap">
-      <p class="kicker">Design presets</p>
-      <h2>The same app in {jsonPresets.length} directions</h2>
-      <p class="lead">A preset is a token file. Pass <code>--ui</code> to the generator and every stack takes on a different personality, so your product does not look like everyone else's.</p>
-      <div class="presets">
-        {jsonPresets.map((p) => (
-          <article class="preset" style={`--pl-surface:${p.color.surface};--pl-muted-surface:${p.color.surfaceMuted};--pl-text:${p.color.text};--pl-muted:${p.color.textMuted};--pl-line:${p.color.border};--pl-primary:${p.color.primary};--pl-on:${p.color.onPrimary};--pd-surface:${p.colorDark.surface};--pd-muted-surface:${p.colorDark.surfaceMuted};--pd-text:${p.colorDark.text};--pd-muted:${p.colorDark.textMuted};--pd-line:${p.colorDark.border};--pd-primary:${p.colorDark.primary};--pd-on:${p.colorDark.onPrimary};--p-radius:${p.radius.md}px;--p-font:'${p.font.display} Variable'`}>
-            <h3>{p.name}</h3>
-            <p>{p.description}</p>
-            <div class="mock" aria-hidden="true"><div class="bar"></div><div class="bar w"></div><span class="pb">Continue</span></div>
-            <div class="swatches" aria-hidden="true">{["primary", "surface", "text", "success", "danger"].map((k) => <i style={`--c:${p.color[k]}`}></i>)}</div>
-            <small>--ui {p.id} · {p.font.display}</small>
-          </article>
-        ))}
+      <h2>Why not start from scratch?</h2>
+      <p class="h-lead">Every app needs the same groundwork first. Daedalus has it ready, connected and checked.</p>
+      <div class="h-compare">
+        <div>
+          <h3>From scratch</h3>
+          <ul>
+            <li>Set up three separate projects</li>
+            <li>Build sign-in and accounts</li>
+            <li>Wire up a database and server</li>
+            <li>Choose colours and fonts for each app</li>
+            <li>Draw and build every first screen</li>
+            <li>Add tests and safety checks later</li>
+            <li>Build a way to publish</li>
+          </ul>
+        </div>
+        <div class="with">
+          <h3>With Daedalus</h3>
+          <ul>
+            <li>One plan for the website, phone and desktop</li>
+            <li>Sign-in and accounts included</li>
+            <li>Database and server already connected</li>
+            <li>One look shared by every app</li>
+            <li>Ready-made screens, with empty and error states</li>
+            <li>Tests and safety checks on from day one</li>
+            <li>A working way to publish</li>
+          </ul>
+        </div>
+      </div>
+      <p class="h-note">You own all the code and can change anything. It is a starting point, not a cage. It is not for a tiny one-page site, a quick throwaway test, or a project that needs different technology. <a href={url("/getting-started/why-daedalus/")}>Read more</a></p>
+    </div>
+  </section>
+
+  <section class="h-sec h-tint">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <ol class="h-steps">
+        <li>
+          <svg viewBox="0 0 96 72" aria-hidden="true"><rect x="8" y="8" width="64" height="38" rx="10" /><path d="M24 46l-6 14 18-14" /><path d="M20 22h40M20 32h26" class="a" /></svg>
+          <h3>1. Say what you want</h3>
+          <p>Describe it in your own words, like you would to a colleague.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 96 72" aria-hidden="true"><rect x="4" y="14" width="24" height="44" rx="6" /><rect x="36" y="14" width="24" height="44" rx="6" class="a" /><rect x="68" y="14" width="24" height="44" rx="6" /></svg>
+          <h3>2. Pick your favourite</h3>
+          <p>AI shows you three different designs. You keep the one you like.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 96 72" aria-hidden="true"><rect x="6" y="10" width="46" height="32" rx="4" /><rect x="60" y="22" width="20" height="38" rx="5" class="a" /><path d="M20 52h18M29 42v10" /></svg>
+          <h3>3. Get your apps</h3>
+          <p>Your website, phone app and desktop app, checked and ready to grow.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="h-sec">
+    <div class="wrap">
+      <h2>You can trust it</h2>
+      <div class="h-trust">
+        <div><h3>Free and open source</h3><p>Anyone can read it, use it and improve it. No lock-in.</p></div>
+        <div><h3>You stay in control</h3><p>Nothing changes until you say yes. You always see what it plans to do.</p></div>
+        <div><h3>AI can make mistakes</h3><p>So please check what it builds. You are responsible for what you ship. <a href={url("/ai/disclaimer/")}>Read the full note</a>.</p></div>
       </div>
     </div>
   </section>
 
-  <section id="guardrails">
+  <section class="h-sec h-end">
     <div class="wrap">
-      <p class="kicker">Guardrails</p>
-      <h2>Speed without the mess</h2>
-      <div class="guard">
-        {guards.map(([n, t, p]) => <div><h3><span>{n}</span>{t}</h3><p>{p}</p></div>)}
-      </div>
-    </div>
-  </section>
-
-  <section class="close">
-    <div class="wrap">
-      <h2>Start with the map, then walk the labyrinth</h2>
-      <p class="lead">Install it, generate a project, and run <code>deno task check</code>. The docs below are generated from the repository, so they match the code.</p>
-      <div class="cta">
-        <a class="btn primary" href={url("/getting-started/install/")}>Install and first project</a>
-        <a class="btn" href={url("/getting-started/choosing-a-stack/")}>Choosing a stack</a>
-      </div>
-      <small>Daedalus is an AI-assisted framework. AI output can be wrong, insecure or non-compliant, and you are responsible for everything you ship. Packs and checklists are aids, not legal, financial, medical or safety advice.</small>
+      <h2>Ready to try it?</h2>
+      <p class="h-cta c"><a class="btn primary big" href={url("/demo/")}>Watch it work</a><a class="btn big" href={url("/developers/")}>For developers</a></p>
     </div>
   </section>
 </Base>
-
-<style is:global>
-  .preset {
-    --p-surface: var(--pl-surface); --p-muted-surface: var(--pl-muted-surface); --p-text: var(--pl-text);
-    --p-muted: var(--pl-muted); --p-line: var(--pl-line); --p-primary: var(--pl-primary); --p-on: var(--pl-on);
-  }
-  :root:not([data-theme="light"]) .preset {
-    --p-surface: var(--pd-surface); --p-muted-surface: var(--pd-muted-surface); --p-text: var(--pd-text);
-    --p-muted: var(--pd-muted); --p-line: var(--pd-line); --p-primary: var(--pd-primary); --p-on: var(--pd-on);
-  }
-</style>
-
-<script>
-  document.querySelector("[data-copy]")?.addEventListener("click", async (e) => {
-    const btn = e.currentTarget as HTMLButtonElement;
-    const text = (document.getElementById("cmd")?.textContent ?? "");
-    try {
-      await navigator.clipboard.writeText(text);
-      btn.setAttribute("aria-label", "Copied");
-      setTimeout(() => btn.setAttribute("aria-label", "Copy the install commands"), 1800);
-    } catch {}
-  });
-</script>

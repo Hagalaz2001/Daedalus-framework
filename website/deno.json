@@ -6,6 +6,7 @@
     "dev": "deno task sync && deno task showcase && deno run -A npm:astro@7.4.12 dev",
     "build": "deno task sync && deno task showcase && deno run -A npm:astro@7.4.12 build",
     "preview": "deno run -A npm:astro@7.4.12 preview",
+    "record": "deno run -A --config ../studio/deno.json scripts/record-demo.ts",
     "test": "deno test -A scripts/"
   },
   "fmt": { "lineWidth": 120 },

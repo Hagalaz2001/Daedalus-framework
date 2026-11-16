@@ -209,3 +209,21 @@ dialog.lb::backdrop { background: rgb(6 8 10 / 0.88); backdrop-filter: blur(6px)
 .lb-view.phone img { max-height: calc(100vh - 6rem); }
 .lb-view.fit img { max-height: calc(100vh - 6rem); object-fit: contain; }
 @media (max-width: 61.99rem) { .labyrinth { opacity: 0.07; } }
+
+/* Plain-language additions */
+.aside { color: var(--d-muted); font-size: 0.95rem; margin: -0.5rem 0 0; }
+.steps3 { display: grid; gap: 1rem; margin: 2.5rem 0 2rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+.steps3 .card h3 { font-size: 1.3rem; }
+.tip { font-size: 0.85rem; color: var(--d-accent); text-decoration: underline dotted; cursor: help; position: relative; }
+.tip::after { content: attr(data-tip); position: absolute; left: 0; bottom: 130%; width: max-content; max-width: 16rem; padding: 0.55rem 0.7rem; border-radius: 8px; background: var(--d-ink); color: var(--d-bg); font-size: 0.8rem; line-height: 1.4; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 5; }
+.tip:hover::after, .tip:focus-visible::after { opacity: 1; }
+.devgrid { display: grid; gap: 2rem; margin-top: 2rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 56rem) { .devgrid { grid-template-columns: 1.5fr 1fr; } }
+.mini { font: 500 0.8rem/1.4 var(--d-mono); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 0.6rem; }
+.devlinks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.devlinks li { border-bottom: 1px solid var(--d-line); }
+.devlinks a { display: block; padding: 0.7rem 0; text-decoration: none; }
+.devlinks a:hover { color: var(--d-accent); }
+.chips li { white-space: normal; }
+.top nav a { white-space: nowrap; }
+@media (max-width: 40rem) { .top-in { padding-inline: 1rem; gap: 0.4rem; } .brand { font-size: 1.15rem; } .top nav { gap: 0; } .top nav a { padding: 0.5rem 0.5rem; font-size: 0.9rem; } .theme { margin-left: 0.15rem; } }

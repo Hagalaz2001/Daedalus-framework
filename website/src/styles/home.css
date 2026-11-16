@@ -1,0 +1,59 @@
+/* Calm landing page: one accent, big type, few lines. */
+.h-hero { padding: clamp(3rem, 8vw, 7rem) 0 clamp(2rem, 5vw, 4rem); overflow: clip; }
+.h-hero-grid { display: grid; gap: 3rem; grid-template-columns: minmax(0, 1fr); align-items: center; }
+@media (min-width: 62rem) { .h-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 3rem; } }
+.h-eyebrow { color: var(--d-accent); font-weight: 600; font-size: 1rem; margin: 0 0 1rem; }
+.h-hero h1 { font-size: clamp(2.6rem, 7vw, 4.8rem); line-height: 1.05; font-weight: 480; font-variation-settings: "opsz" 110; letter-spacing: -0.01em; margin: 0 0 1.4rem; max-width: 14ch; }
+.h-lead { font-size: clamp(1.15rem, 2vw, 1.4rem); line-height: 1.55; color: var(--d-muted); max-width: 34rem; margin: 0 0 2rem; }
+.h-cta { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; margin: 0; }
+.h-cta.c { justify-content: center; }
+.btn.big { min-height: 3.5rem; padding: 0 2rem; font-size: 1.1rem; }
+.h-link { font-weight: 600; font-size: 1.05rem; }
+.h-stage { padding: 0 0 2rem; }
+.h-sec { padding: clamp(3.5rem, 9vw, 7rem) 0; }
+.h-sec h2 { font-size: clamp(2rem, 4.6vw, 3.2rem); margin-bottom: 1.2rem; }
+.h-tint { background: var(--d-bg-2); }
+
+.h-cards { display: grid; gap: 1.25rem; margin-top: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+.h-card { background: var(--d-surface); border-radius: 22px; padding: 2rem; }
+.h-card svg { width: 3.4rem; height: 3.4rem; margin-bottom: 1.2rem; fill: none; stroke: var(--d-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.h-card svg .a, .h-steps svg .a { stroke: var(--d-accent); }
+.h-card h3 { font-size: 1.5rem; margin-bottom: 0.6rem; }
+.h-card p { margin: 0; color: var(--d-muted); font-size: 1.08rem; line-height: 1.6; }
+
+.h-demo { display: grid; gap: 2.5rem; align-items: center; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 62rem) { .h-demo { grid-template-columns: 1fr 1.1fr; } }
+.h-poster { position: relative; display: block; border-radius: 20px; overflow: hidden; box-shadow: var(--d-shadow); }
+.h-poster img { width: 100%; aspect-ratio: 1440 / 900; object-fit: cover; object-position: top; }
+.h-play { position: absolute; inset: 0; display: grid; place-items: center; background: rgb(0 0 0 / 0.18); transition: background 0.2s; }
+.h-poster:hover .h-play { background: rgb(0 0 0 / 0.08); }
+.h-play svg { width: 5rem; height: 5rem; padding: 1.4rem 1.2rem 1.4rem 1.6rem; border-radius: 50%; background: var(--d-accent); fill: var(--d-accent-ink); }
+
+.h-strip { display: flex; gap: 1.5rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: 1.5rem 1.25rem 2.5rem max(1.25rem, calc((100vw - 76rem) / 2 + 1.25rem)); scrollbar-width: thin; }
+.h-strip figure { margin: 0; flex: 0 0 min(80vw, 28rem); scroll-snap-align: start; border-radius: 16px; overflow: hidden; box-shadow: var(--d-shadow); background: var(--d-surface); align-self: flex-start; }
+.h-strip figure.is-phone { flex-basis: min(48vw, 12rem); }
+.h-strip img { width: 100%; aspect-ratio: 1440 / 900; object-fit: cover; object-position: top; }
+.h-strip .is-phone img { aspect-ratio: 780 / 1688; }
+
+.h-steps { list-style: none; margin: 3rem 0 0; padding: 0; display: grid; gap: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+.h-steps svg { width: 9rem; height: 6.8rem; fill: none; stroke: var(--d-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 1rem; }
+.h-steps h3 { font-size: 1.45rem; margin-bottom: 0.5rem; }
+.h-steps p { margin: 0; color: var(--d-muted); font-size: 1.08rem; line-height: 1.6; }
+
+.h-trust { display: grid; gap: 2rem; margin-top: 2rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+.h-trust h3 { font-size: 1.35rem; margin-bottom: 0.4rem; }
+.h-trust p { margin: 0; color: var(--d-muted); font-size: 1.05rem; line-height: 1.6; }
+
+.h-end { text-align: center; padding-bottom: clamp(4rem, 10vw, 8rem); }
+.h-end h2 { max-width: 18ch; margin-inline: auto; margin-bottom: 2rem; }
+
+.h-compare { display: grid; gap: 1.25rem; margin-top: 2.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.h-compare > div { border-radius: 22px; padding: 2rem; background: var(--d-bg-2); }
+.h-compare .with { background: var(--d-surface); box-shadow: inset 0 0 0 2px var(--d-accent); }
+.h-compare h3 { font-size: 1.5rem; margin-bottom: 1rem; }
+.h-compare ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.7rem; }
+.h-compare li { font-size: 1.08rem; color: var(--d-muted); padding-left: 1.7rem; position: relative; }
+.h-compare li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--d-line); }
+.h-compare .with li { color: var(--d-ink); }
+.h-compare .with li::before { background: var(--d-accent); }
+.h-note { margin-top: 2rem; max-width: 44rem; color: var(--d-muted); font-size: 1.05rem; }

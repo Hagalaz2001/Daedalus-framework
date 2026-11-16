@@ -1,0 +1,49 @@
+---
+import Base from "../layouts/Base.astro";
+import TerminalReplay from "../components/TerminalReplay.astro";
+import { REPO, url } from "../lib/site";
+import "../styles/demo.css";
+import "../styles/home.css";
+---
+<Base title="For developers | Daedalus" description="The precise version: what Daedalus generates, how to install it, and where the technical documentation lives." path="/developers/">
+  <div class="wrap sc-head">
+    <h1>For developers</h1>
+    <p class="h-lead">Daedalus is a project generator and framework. One OpenAPI contract and one <code>design/tokens.json</code> generate the TypeScript and Dart clients and each stack's theme. Architecture, boundary lint, <code>deno audit</code>, AI-agent rules and a design studio ship in the repository. Pure Deno, MIT licensed.</p>
+  </div>
+  <div class="wrap">
+    <div class="devgrid">
+      <div>
+        <p class="mini">Try it</p>
+        <div class="cmd">
+          <code id="cmd"><span class="l"><span class="p">$ </span>git clone {REPO}.git daedalus</span><span class="l"><span class="p">$ </span>cd daedalus</span><span class="l"><span class="p">$ </span>deno run -A cli.ts new ../shop --name "Acme Shop" --web site,spa --mobile rn --backend hono</span></code>
+          <button class="copy" type="button" aria-label="Copy the install commands" data-copy>Copy</button>
+        </div>
+      </div>
+      <ul class="devlinks">
+        <li><a href={url("/getting-started/introduction/")}>Documentation home</a></li>
+        <li><a href={url("/getting-started/install/")}>Install and first project</a></li>
+        <li><a href={url("/getting-started/choosing-a-stack/")}>Choosing a stack</a></li>
+        <li><a href={url("/getting-started/why-daedalus/")}>Why use Daedalus?</a></li>
+        <li><a href={url("/concepts/architecture/")}>Architecture</a></li>
+        <li><a href={url("/reference/cli/")}>CLI and MCP reference</a></li>
+        <li><a href={url("/ai/workflow/")}>AI workflow and responsibility</a></li>
+        <li><a href={REPO} rel="noopener">Source on GitHub</a></li>
+      </ul>
+    </div>
+    <p class="mini" style="margin-top:3rem">Creating a project, recorded from a real run</p>
+    <TerminalReplay source="create" title="daedalus new" />
+  </div>
+  <div style="height:4rem"></div>
+</Base>
+
+<script>
+  document.querySelector("[data-copy]")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const text = [...document.querySelectorAll("#cmd .l")].map((l) => (l.textContent ?? "").replace(/^\$ /, "")).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = "Copied";
+      setTimeout(() => (btn.textContent = "Copy"), 1800);
+    } catch {}
+  });
+</script>

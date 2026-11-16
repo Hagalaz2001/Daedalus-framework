@@ -25,8 +25,11 @@ export default defineConfig({
         { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" } },
       ],
       sidebar: [
+        { label: "Learn", items: [{ autogenerate: { directory: "learn" } }] },
         { label: "Showcase", link: "/showcase/", attrs: { class: "sidebar-showcase" } },
         { label: "Getting started", items: [{ autogenerate: { directory: "getting-started" } }] },
+        { label: "Method", items: [{ autogenerate: { directory: "method" } }] },
+        { label: "Developer guide", items: [{ autogenerate: { directory: "dev" } }] },
         { label: "Concepts", items: [{ autogenerate: { directory: "concepts" } }] },
         {
           label: "Stacks",

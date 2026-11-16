@@ -28,12 +28,9 @@ const description = `${total} real screens from the Daedalus stacks: website, we
 ---
 <Base title={title} description={description} path="/showcase/" nav="showcase">
   <div class="wrap sc-head">
-    <p class="kicker">Made with Daedalus</p>
-    <h1>What the stacks produce</h1>
-    <p class="lead">
-      Screenshots captured from the running starter apps, in light and dark, at the sizes the stacks ship. Nothing here is a
-      mock-up. Where an app has not been launched yet, the card says so.
-    </p>
+    
+    <h1>What Daedalus makes</h1>
+    <p class="lead">Real screens from the apps Daedalus produced, in light and dark mode. Nothing here is a mock-up. Tap any picture to enlarge it.</p>
   </div>
 
   <div class="tabs">
@@ -82,7 +79,7 @@ const description = `${total} real screens from the Daedalus stacks: website, we
 
   <div class="wrap">
     <div class="howto">
-      <b>Add more screens.</b> Stacks write PNGs named <code>&lt;screen&gt;[-&lt;width&gt;]-light.png</code> and <code>-dark.png</code> to
+      <b>For developers: add more screens.</b> Stacks write PNGs named <code>&lt;screen&gt;[-&lt;width&gt;]-light.png</code> and <code>-dark.png</code> to
       <code>stacks/&lt;id&gt;/docs/screenshots/</code>. Run <code>deno task showcase</code> in the repository root, then rebuild the site;
       new screens appear here and the "coming soon" cards turn into galleries.
     </div>

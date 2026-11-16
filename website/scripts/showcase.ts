@@ -25,22 +25,22 @@ interface Source {
 }
 
 export const PLATFORMS = [
-  { id: "website", title: "Website", blurb: "Marketing sites, blogs and pricing pages: static or server-rendered, fast, and accessible." },
-  { id: "web", title: "Web app", blurb: "Signed-in product UI: dashboards, lists, forms and settings, with every empty, error and loading state designed." },
-  { id: "mobile", title: "Mobile", blurb: "Android and iOS apps from the same contract and tokens, in React Native or Flutter." },
-  { id: "desktop", title: "Desktop", blurb: "Native Rust desktop apps, on GPUI or in a Tauri shell." },
-  { id: "studio", title: "Studio", blurb: "The design studio: directions, system, flow and checks drafted next to your code." },
+  { id: "website", title: "Websites", blurb: "Pages for a business, a blog or a shop front. Quick to load, easy to find on Google, and good looking on any screen." },
+  { id: "web", title: "Web apps", blurb: "Tools your team opens in a browser: dashboards, lists, forms and settings, with every empty, error and loading moment designed." },
+  { id: "mobile", title: "Phone apps", blurb: "Apps for iPhone and Android that match your website: same colours, same wording, same data." },
+  { id: "desktop", title: "Desktop apps", blurb: "Real programs for Windows, Mac and Linux, small and quick." },
+  { id: "studio", title: "Design studio", blurb: "Where ideas become designs: describe a screen, compare directions, and check them before they are built." },
 ];
 
 const SOURCES: Source[] = [
-  { platform: "website", stack: "web-site-astro", label: "Astro site", dir: "stacks/web-site-astro/docs/screenshots", shape: "wide", pending: "The Astro site stack has no screenshots yet." },
-  { platform: "website", stack: "web-site-next", label: "Next.js site", dir: "stacks/web-site-next/docs/screenshots", shape: "wide" },
-  { platform: "web", stack: "web-spa", label: "React app", dir: "stacks/web-spa/docs/screenshots", shape: "wide" },
-  { platform: "web", stack: "web-spa-vue", label: "Vue app", dir: "stacks/web-spa-vue/docs/screenshots", shape: "wide", only: ["dashboard", "notes", "note-detail", "settings"] },
-  { platform: "mobile", stack: "mobile-rn", label: "React Native", dir: "stacks/mobile-rn/docs/screenshots", shape: "phone" },
-  { platform: "mobile", stack: "mobile-flutter", label: "Flutter", dir: "stacks/mobile-flutter/docs/screenshots", shape: "phone", pending: "Flutter screenshots land once the app has been run on an emulator." },
-  { platform: "desktop", stack: "desktop-gpui", label: "Rust + GPUI", dir: "stacks/desktop-gpui/docs/screenshots", shape: "wide", pending: "The native app has not been launched for capture yet." },
-  { platform: "desktop", stack: "desktop-tauri", label: "Tauri", dir: "stacks/desktop-tauri/docs/screenshots", shape: "wide", pending: "The Tauri app has not been launched for capture yet." },
+  { platform: "website", stack: "web-site-astro", label: "Website", dir: "stacks/web-site-astro/docs/screenshots", shape: "wide", pending: "The Astro site stack has no screenshots yet." },
+  { platform: "website", stack: "web-site-next", label: "Website (with live-server features)", dir: "stacks/web-site-next/docs/screenshots", shape: "wide" },
+  { platform: "web", stack: "web-spa", label: "Web app", dir: "stacks/web-spa/docs/screenshots", shape: "wide" },
+  { platform: "web", stack: "web-spa-vue", label: "Web app (alternate build)", dir: "stacks/web-spa-vue/docs/screenshots", shape: "wide", only: ["dashboard", "notes", "note-detail", "settings"] },
+  { platform: "mobile", stack: "mobile-rn", label: "Phone app", dir: "stacks/mobile-rn/docs/screenshots", shape: "phone" },
+  { platform: "mobile", stack: "mobile-flutter", label: "Phone app (alternate build)", dir: "stacks/mobile-flutter/docs/screenshots", shape: "phone", pending: "Flutter screenshots land once the app has been run on an emulator." },
+  { platform: "desktop", stack: "desktop-gpui", label: "Desktop app", dir: "stacks/desktop-gpui/docs/screenshots", shape: "wide", pending: "The native app has not been launched for capture yet." },
+  { platform: "desktop", stack: "desktop-tauri", label: "Desktop app (alternate build)", dir: "stacks/desktop-tauri/docs/screenshots", shape: "wide", pending: "The Tauri app has not been launched for capture yet." },
   { platform: "studio", stack: "studio", label: "Studio", dir: "docs/studio", shape: "wide" },
 ];
 
@@ -55,7 +55,7 @@ const CAPTIONS: Record<string, string> = {
   "profile-delete": "Account deletion", settings: "Settings", "sign-in": "Sign in", "sign-up": "Sign up",
   onboarding: "Onboarding", "sign-in-errors": "Sign in, validation errors", home: "Home", detail: "Detail view",
   studio: "Studio workspace", checks: "Design checks", directions: "Design directions", "export-diff": "Export diff",
-  flow: "User flow", system: "Design system",
+  flow: "User flow", system: "Design system", signin: "Sign in", "new-note": "Create form", edit: "Edit form", "note-form": "Create form",
 };
 
 /** Strongest screens first; error, legal and not-found pages last. Unlisted screens keep file order between the two. */

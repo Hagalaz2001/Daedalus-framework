@@ -1,0 +1,48 @@
+---
+import { getImage } from "astro:assets";
+import Base from "../layouts/Base.astro";
+import Demo from "../components/Demo.astro";
+import { pick, shot, url } from "../lib/site";
+import "../styles/demo.css";
+import "../styles/home.css";
+
+// Real screenshots of the starter apps, for the last step.
+const wanted: [string, string, string][] = [["web-spa", "dashboard", "Web app"], ["mobile-rn", "05-home", "Phone app"], ["desktop-gpui", "dashboard", "Desktop app"]];
+const shots: Record<string, { label: string; light: string; dark: string; w: number; h: number }> = {};
+for (const [stack, name, label] of wanted) {
+  const it = pick(stack, name);
+  const l = shot(it?.light);
+  const d = shot(it?.dark);
+  if (!it || !l || !d) continue;
+  const width = it.shape === "phone" ? 300 : 640;
+  shots[stack] = {
+    label,
+    light: (await getImage({ src: l, width, format: "webp", quality: 78 })).src,
+    dark: (await getImage({ src: d, width, format: "webp", quality: 78 })).src,
+    w: width,
+    h: Math.round(width * (l.height / l.width)),
+  };
+}
+const title = "Watch Daedalus build an app";
+const description = "A recorded, step-by-step replay of a real Daedalus run: from a plain request to three designs, the finished screens, generated code and passing checks.";
+---
+<Base title={title} description={description} path="/demo/" nav="demo">
+  <div class="wrap sc-head">
+    <h1>Watch Daedalus build an app</h1>
+    <p class="lead">Type a request, watch the design appear, pick the one you like, and see it on a website, a phone and a desktop. It takes about a minute. You can pause, skip and change the speed.</p>
+  </div>
+  <div class="wrap"><Demo shots={JSON.stringify(shots)} /></div>
+
+  <section class="h-sec">
+    <div class="wrap h-end">
+      <h2>Want the technical details?</h2>
+      <p class="h-cta c"><a class="btn big" href={url("/developers/")}>For developers</a></p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { mountDemo } from "../demo/player";
+  const el = document.getElementById("demo");
+  if (el) mountDemo(el);
+</script>

@@ -4,6 +4,9 @@ How to run the backend and the web apps outside your laptop: environments, confi
 targets, backups, monitoring and what to do when something breaks. Everything here is generic: replace `example.com` and
 names with yours.
 
+The delivery pipeline (checks on every pull request, signed releases, approval-gated deploys, secret handling, incident
+response one-pager) is described in [DEVSECOPS.md](DEVSECOPS.md); this page covers running the backend itself.
+
 Status of the commands below: `deno task --cwd backend start`, the `/health` and `/ready` checks and the environment
 validation were run and tested. The Docker image and the Fly.io, Render, Railway and Compose snippets follow each
 platform's documented format but were not run by the framework's own tests (no Docker host in CI here), so build and
@@ -26,20 +29,21 @@ seen in production, make staging able to show it.
 Read and validated once at boot (`backend/src/shared/config/config.ts`); the process refuses to start and lists every
 problem if something is missing or malformed. Copy `backend/.env.example` to `backend/.env` locally.
 
-| Variable                | Required                     | Default                        | Meaning                                                                                                         |
-| ----------------------- | ---------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `APP_ENV`               | no                           | `development`                  | `development`, `test` or `production`; production turns the strict checks on                                    |
-| `PORT`                  | no                           | `8787`                         | HTTP port                                                                                                       |
-| `DATABASE_URL`          | production                   | empty (PGlite)                 | Postgres connection string; use the pooler URL on serverless hosts                                              |
-| `MONGODB_URI`           | production (MongoDB flavour) | empty (managed local `mongod`) | MongoDB connection string; plays the role of `DATABASE_URL` in a `--db mongodb` project                         |
-| `PGLITE_DIR`            | no                           | `.data/pglite`                 | Folder of the embedded database when no database URL is set (the MongoDB flavour keeps `.data/mongo` beside it) |
-| `BETTER_AUTH_SECRET`    | production                   | dev value                      | 32+ random characters; signs sessions. Rotating it signs everyone out                                           |
-| `BETTER_AUTH_URL`       | production                   | `http://localhost:<PORT>`      | Public URL of the API                                                                                           |
-| `AUTH_TRUSTED_ORIGINS`  | production                   | `http://localhost:5173`        | Comma-separated web origins allowed to use cookies                                                              |
-| `LOG_LEVEL`             | no                           | `info`                         | `debug`, `info`, `warn`, `error`                                                                                |
-| `RATE_LIMIT_PER_MINUTE` | no                           | `120`                          | Requests per client per minute (auth endpoints: 30)                                                             |
-| `TRUST_PROXY`           | no                           | `false`                        | `true` behind a reverse proxy you control, so the real client address is used                                   |
-| `ADMIN_EMAILS`          | no                           | empty                          | Platform operators (admin and flags modules)                                                                    |
+| Variable                     | Required                     | Default                        | Meaning                                                                                                                                                                                                        |
+| ---------------------------- | ---------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_ENV`                    | no                           | `development`                  | `development`, `test` or `production`; production turns the strict checks on                                                                                                                                   |
+| `PORT`                       | no                           | `8787`                         | HTTP port                                                                                                                                                                                                      |
+| `DATABASE_URL`               | production                   | empty (PGlite)                 | Postgres connection string; use the pooler URL on serverless hosts                                                                                                                                             |
+| `MONGODB_URI`                | production (MongoDB flavour) | empty (managed local `mongod`) | MongoDB connection string; plays the role of `DATABASE_URL` in a `--db mongodb` project                                                                                                                        |
+| `PGLITE_DIR`                 | no                           | `.data/pglite`                 | Folder of the embedded database when no database URL is set (the MongoDB flavour keeps `.data/mongo` beside it)                                                                                                |
+| `BETTER_AUTH_SECRET`         | production                   | dev value                      | 32+ random characters; signs sessions. Rotating it signs everyone out                                                                                                                                          |
+| `BETTER_AUTH_URL`            | production                   | `http://localhost:<PORT>`      | Public URL of the API                                                                                                                                                                                          |
+| `AUTH_TRUSTED_ORIGINS`       | production                   | `http://localhost:5173`        | Comma-separated web origins allowed to use cookies                                                                                                                                                             |
+| `LOG_LEVEL`                  | no                           | `info`                         | `debug`, `info`, `warn`, `error`                                                                                                                                                                               |
+| `RATE_LIMIT_PER_MINUTE`      | no                           | `120`                          | Requests per client per minute                                                                                                                                                                                 |
+| `AUTH_RATE_LIMIT_PER_MINUTE` | no                           | `30`                           | Stricter limit on sign in and sign up                                                                                                                                                                          |
+| `TRUST_PROXY`                | no                           | `0`                            | Number of reverse proxies you control in front of the app (`true` = 1). The client address is read from `X-Forwarded-For` that many entries from the end; the left side is client-controlled and never trusted |
+| `ADMIN_EMAILS`               | no                           | empty                          | Platform operators (admin and flags modules)                                                                                                                                                                   |
 
 Each installed module adds its own variables to `.env.example` and its doc (`S3_*`, `STRIPE_*`, `EMAIL_*`, `SENTRY_DSN`,
 `OTEL_*` ...). Web apps read build-time variables prefixed `VITE_` (for example `VITE_API_BASE_URL`); those are public
@@ -56,6 +60,8 @@ by design, never put a secret in them.
 - Rotate on a schedule and immediately after anyone with access leaves or a key appears anywhere it should not. Stripe
   and similar services let two keys overlap: add the new one, deploy, revoke the old one.
 - Stripe: test keys (`sk_test_...`) everywhere except production, and only after the payments flow has been reviewed.
+- CI secrets are stored per environment (staging, production) with a named reviewer on production; the exact list and
+  the rotation routine are in [DEVSECOPS.md](DEVSECOPS.md#secrets-management).
 
 ## Container image
 
@@ -68,8 +74,9 @@ docker run --rm -p 8787:8787 --env-file backend/.env app-backend
 
 It runs the TypeScript sources with Deno 2 as a non-root user, applies migrations on start and has a health check on
 `/health`. Image size is small because Deno needs no build step; pin the Deno version (it is in the `FROM` line) and
-update it deliberately. For production set `APP_ENV=production` (already the image default) and the required variables
-above; the container exits with a clear message if any is missing.
+update it deliberately. CI builds it on every pull request and scans it with Trivy; releases can publish it signed to
+GHCR ([DEVSECOPS.md](DEVSECOPS.md#supply-chain-protection)). For production set `APP_ENV=production` (already the image
+default) and the required variables above; the container exits with a clear message if any is missing.
 
 Endpoints for orchestrators: `GET /health` (liveness: the process answers) and `GET /ready` (readiness: the database
 answers). Send traffic only when `/ready` is 200; restart only when `/health` fails. On `SIGTERM` the server stops
@@ -77,8 +84,10 @@ accepting connections, lets in-flight requests finish (10 seconds at most), stop
 
 ## Deploy targets
 
-Pick one for the backend; the web app is usually separate static hosting (Vercel below). All of them need a managed
-Postgres (Supabase, Neon, the platform's own) with its URL in `DATABASE_URL`.
+Pick one for the backend; the web app is usually separate static hosting (Vercel below). Deploys run from CI with a
+protected `production` environment and stay disabled until you configure them: see
+[DEVSECOPS.md](DEVSECOPS.md#turning-deployment-on) and [Adding a deploy target](DEVSECOPS.md#adding-a-deploy-target).
+All of them need a managed Postgres (Supabase, Neon, the platform's own) with its URL in `DATABASE_URL`.
 
 ### Fly.io
 
@@ -206,6 +215,9 @@ in the CI secret store, ship to TestFlight and the Play internal track first, th
   connection use. Alerts go to a channel someone reads; every alert needs an owner and an action.
 
 ## Incident checklist
+
+A one-page version to print, with severity levels and the breach-notification reminder, is in
+[DEVSECOPS.md](DEVSECOPS.md#incident-response-one-page).
 
 1. **Acknowledge** in the team channel; name one person leading. Note the start time.
 2. **Assess** impact in plain words: who is affected, which feature, since when, is data at risk? Check `/ready`, the

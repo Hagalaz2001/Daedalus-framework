@@ -1,0 +1,26 @@
+---
+import { url } from "../lib/site";
+interface Props {
+  source?: "create" | "check";
+  title?: string;
+}
+const { source = "create", title = "Terminal" } = Astro.props;
+---
+<div class="termwrap" data-terminal data-source={source} data-url={url("/demo/recording.json")}>
+  <div class="term-bar">
+    <span class="term-title"><i></i><i></i><i></i>{title}</span>
+    <span class="term-ctl">
+      <button type="button" data-play aria-label="Pause the terminal">Pause</button>
+      <button type="button" data-restart>Restart</button>
+      <label>Speed
+        <select data-speed aria-label="Terminal speed"><option value="1">1x</option><option value="2" selected>2x</option><option value="4">4x</option></select>
+      </label>
+    </span>
+  </div>
+  <div class="term-body" role="log" aria-label="Terminal replay" tabindex="0"></div>
+  <p class="muted small" data-note>Loading the recorded run...</p>
+</div>
+<script>
+  import { mountTerminal } from "../demo/terminal";
+  document.querySelectorAll<HTMLElement>("[data-terminal]").forEach(mountTerminal);
+</script>

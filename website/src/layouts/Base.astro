@@ -10,7 +10,7 @@ interface Props {
   title: string;
   description: string;
   path: string;
-  nav?: "showcase" | "";
+  nav?: "showcase" | "demo" | "";
 }
 const { title, description, path, nav = "" } = Astro.props;
 const canonical = `${SITE}${path}`;
@@ -62,10 +62,9 @@ const ld = {
       <div class="top-in">
         <a class="brand" href={url("/")} aria-label="Daedalus, home"><Logo /><span>Daedalus</span></a>
         <nav aria-label="Primary">
-          <a href={url("/getting-started/introduction/")}>Docs</a>
-          <a href={url("/showcase/")} aria-current={nav === "showcase" ? "page" : undefined}>Showcase</a>
-          <a class="hide-sm" href={url("/stacks/web-spa/")}>Stacks</a>
-          <a class="hide-sm" href={REPO} rel="noopener">GitHub</a>
+          <a href={url("/demo/")} aria-current={nav === "demo" ? "page" : undefined}>Watch it work</a>
+          <a href={url("/showcase/")} aria-current={nav === "showcase" ? "page" : undefined}>Examples</a>
+          <a class="hide-sm" href={url("/developers/")}>For developers</a>
           <button class="theme" type="button" aria-label="Switch between light and dark theme" id="theme-toggle">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
               <circle cx="12" cy="12" r="4.2" /><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" />
@@ -79,14 +78,13 @@ const ld = {
       <div class="foot-in">
         <div>
           <a class="brand" href={url("/")}><Logo /><span>Daedalus</span></a>
-          <p class="muted">Open source under the MIT licence. AI output can be wrong: you are responsible for what you ship.
-            <a href={url("/ai/disclaimer/")}>Read the disclaimer</a>.</p>
+          <p class="muted">Free and open source. AI can make mistakes, so please check what it builds. You are responsible for what you ship.</p>
         </div>
         <ul>
-          <li><a href={url("/getting-started/introduction/")}>Documentation</a></li>
-          <li><a href={url("/showcase/")}>Showcase</a></li>
-          <li><a href={url("/contributing/guide/")}>Contributing</a></li>
-          <li><a href={REPO} rel="noopener">GitHub</a></li>
+          <li><a href={url("/demo/")}>Watch it work</a></li>
+          <li><a href={url("/showcase/")}>Examples</a></li>
+          <li><a href={url("/developers/")}>For developers</a></li>
+          <li><a href={url("/ai/disclaimer/")}>Important note about AI</a></li>
         </ul>
       </div>
     </footer>

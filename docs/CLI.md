@@ -19,6 +19,7 @@ The `daedalus` command (`cli.ts`). Install: `deno install -g -A -n daedalus <pat
 | `daedalus docs <query>` | Search Daedalus documentation. |
 | `daedalus studio [--project DIR]` | Run the design studio. |
 | `daedalus doctor [args]` | Check the machine (toolchains, local AI); exit 1 when below the minimum. |
+| `daedalus deno [--status\|--install] [--json]` | Temporary: shows which Deno runs React Native native builds and why; `--install` fetches the checksum-verified patched Deno ([tools/deno-patched](../tools/deno-patched/README.md)). |
 | `daedalus mcp` | MCP server on stdio ([INTEGRATIONS.md](INTEGRATIONS.md)). |
 
 `new`, `add-app`, `add-module` and `add-pack` take `--no-check` to skip the final `deno task check`. `new` takes `--yes`

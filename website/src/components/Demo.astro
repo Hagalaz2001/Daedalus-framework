@@ -1,0 +1,96 @@
+---
+import { url } from "../lib/site";
+interface Props { shots?: string }
+const { shots = "{}" } = Astro.props;
+const steps = [
+  ["Say what you want", "Describe the screen in your own words."],
+  ["It learns your look", "Daedalus reads your brand notes first."],
+  ["Three ideas, you pick", "Three different designs appear. You choose."],
+  ["Screens take shape", "The design builds up and the code is written beside it."],
+  ["It checks its own work", "Automatic checks run before anything is trusted."],
+  ["One idea, every device", "The same screen for web, phone and desktop."],
+];
+---
+<div class="demo" id="demo" data-url={url("/demo/recording.json")} data-shots={shots}>
+  <p class="demo-label"><b>Recorded demo of a real run.</b> The designs, files and check results below were captured from Daedalus Studio and the Daedalus command line (the design tool used built-in sample answers instead of a live AI, so the run is repeatable). Try it yourself with <code>daedalus studio</code>.</p>
+
+  <ol class="rail" aria-label="Steps">
+    {steps.map(([t], i) => (
+      <li><button type="button" data-step={i} aria-label={`Step ${i + 1}: ${t}`}><span>{i + 1}</span><em>{t}</em></button></li>
+    ))}
+  </ol>
+
+  <div class="controls" role="group" aria-label="Playback">
+    <button type="button" data-act="play" class="btn primary">Start</button>
+    <button type="button" data-act="prev" class="btn" aria-label="Previous step">Back</button>
+    <button type="button" data-act="next" class="btn" aria-label="Next step">Next</button>
+    <button type="button" data-act="restart" class="btn">Restart</button>
+    <label class="speed">Speed
+      <select data-act="speed" aria-label="Playback speed">
+        <option value="0.5">0.5x</option>
+        <option value="1" selected>1x</option>
+        <option value="2">2x</option>
+        <option value="4">4x</option>
+      </select>
+    </label>
+    <span class="keys muted">Keys: Space play/pause, arrows change step, R restart</span>
+  </div>
+
+  <div class="stage" tabindex="-1">
+    <div class="live" aria-live="polite" id="demo-live"></div>
+    <h2 class="step-title" id="step-title"></h2>
+    <p class="step-help" id="step-help"></p>
+
+    <section class="panel" data-panel="0" hidden>
+      <div class="chips-row" role="radiogroup" aria-label="Sample requests" id="briefs"></div>
+      <label for="brief" class="visually">Your request</label>
+      <textarea id="brief" rows="4" spellcheck="false"></textarea>
+      <p class="muted small" id="brief-note"></p>
+    </section>
+
+    <section class="panel" data-panel="1" hidden>
+      <div class="two">
+        <div>
+          <p class="mini">Your brand notes <span class="muted">(a short file where your look and tone are written down)</span></p>
+          <pre class="md" id="designmd" aria-label="Brand notes"></pre>
+        </div>
+        <div>
+          <p class="mini">Your colours and fonts <span class="muted">(chosen once, used in every app)</span></p>
+          <div class="tokens" id="tokens"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="2" hidden>
+      <div class="dirs" id="dirs"></div>
+      <p class="pick-hint" id="pick-hint" hidden>Choose the direction you like best.</p>
+    </section>
+
+    <section class="panel" data-panel="3" hidden>
+      <div class="build">
+        <div>
+          <div class="state-bar" id="state-bar" role="group" aria-label="Screen states"></div>
+          <div class="devices" id="devices"></div>
+        </div>
+        <div class="codebox">
+          <div class="code-tabs" role="tablist" aria-label="Generated code"></div>
+          <p class="mini" id="code-path"></p>
+          <pre class="code" id="code" aria-label="Generated code"><code></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="4" hidden>
+      <div class="two checks">
+        <ul class="checklist" id="checklist"></ul>
+        <div class="term"><div class="term-body" id="check-log" role="log" aria-label="Check output"></div></div>
+      </div>
+      <p class="muted small" id="check-note"></p>
+    </section>
+
+    <section class="panel" data-panel="5" hidden>
+      <div class="every" id="every"></div>
+      <p class="muted small" id="every-note"></p>
+    </section>
+  </div>
+</div>
