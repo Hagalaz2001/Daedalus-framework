@@ -1,7 +1,7 @@
 // File access for design files: a symlink anywhere on the way (the design folder, a screen folder, the
 // file itself) must never let a read or write leave the project. Every helper checks with lstat and
 // realpath before touching a file. (Same idea as the Meetings reader.)
-import { Buffer } from "node:buffer";
+import type { Buffer } from "node:buffer";
 import { lstat, mkdir, readdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 

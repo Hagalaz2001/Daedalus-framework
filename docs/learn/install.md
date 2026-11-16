@@ -6,7 +6,7 @@ you can skip those until you want that kind of app. Plan 10 minutes.
 ```mermaid
 flowchart TD
   A["Install Git"] --> B["Install Deno"]
-  B --> C["Download Daedalus"]
+  B --> C["Install the daedalus command"]
   C --> D["daedalus doctor<br/>checks your machine"]
   D --> E{"Which apps?"}
   E -- "web or backend only" --> F["Done"]
@@ -53,23 +53,41 @@ deno --version
 You need **Deno 2.9 or newer**. If it is older, run `deno upgrade`. If the command is "not found", see
 [troubleshooting](troubleshooting.md#1-deno-is-not-recognized-or-command-not-found).
 
-## 3. Download Daedalus
+## 3. Install the `daedalus` command
+
+Pick the easiest one for you. None needs administrator rights.
+
+| You have | Run |
+|---|---|
+| Windows (PowerShell) | `irm https://github.com/Hagalaz2001/Daedalus-framework/releases/latest/download/install.ps1 \| iex` |
+| macOS or Linux | `curl -fsSL https://github.com/Hagalaz2001/Daedalus-framework/releases/latest/download/install.sh \| sh` |
+| Deno already (any system) | `deno install -g -A -n daedalus jsr:@daedalus-framework/cli` |
+
+The first two download a ready-made program, check its checksum against the one published with the release, and add it
+to your PATH. Open a **new** terminal afterwards and check:
+
+```
+daedalus --version
+```
+
+The first time you create a project, `daedalus` downloads the templates that belong to its version (about 25 MB, once,
+checked the same way) and keeps them in your user folder (`~/.daedalus` on macOS and Linux, `%LOCALAPPDATA%\daedalus` on
+Windows). After that it works offline. To update everything later: `daedalus upgrade`.
+
+If `daedalus` is "not found" after the JSR install, add `~/.deno/bin` to your PATH ([troubleshooting](troubleshooting.md#2-daedalus-is-not-found-after-installing-it)).
+
+### Or from the source code
+
+If you want to read or change Daedalus itself:
 
 ```
 git clone https://github.com/Hagalaz2001/Daedalus-framework.git daedalus
 cd daedalus
-```
-
-Put it somewhere permanent, for example `~/daedalus` (your home folder). Later commands find it there automatically.
-
-Optional but handy: make a `daedalus` command available everywhere.
-
-```
 deno install -g -A -n daedalus cli.ts
 ```
 
-If `daedalus` is then "not found", add `~/.deno/bin` to your PATH ([troubleshooting](troubleshooting.md#2-daedalus-is-not-found-after-installing-it)).
-Without this step, use `deno run -A cli.ts` wherever this guide says `daedalus`, from inside the `daedalus` folder.
+Put the folder somewhere permanent, for example `~/daedalus`: generated projects find it there. Without the last line, use
+`deno run -A cli.ts` wherever this guide says `daedalus`, from inside the `daedalus` folder.
 
 ## 4. Check your machine
 

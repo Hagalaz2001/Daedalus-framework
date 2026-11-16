@@ -1,12 +1,18 @@
 # TEMPORARY: builds Deno with the child_process IPC fix (denoland/deno#37040, PR #37080) and publishes it as a release.
-# Trigger: push a tag like deno-patched-v2.9.8-1. Delete this workflow when upstream ships the fix (tools/deno-patched/README.md).
+# Trigger: manual only (workflow_dispatch). Daedalus now uses the official Deno 2.9.6 instead; this stays as a record. Delete this workflow when upstream ships the fix (tools/deno-patched/README.md).
 name: deno-patched
 on:
-  push:
-    tags: ["deno-patched-v*-*"]
+  workflow_dispatch: # manual only, no automatic trigger
+    inputs:
+      tag:
+        description: "Release tag to create, e.g. deno-patched-v2.9.8-1"
+        required: true
 
 permissions:
   contents: read
+
+env:
+  RELEASE_TAG: ${{ inputs.tag }}
 
 jobs:
   build:
@@ -27,7 +33,7 @@ jobs:
         id: v
         shell: bash
         run: |
-          tag="${GITHUB_REF_NAME}"                       # deno-patched-v2.9.8-1
+          tag="${RELEASE_TAG}"                       # deno-patched-v2.9.8-1
           ver="${tag#deno-patched-v}"; ver="${ver%-*}"   # 2.9.8
           echo "version=$ver" >> "$GITHUB_OUTPUT"
       - name: Clone Deno and apply the patch
@@ -87,6 +93,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
-            --title "Patched Deno ($GITHUB_REF_NAME)" \
+          gh release create "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" \
+            --title "Patched Deno ($RELEASE_TAG)" \
             --notes "Unofficial Deno build with the child_process IPC fix (denoland/deno#37040, PR #37080). Temporary: see tools/deno-patched/README.md. After downloading, copy the SHA-256 values from SHA256SUMS.txt into ASSETS in template/scripts/native-deno.ts."

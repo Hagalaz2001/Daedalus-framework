@@ -13,7 +13,9 @@ import "../styles/home.css";
   <div class="wrap">
     <div class="devgrid">
       <div>
-        <p class="mini">Try it</p>
+        <p class="mini">Install, no clone needed</p>
+        <p>Windows: <code>irm {REPO}/releases/latest/download/install.ps1 | iex</code><br />macOS and Linux: <code>curl -fsSL {REPO}/releases/latest/download/install.sh | sh</code><br />With Deno: <code>deno install -g -A -n daedalus jsr:@daedalus-framework/cli</code>. Then <code>daedalus --version</code> and <code>daedalus upgrade</code>. Downloads are checked against the SHA-256 published with each release.</p>
+        <p class="mini" style="margin-top:1.5rem">Or from source</p>
         <div class="cmd">
           <code id="cmd"><span class="l"><span class="p">$ </span>git clone {REPO}.git daedalus</span><span class="l"><span class="p">$ </span>cd daedalus</span><span class="l"><span class="p">$ </span>deno run -A cli.ts new ../shop --name "Acme Shop" --web site,spa --mobile rn --backend hono</span></code>
           <button class="copy" type="button" aria-label="Copy the install commands" data-copy>Copy</button>

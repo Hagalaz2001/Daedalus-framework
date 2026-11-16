@@ -2,7 +2,7 @@
 // .blueprint.json and the UI kit's public exports. Pure reads; nothing here writes.
 import { join } from "node:path";
 
-import { type Tokens } from "../shared/design/tokens.ts";
+import type { Tokens } from "../shared/design/tokens.ts";
 export { tokenMap, type Tokens, tokensCss } from "../shared/design/tokens.ts";
 export interface Preset {
   id: string;

@@ -2,7 +2,7 @@
 import { assert, assertEquals, assertThrows } from "jsr:@std/assert@1";
 import { Approvals } from "./approvals.ts";
 import { verifyChain } from "./audit.ts";
-import { Ledger, LedgerError, simple } from "./ledger.ts";
+import { Ledger, type LedgerError, simple } from "./ledger.ts";
 import { allocate, formatMajor, money, parseMajor } from "./money.ts";
 import { internalRows, reconcile } from "./reconcile.ts";
 

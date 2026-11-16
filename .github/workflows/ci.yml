@@ -27,6 +27,7 @@ jobs:
       - run: deno task test
       - run: deno task oss:check
       - run: deno audit
+      - run: deno publish --dry-run
 
   verify-dbs:
     needs: blueprint

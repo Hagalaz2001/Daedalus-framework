@@ -1,5 +1,30 @@
 {
+  "name": "@daedalus-framework/cli",
   "version": "2.0.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./cli.ts",
+    "./mcp": "./mcp.ts"
+  },
+  "publish": {
+    "include": [
+      "cli.ts",
+      "mcp.ts",
+      "new-project.ts",
+      "VERSION",
+      "LICENSE",
+      "README.md",
+      "DISCLAIMER.md",
+      "deno.json",
+      "lib/**/*.ts",
+      "template/scripts/lib/exec.ts",
+      "template/scripts/git-setup.ts",
+      "template/scripts/native-deno.ts"
+    ],
+    "exclude": [
+      "**/*_test.ts"
+    ]
+  },
   "tasks": {
     "website:dev": "deno task --cwd website dev",
     "website:build": "deno task --cwd website build",
@@ -12,7 +37,9 @@
     "verify:dbs": "deno run -A dbs/verify.ts mongodb",
     "oss:check": "deno run -A tools/oss-check.ts",
     "check": "deno task lint && deno task typecheck && deno task test && deno task oss:check && deno audit",
-    "doctor": "deno task --cwd studio doctor"
+    "doctor": "deno task --cwd studio doctor",
+    "release:prepare": "deno run -A tools/release-prepare.ts",
+    "release:build": "deno run -A tools/build-release.ts"
   },
   "fmt": {
     "lineWidth": 120,
@@ -38,7 +65,10 @@
   },
   "lint": {
     "rules": {
-      "exclude": ["no-import-prefix", "require-await"]
+      "exclude": [
+        "no-import-prefix",
+        "require-await"
+      ]
     },
     "exclude": [
       "*.mjs",

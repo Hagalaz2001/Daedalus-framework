@@ -1,7 +1,7 @@
 import { mailer, useMailer } from "../../shared/mail/mailer.ts";
 import type { Module } from "../../shared/http/types.ts";
 import { createMailer } from "./transports.ts";
-import { renderMail, templates } from "./templates.tsx";
+import { renderMail, type templates } from "./templates.tsx";
 
 export { renderMail } from "./templates.tsx";
 

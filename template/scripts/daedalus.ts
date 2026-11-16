@@ -2,8 +2,8 @@
 // optional feature modules: `deno task add-module <name>[,<name>]`,
 // or the design studio: `deno task studio`.
 // The generator owns the stack templates, so this finds the Daedalus folder and delegates to it.
-//   Lookup order: --daedalus <dir>, $DAEDALUS_HOME, a daedalus or daedalus-framework folder next to or above this project, ~/daedalus.
-import { existsSync } from "node:fs";
+//   Lookup order: --daedalus <dir>, $DAEDALUS_HOME, a daedalus or daedalus-framework folder next to or above this project, ~/daedalus, then the assets that the `daedalus` command downloaded (newest version).
+import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const args = [...Deno.args];
@@ -17,6 +17,18 @@ function findDaedalus(): string | undefined {
   }
   const home = Deno.env.get("USERPROFILE") ?? Deno.env.get("HOME");
   if (home) candidates.push(join(home, "daedalus"));
+  // The per-user cache of the installed `daedalus` command (see lib/home.ts in Daedalus): <cache>/assets/<version>.
+  const cache = Deno.env.get("DAEDALUS_CACHE") ??
+    (Deno.build.os === "windows"
+      ? join(Deno.env.get("LOCALAPPDATA") ?? "", "daedalus")
+      : home && join(home, ".daedalus"));
+  if (cache) {
+    try {
+      const versions = readdirSync(join(cache, "assets")).filter((v) => /^\d+\.\d+\.\d+$/.test(v))
+        .sort((x, y) => y.localeCompare(x, undefined, { numeric: true }));
+      for (const v of versions) candidates.push(join(cache, "assets", v));
+    } catch { /* no cache */ }
+  }
   return candidates.find((c) => c && existsSync(join(c, "new-project.ts")));
 }
 

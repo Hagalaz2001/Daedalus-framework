@@ -4,22 +4,26 @@
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.32.2/server/mcp.js";
 import { StdioServerTransport } from "npm:@modelcontextprotocol/sdk@1.32.2/server/stdio.js";
 import { z } from "npm:zod@4.6.7";
-import { dirname, fromFileUrl, join } from "jsr:@std/path@1";
+import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { describe, type ItemKind, list, readDoc, searchDocs } from "./lib/catalog.ts";
 import { flagChoices } from "./lib/blueprint.ts";
+import { ensureAssets } from "./lib/assets.ts";
+import { isCompiled } from "./lib/home.ts";
+import { VERSION } from "./lib/version.ts";
 
-const root = dirname(fromFileUrl(import.meta.url));
+const root = await ensureAssets();
 /** A tool call that runs longer than this is cancelled and its child process killed (new_project installs and builds: minutes). */
-const TOOL_TIMEOUT_MS = Number(Deno.env.get("DAEDALUS_MCP_TIMEOUT_MS")) || 30 * 60_000;
-const VERSION: string = JSON.parse(readFileSync(join(root, "deno.json"), "utf8")).version ?? "0.0.0";
+const TOOL_TIMEOUT_MS: number = Number(Deno.env.get("DAEDALUS_MCP_TIMEOUT_MS")) || 30 * 60_000;
 
 /** Runs `cli.ts <args> --json` in a child process and returns the parsed JSON document it printed. */
 export async function runCli(args: string[], timeoutMs = TOOL_TIMEOUT_MS): Promise<Record<string, unknown>> {
   let out: Deno.CommandOutput;
   try {
     out = await new Deno.Command(Deno.execPath(), {
-      args: ["run", "-A", join(root, "cli.ts"), ...args, "--json"],
+      // A compiled binary is the CLI itself; under deno, run cli.ts (a file or a jsr.io URL) in a child.
+      args: [...(isCompiled() ? [] : ["run", "-A", new URL("./cli.ts", import.meta.url).href]), ...args, "--json"],
+      env: { DAEDALUS_HOME: root },
       stdout: "piped",
       stderr: "piped",
       signal: AbortSignal.timeout(timeoutMs),
@@ -240,6 +244,9 @@ export function createServer(): McpServer {
   return server;
 }
 
-if (import.meta.main) {
+/** Serves the MCP tools on stdin/stdout until the client disconnects. */
+export async function serveStdio(): Promise<void> {
   await createServer().connect(new StdioServerTransport());
 }
+
+if (import.meta.main) await serveStdio();

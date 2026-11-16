@@ -7,9 +7,9 @@
 //   deno run -A new-project.ts add-app <stack> <name> [--project <dir>] [--id com.yourco.app] [--display "Name"]
 // Missing flags are asked interactively. Windows and Mac.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { fileURLToPath } from "node:url";
+import { blueprintRoot, denoBin } from "./lib/home.ts";
 import {
   addToManifest,
   applyDb,
@@ -44,7 +44,7 @@ import { describe, formatDescribe, formatDocs, formatList, type ItemKind, list, 
 import { runArgs, type RunResult, shell, tailOf } from "./template/scripts/lib/exec.ts";
 import { validateGitInput } from "./template/scripts/git-setup.ts";
 
-const here = dirname(fileURLToPath(import.meta.url));
+const here = blueprintRoot();
 
 /** One command the generator ran. In JSON mode its output is captured (last lines) instead of streamed. */
 export interface Step {
@@ -367,7 +367,7 @@ function newProject(argv: string[]): Result {
   if (gitName && gitEmail) {
     const a = ["run", "-A", "scripts/git-setup.ts", "--name", gitName, "--email", gitEmail, "--commit"];
     if (remote) a.push("--remote", remote);
-    if (!spawnStep(Deno.execPath(), a, target).ok) throw new StepError(`Failed: git setup (in ${target})`);
+    if (!spawnStep(denoBin(), a, target).ok) throw new StepError(`Failed: git setup (in ${target})`);
   }
   say(`
 Project ready: ${target}

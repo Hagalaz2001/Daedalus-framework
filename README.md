@@ -20,15 +20,32 @@ checks and workflow in every one, with AI agents as part of the team.
 
 Requirements: [Deno](https://deno.com) 2.9 or newer, Git. Flutter SDK for Flutter apps, Rust for desktop apps.
 
+### Install
+
+Pick one. Every way gives the same `daedalus` command.
+
+| Way | Command |
+|---|---|
+| Windows (PowerShell), no admin | `irm https://github.com/Hagalaz2001/Daedalus-framework/releases/latest/download/install.ps1 \| iex` |
+| macOS and Linux | `curl -fsSL https://github.com/Hagalaz2001/Daedalus-framework/releases/latest/download/install.sh \| sh` |
+| JSR (needs Deno) | `deno install -g -A -n daedalus jsr:@daedalus-framework/cli` |
+| From source | `git clone https://github.com/Hagalaz2001/Daedalus-framework.git daedalus` then `deno install -g -A -n daedalus daedalus/cli.ts` |
+
+The installers download one prebuilt binary (Windows x64, macOS arm64 and x64, Linux x64 and arm64) into your user
+folder, check its SHA-256 against `checksums.txt` of the same release, and add it to your PATH. No administrator
+rights. Set `DAEDALUS_VERSION=2.0.0` to choose a version. The templates and stacks are not inside the binary: the first
+command that needs them downloads `daedalus-assets-vX.Y.Z.tar.gz` of the same release, verifies it and unpacks it to
+`~/.daedalus/assets/<version>` (`%LOCALAPPDATA%daedalus` on Windows); after that it works offline. A checkout still
+works as before (`DAEDALUS_HOME` or running `cli.ts` from the folder). `daedalus --version` shows the version,
+`daedalus upgrade` updates it. Generated projects still need [Deno](https://deno.com) 2.9 or newer.
+
+### Create a project
+
 ```
-git clone https://github.com/Hagalaz2001/Daedalus-framework.git daedalus
-cd daedalus
-deno install -g -A -n daedalus cli.ts      # optional: puts `daedalus` on your PATH
-daedalus new ../shop --name "Acme Shop" --id com.example.shop \
-  --web site,spa --mobile flutter --backend hono
+daedalus new ../shop --name "Acme Shop" --id com.example.shop   --web site,spa --mobile flutter --backend hono
 ```
 
-Flags that are missing are asked for interactively; `--yes` accepts defaults instead. Without the optional install
+Flags that are missing are asked for interactively; `--yes` accepts defaults instead. From a checkout without the install
 step, use `deno run -A cli.ts new ...`. Other commands: `daedalus add-app|add-module|add-pack|studio`, run in a generated
 project (the same as the `deno task` equivalents below).
 

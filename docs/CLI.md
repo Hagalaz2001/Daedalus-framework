@@ -19,8 +19,17 @@ The `daedalus` command (`cli.ts`). Install: `deno install -g -A -n daedalus <pat
 | `daedalus docs <query>` | Search Daedalus documentation. |
 | `daedalus studio [--project DIR]` | Run the design studio. |
 | `daedalus doctor [args]` | Check the machine (toolchains, local AI); exit 1 when below the minimum. |
-| `daedalus deno [--status\|--install] [--json]` | Temporary: shows which Deno runs React Native native builds and why; `--install` fetches the checksum-verified patched Deno ([tools/deno-patched](../tools/deno-patched/README.md)). |
+| `daedalus deno [--status\|--install] [--json]` | Temporary: which Deno runs React Native native builds. Deno 2.9.7+ breaks `expo export`, so it uses the official Deno 2.9.6 (checksum-verified download, cached); `--install` pre-downloads it. See [tools/deno-patched](../tools/deno-patched/README.md). |
 | `daedalus mcp` | MCP server on stdio ([INTEGRATIONS.md](INTEGRATIONS.md)). |
+| `daedalus --version` | Prints the version (also `-v`, `version`). |
+| `daedalus upgrade [--version X.Y.Z]` | Downloads and verifies the assets of that version (default: the latest release); the single-file binary also replaces itself. Under `deno install` or a checkout it prints the command to update the program. |
+
+Install options: the one-line installers, `deno install -g -A -n daedalus jsr:@daedalus-framework/cli`, or a checkout
+(README). Outside a checkout the templates come from the GitHub release of the same version: they are downloaded once,
+checked against `checksums.txt` and the checksum built into the program, and kept in `~/.daedalus/assets/<version>`
+(`%LOCALAPPDATA%\daedalus\assets\<version>` on Windows). Environment: `DAEDALUS_HOME` (use this folder instead),
+`DAEDALUS_CACHE` (move the cache), `DAEDALUS_RELEASES` (a mirror of the releases page). Offline without a cache the
+command says so and exits 1; `studio` and `doctor` need Deno on PATH.
 
 `new`, `add-app`, `add-module` and `add-pack` take `--no-check` to skip the final `deno task check`. `new` takes `--yes`
 to accept defaults instead of asking, and `--db postgres|mongodb` (default `postgres`; modules that need Postgres are refused

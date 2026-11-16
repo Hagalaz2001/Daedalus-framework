@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { blueprintRoot } from "./home.ts";
 import { runArgs } from "../template/scripts/lib/exec.ts";
 
 export type Cmd = string | { cwd?: string; run: string };
@@ -160,11 +160,10 @@ export function listStacks(blueprintDir: string): string[] {
     .sort();
 }
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const KINDS: Kind[] = ["web", "mobile", "desktop"];
 
 /** Flag value -> stack id per kind (--web spa, --mobile rn ...), read from each stack.json's `flag`. The one registry. */
-export function stackFlags(blueprintDir = ROOT): Record<Kind, Record<string, string>> {
+export function stackFlags(blueprintDir = blueprintRoot()): Record<Kind, Record<string, string>> {
   const out: Record<Kind, Record<string, string>> = { web: {}, mobile: {}, desktop: {} };
   for (const id of listStacks(blueprintDir)) {
     const def = loadStack(blueprintDir, id);
@@ -174,10 +173,14 @@ export function stackFlags(blueprintDir = ROOT): Record<Kind, Record<string, str
 }
 
 /** "spa|spa-vue|site|site-next" for the help text and prompts. */
-export const flagChoices = (kind: Kind, blueprintDir = ROOT) => Object.keys(stackFlags(blueprintDir)[kind]).join("|");
+export const flagChoices = (kind: Kind, blueprintDir = blueprintRoot()) =>
+  Object.keys(stackFlags(blueprintDir)[kind]).join("|");
 
 // Maps generator flags to stack ids; "none" and "" mean nothing. Only --web takes a comma list.
-export function stacksFromFlags(f: { web?: string; mobile?: string; desktop?: string }, blueprintDir = ROOT): string[] {
+export function stacksFromFlags(
+  f: { web?: string; mobile?: string; desktop?: string },
+  blueprintDir = blueprintRoot(),
+): string[] {
   const flags = stackFlags(blueprintDir);
   const out: string[] = [];
   for (const kind of KINDS) {

@@ -25,6 +25,8 @@ Pick-your-stack framework. The single fixed template became a base plus stacks.
   pull request templates, CI that runs the unit tests and generates and checks a project per combination.
 - `deno audit` in `deno task check` of generated projects, of this repository and in CI; exact-version pinning for
   `next`, `astro`, `react`, `react-dom`, `vue`, `hono`, `better-auth` enforced by `lint:deno-only`.
+- Installable tool: JSR package `@daedalus-framework/cli`, single-file binaries (Windows x64, macOS arm64 and x64, Linux x64 and arm64), `install.ps1` and `install.sh` (user-level, checksum-verified), `daedalus --version` and `daedalus upgrade`. The CLI downloads the assets of its own version from the GitHub release (SHA-256 checked against `checksums.txt` and a checksum built into the CLI) into a per-user cache; a checkout still works.
+- `.github/workflows/release.yml` (tag to check, assets, binaries, SBOM, provenance, GitHub Release, JSR through OIDC), `deno task release:prepare`, `docs/RELEASING.md`.
 - `deno task oss:check`: fails on private names, personal paths, emails, unlisted third-party folders and npm usage.
 
 ### Changed
