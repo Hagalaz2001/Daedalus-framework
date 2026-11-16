@@ -12,7 +12,7 @@
   },
   "imports": {
     "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@1.8.0",
-    "@google/stitch-sdk": "npm:@google/stitch-sdk@0.3.5",
+    "@google/stitch-sdk": "npm:@google/stitch-sdk@0.4.0",
     "@std/assert": "jsr:@std/assert@1.0.19",
     "@std/dotenv": "jsr:@std/dotenv@0.225.8",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@4.3.5",

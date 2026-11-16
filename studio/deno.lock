@@ -5,7 +5,7 @@
     "jsr:@std/dotenv@0.225.8": "0.225.8",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@anthropic-ai/sdk@1.8.0": "1.8.0_zod@4.6.7",
-    "npm:@google/stitch-sdk@0.3.5": "0.3.5",
+    "npm:@google/stitch-sdk@0.4.0": "0.4.0",
     "npm:@tailwindcss/vite@4.3.5": "4.3.5_vite@8.3.8",
     "npm:@types/react-dom@19.3.0": "19.3.0_@types+react@19.3.0",
     "npm:@types/react@19.3.0": "19.3.0",
@@ -68,15 +68,15 @@
         "tslib"
       ]
     },
-    "@google/stitch-sdk@0.3.5": {
-      "integrity": "sha512-81Jow7WvDP93gHVEP327LJjE0neXGnuv43RmfVgPUjzOGN6rxrCMBwX53UgrpkDOkZt9yr7K8gGOpxbuOdIe5A==",
+    "@google/stitch-sdk@0.4.0": {
+      "integrity": "sha512-h7EY+F7pY8jr6WNLHMrEyfm/kIlbngr+p6MaihAvJcnqMAeui/M2tCwJxiSHDU6BlDWbI4BmsMBFu1IE6uGsqA==",
       "dependencies": [
         "@modelcontextprotocol/sdk",
         "cheerio",
         "zod"
       ]
     },
-    "@hono/node-server@2.1.8_hono@4.13.18": {
+    "@hono/node-server@2.1.8_hono@4.13.19": {
       "integrity": "sha512-jdf7FHh6A1lzjpHHQUgxsg2GeER2vMetnAOfeActzcoli6jamlK+NAwL6Dsr5Fl3BS3tYUQzCdtZjU8Qxv7bEA==",
       "dependencies": [
         "hono"
@@ -710,8 +710,8 @@
         "function-bind"
       ]
     },
-    "hono@4.13.18": {
-      "integrity": "sha512-H9q/E1XizaWstJxUW881dmLxEj+t/TrGGnyxINkm4+sK0qUwsMtFdo2BWI9Vs3cIS19MU6b6iCijoUoEf4f3DA=="
+    "hono@4.13.19": {
+      "integrity": "sha512-KmXvQAXwcAHV+muzbIwoJ23niEB5nMoDVr9WcRkU8mvjUECm/1+7v4Jgp7P7a+H6MLFrh+vXrGonGrGS+RQfkA=="
     },
     "htmlparser2@10.1.0": {
       "integrity": "sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ==",
@@ -1228,7 +1228,7 @@
       "jsr:@std/assert@1.0.19",
       "jsr:@std/dotenv@0.225.8",
       "npm:@anthropic-ai/sdk@1.8.0",
-      "npm:@google/stitch-sdk@0.3.5",
+      "npm:@google/stitch-sdk@0.4.0",
       "npm:@tailwindcss/vite@4.3.5",
       "npm:@types/react-dom@19.3.0",
       "npm:@types/react@19.3.0",
