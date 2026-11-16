@@ -20,7 +20,11 @@ Deno.test("ts: shared must not import features", () => {
 Deno.test("dart: barrel only", () => {
   assertEquals(findViolations("dart", "main.dart", `import 'features/notes/notes.dart';`), []);
   assertEquals(findViolations("dart", "main.dart", `import 'features/notes/presentation/notes_page.dart';`).length, 1);
-  assertEquals(findViolations("dart", "features/auth/presentation/p.dart", `import 'package:app/features/notes/data/r.dart';`).length, 1);
+  assertEquals(
+    findViolations("dart", "features/auth/presentation/p.dart", `import 'package:app/features/notes/data/r.dart';`)
+      .length,
+    1,
+  );
   assertEquals(findViolations("dart", "features/notes/presentation/p.dart", `import '../data/r.dart';`), []);
   assertEquals(findViolations("dart", "core/a.dart", `import '../features/notes/notes.dart';`).length, 1);
 });

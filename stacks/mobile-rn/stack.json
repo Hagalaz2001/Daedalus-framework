@@ -1,10 +1,12 @@
 {
   "id": "mobile-rn",
   "kind": "mobile",
+  "flag": "rn",
   "label": "React Native (Expo) + TypeScript (Android + iOS)",
   "defaultAppDir": "apps/mobile",
   "appSource": "app",
   "workspaceMember": true,
+  "export": { "kind": "react-native", "label": "React Native (Reusables, NativeWind)" },
   "packages": [
     "packages/api_ts"
   ],
@@ -16,6 +18,12 @@
     "build:mobile-web": {
       "cwd": "{appDir}",
       "run": "deno task export:web"
+    },
+    "build:android": {
+      "run": "deno run -A scripts/native-deno.ts --cwd {appDir} export:android"
+    },
+    "build:ios": {
+      "run": "deno run -A scripts/native-deno.ts --cwd {appDir} export:ios"
     }
   },
   "replace": [
@@ -52,7 +60,7 @@
       "to": "{bundleId}"
     }
   ],
-  "tokens": "scripts/tokens.ts",
+  "tokens": "deno run -A scripts/tokens/mobile-rn.ts {appDir}",
   "check": [
     {
       "cwd": "{appDir}",

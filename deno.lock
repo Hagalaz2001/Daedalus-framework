@@ -10,6 +10,7 @@
     "jsr:@std/yaml@1.3.0": "1.3.0",
     "npm:@electric-sql/pglite@0.5.15": "0.5.15",
     "npm:@modelcontextprotocol/sdk@1.32.2": "1.32.2_zod@4.6.7",
+    "npm:nodemailer@*": "10.6.0",
     "npm:zod@4.6.7": "4.6.7"
   },
   "jsr": {
@@ -370,6 +371,9 @@
       "dependencies": [
         "content-type@2.1.0"
       ]
+    },
+    "nodemailer@10.6.0": {
+      "integrity": "sha512-jWanL7D9GD3jvUDYKmoC5rWTiG8MnBgnN2yV68bgMKip1zUJhiSTyz7Eg+18y8sk5OvdVDzws5nZK5arSI4f5Q=="
     },
     "object-assign@4.1.1": {
       "integrity": "sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg=="

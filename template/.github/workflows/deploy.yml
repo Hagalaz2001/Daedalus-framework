@@ -1,0 +1,80 @@
+# Deploy template. DISABLED until you configure it: both jobs only run when the repository variable DEPLOY_ENABLED is
+# "true". Setup, step by step, is in docs/DEVSECOPS.md ("Turning deployment on").
+#
+#   staging     runs by itself after the ci workflow succeeds on main.
+#   production  is started by hand (Actions > deploy > Run workflow) with a release tag and waits in the "production"
+#               environment until a named reviewer approves it (Settings > Environments > production > Required reviewers).
+#
+# Secrets belong to the environment (Settings > Environments > <name> > Secrets), never to the repository and never in
+# this file. Prefer OIDC (id-token: write) over long-lived cloud keys: the cloud provider trusts this workflow directly.
+name: deploy
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Release tag to deploy to production (for example v1.2.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    # workflow_run.event == push keeps fork pull requests (which can be named "main") from ever reaching this job.
+    if: >-
+      vars.DEPLOY_ENABLED == 'true' &&
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    environment:
+      name: staging
+    permissions:
+      contents: read
+      id-token: write # only for OIDC to your cloud provider; remove it if you use a deploy token instead
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Deploy to staging
+        run: deno run -A scripts/ci/deploy.ts staging
+
+  production:
+    if: vars.DEPLOY_ENABLED == 'true' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    environment:
+      name: production # required reviewers on this environment are the manual approval
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Only release tags may reach production
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          case "$REF" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "ref must be a release tag like v1.2.0, got: $REF"; exit 1 ;;
+          esac
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Deploy to production
+        run: deno run -A scripts/ci/deploy.ts production

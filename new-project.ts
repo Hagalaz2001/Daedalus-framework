@@ -1,7 +1,7 @@
 // Daedalus generator: create a project from template/ + chosen stacks, or add an app, module or pack to one.
 // Usually run through `daedalus` (cli.ts); `deno run -A new-project.ts ...` is the same thing.
-//   deno run -A new-project.ts <dir> --name "Shop" --id com.yourco.shop --web spa|spa-vue|site|site-next|none (comma-combinable)
-//        --mobile flutter|rn|none --desktop gpui|tauri|none --backend hono|none [--db postgres|mongodb] [--ui clean|editorial] [--modules a,b] [--packs a,b]
+//   deno run -A new-project.ts <dir> --name "Shop" --id com.yourco.shop --web spa|spa-vue|site|site-next|none (comma-combinable; the choices live in each stacks/<id>/stack.json "flag")
+//        --mobile flutter|rn|none --desktop gpui|tauri|none --backend hono|none [--db postgres|mongodb] [--ui clean|editorial|playful] [--modules a,b] [--packs a,b]
 //        [--git-name N --git-email E --remote URL] [--no-check]
 //   deno run -A new-project.ts add-module <name>[,<name>] [--project <dir>]   (same for add-pack)
 //   deno run -A new-project.ts add-app <stack> <name> [--project <dir>] [--id com.yourco.app] [--display "Name"]
@@ -15,32 +15,36 @@ import {
   applyDb,
   applyOverlay,
   assertValid,
-  DB_FLAVOURS,
+  checkOverlay,
+  type Cmd,
   composeStack,
   copyTree,
-  type Cmd,
+  DB_FLAVOURS,
+  defaultOverlays,
+  type DenoJson,
+  flagChoices,
   isAppName,
   isBundleId,
   isDisplayName,
-  defaultOverlays,
   listOverlays,
   listStacks,
   loadStack,
-  type OverlayKind,
   type Manifest,
   mergeDenoJson,
+  type OverlayKind,
   readManifest,
+  readOverlayDef,
   resolveCmd,
   stacksFromFlags,
+  UsageError,
   varsFor,
   writeManifest,
-  type DenoJson,
-  UsageError,
 } from "./lib/blueprint.ts";
-import { describe, type ItemKind, list, searchDocs } from "./lib/catalog.ts";
+import { describe, formatDescribe, formatDocs, formatList, type ItemKind, list, searchDocs } from "./lib/catalog.ts";
+import { runArgs, type RunResult, shell, tailOf } from "./template/scripts/lib/exec.ts";
+import { validateGitInput } from "./template/scripts/git-setup.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const isWin = Deno.build.os === "windows";
 
 /** One command the generator ran. In JSON mode its output is captured (last lines) instead of streamed. */
 export interface Step {
@@ -53,15 +57,27 @@ export interface Step {
 const ctx = { json: false, steps: [] as Step[] };
 /** Progress text: stdout normally, stderr in JSON mode so stdout carries only the final JSON document. */
 const say = (...a: unknown[]) => (ctx.json ? console.error(...a) : console.log(...a));
-const tailOf = (b: Uint8Array) => new TextDecoder().decode(b).split("\n").slice(-30).join("\n").trim();
-
+/** Records a finished step; `display` is what the log and the JSON report show. */
+function record(display: string, cwd: string, r: RunResult): { ok: boolean; stdout: string } {
+  ctx.steps.push({
+    cmd: display,
+    cwd,
+    ok: r.ok,
+    exitCode: r.code,
+    ...(ctx.json ? { tail: tailOf(r.ok || !r.stderr ? r.stdout : r.stderr) } : {}),
+  });
+  return { ok: r.ok, stdout: r.stdout };
+}
+/** Fixed command line from a manifest (stack.json, module.json) through the shell. Never put user input in it. */
 function sh(cmd: string, cwd: string): { ok: boolean; stdout: string } {
   say(`\n> [${cwd}] ${cmd}`);
-  const io = ctx.json ? "piped" : "inherit";
-  const r = new Deno.Command(isWin ? "cmd" : "sh", { args: isWin ? ["/c", cmd] : ["-c", cmd], cwd, stdout: io, stderr: io }).outputSync();
-  const stdout = ctx.json ? new TextDecoder().decode(r.stdout) : "";
-  ctx.steps.push({ cmd, cwd, ok: r.success, exitCode: r.code, ...(ctx.json ? { tail: tailOf(r.success || !r.stderr.length ? r.stdout : r.stderr) } : {}) });
-  return { ok: r.success, stdout };
+  return record(cmd, cwd, shell(cmd, { cwd, capture: ctx.json }));
+}
+/** Program plus argument list, no shell: for everything that carries user input. */
+function spawnStep(cmd: string, args: string[], cwd: string): { ok: boolean; stdout: string } {
+  const display = [cmd, ...args].join(" ");
+  say(`\n> [${cwd}] ${display}`);
+  return record(display, cwd, runArgs(cmd, args, { cwd, capture: ctx.json }));
 }
 class StepError extends Error {
   override name = "StepError";
@@ -83,19 +99,11 @@ function writeJson(f: string, v: unknown) {
   writeFileSync(f, JSON.stringify(v, null, 2) + "\n");
 }
 
-/** Removes the Flutter CI bits when the project has no Flutter app. */
-export function trimCi(projectDir: string, hasFlutter: boolean) {
-  if (hasFlutter) return;
-  const gh = join(projectDir, ".github/workflows/check.yml");
-  if (existsSync(gh)) writeFileSync(gh, readFileSync(gh, "utf8").replace(/ {6}- uses: subosito\/flutter-action@v2\n(?: {8}.*\n)+/, ""));
-  const gl = join(projectDir, ".gitlab-ci.yml");
-  if (existsSync(gl)) writeFileSync(gl, readFileSync(gl, "utf8").replace("ghcr.io/cirruslabs/flutter:stable", "denoland/deno:debian"));
-}
-
-
 /** Short README for the generated project with the AI-assisted notice. */
 function writeProjectReadme(target: string, name: string) {
-  writeFileSync(join(target, "README.md"), `# ${name}
+  writeFileSync(
+    join(target, "README.md"),
+    `# ${name}
 
 > AI-assisted project built with Daedalus: AI output can be wrong; the maintainers and AI providers are not liable and a
 > named human is responsible for every change. See [DISCLAIMER.md](DISCLAIMER.md) and
@@ -103,7 +111,8 @@ function writeProjectReadme(target: string, name: string) {
 
 Describe the product in \`AGENTS.md\` ("This project") and \`PLAN.md\`. Start with \`deno task check\`; the commands are
 listed in \`AGENTS.md\`, the architecture in \`docs/ARCHITECTURE.md\`, the contribution rules in \`CONTRIBUTING.md\`.
-`);
+`,
+  );
 }
 
 /** Applies modules or packs to a project: copies files, merges tasks and workspace, records them in the manifest. */
@@ -169,12 +178,22 @@ const kindOf = (v?: string): ItemKind => {
 
 /** Read-only: `list <kind>`, `describe <kind> <id>`, `docs <query>`. */
 function catalogCommand(cmd: "list" | "describe" | "docs", args: string[]): Result {
-  if (cmd === "list") return { command: "list", kind: kindOf(args[0]), items: list(here, kindOf(args[0])) };
+  if (cmd === "list") {
+    const kind = kindOf(args[0]);
+    const items = list(here, kind);
+    if (!ctx.json) console.log(formatList(kind, items));
+    return { command: "list", kind, items };
+  }
   if (cmd === "describe") {
     assertValid(!!args[1], "Usage: describe <stack|module|pack|preset> <id>");
-    return { command: "describe", item: describe(here, kindOf(args[0]), args[1]) };
+    const item = describe(here, kindOf(args[0]), args[1]);
+    if (!ctx.json) console.log(formatDescribe(item));
+    return { command: "describe", item };
   }
-  return { command: "docs", query: args.join(" "), results: searchDocs(here, args.join(" ")) };
+  const query = args.join(" ");
+  const results = searchDocs(here, query);
+  if (!ctx.json) console.log(formatDocs(query, results));
+  return { command: "docs", query, results };
 }
 
 /** `sync` and `check` for an existing project; `check` returns one entry per step (see docs/CLI.md). */
@@ -222,14 +241,35 @@ function newProject(argv: string[]): Result {
   const dirArg = positionals[0] ?? ask("Target folder");
   assertValid(!!dirArg, "Usage: deno run -A new-project.ts <dir> [flags]");
   const target = resolve(dirArg);
-  assertValid(!existsSync(target) || (statSync(target).isDirectory() && readdirSync(target).length === 0), `Refusing to overwrite: ${target} already exists and is not an empty folder.`);
+  assertValid(
+    !existsSync(target) || (statSync(target).isDirectory() && readdirSync(target).length === 0),
+    `Refusing to overwrite: ${target} already exists and is not an empty folder.`,
+  );
+
+  // Validate before anything is written: these values reach git (and git hooks), so shell syntax and options are refused.
+  try {
+    validateGitInput({ name: values["git-name"], email: values["git-email"], remote: values.remote });
+  } catch (e) {
+    throw new UsageError((e as Error).message);
+  }
+  assertValid(!values["git-name"] === !values["git-email"], "--git-name and --git-email go together");
 
   const interactive = !values.yes && !ctx.json;
   const name = values.name ?? (interactive ? ask("Display name", basename(target)) : basename(target));
   assertValid(isDisplayName(name), `--name must be plain text without quotes or <>&$\`{}, got: ${name}`);
-  const web = values.web ?? (interactive ? ask("Website: spa | spa-vue | site | site-next | none, comma-combinable (site = Astro, the default site)", "none") : "none");
-  const mobile = values.mobile ?? (interactive ? ask("Mobile: flutter | rn | none", "none") : "none");
-  const desktop = values.desktop ?? (interactive ? ask("Desktop: gpui | tauri | none", "none") : "none");
+  const web = values.web ??
+    (interactive
+      ? ask(
+        `Website: ${
+          flagChoices("web", here).split("|").join(" | ")
+        } | none, comma-combinable (site = Astro, the default site)`,
+        "none",
+      )
+      : "none");
+  const mobile = values.mobile ??
+    (interactive ? ask(`Mobile: ${flagChoices("mobile", here).split("|").join(" | ")} | none`, "none") : "none");
+  const desktop = values.desktop ??
+    (interactive ? ask(`Desktop: ${flagChoices("desktop", here).split("|").join(" | ")} | none`, "none") : "none");
   const backend = values.backend ?? (interactive ? ask("Backend: hono | none", "hono") : "hono");
   assertValid(backend === "hono" || backend === "none", `--backend must be hono or none, got: ${backend}`);
   const db = values.db ?? "postgres";
@@ -237,14 +277,16 @@ function newProject(argv: string[]): Result {
   assertValid(db === "postgres" || backend === "hono", `--db ${db} needs --backend hono`);
   const ui = values.ui ?? "clean";
   const presetFile = join(here, "template/design/presets", `${ui}.json`);
-  assertValid(existsSync(presetFile), `Unknown --ui preset "${ui}" (see template/design/presets)`);
+  assertValid(isAppName(ui) && existsSync(presetFile), `Unknown --ui preset "${ui}" (see template/design/presets)`);
 
   const islands = values.islands ?? "react";
   assertValid(islands === "react" || islands === "vue", `--islands must be react or vue, got: ${islands}`);
-  const ids = stacksFromFlags({ web, mobile, desktop });
+  const ids = stacksFromFlags({ web, mobile, desktop }, here);
   const stacks = ids.map((id) => loadStack(here, id));
   let bundleId = values.id;
-  if (!bundleId && stacks.some((s) => s.kind === "mobile") && interactive) bundleId = ask("Bundle id (reverse domain)", "com.example.app");
+  if (!bundleId && stacks.some((s) => s.kind === "mobile") && interactive) {
+    bundleId = ask("Bundle id (reverse domain)", "com.example.app");
+  }
   if (bundleId) assertValid(isBundleId(bundleId), `--id must look like com.company.app (lowercase), got: ${bundleId}`);
 
   for (const s of stacks) {
@@ -254,12 +296,16 @@ function newProject(argv: string[]): Result {
   for (const kind of ["module", "pack"] as const) {
     const wanted = selected(kind, values);
     const have = listOverlays(here, kind);
-    for (const n of wanted) assertValid(have.includes(n), `Unknown ${kind} "${n}" (available: ${have.join(", ") || "none"})`);
-    if (kind === "module") {
-      for (const n of wanted) {
-        const need = (JSON.parse(readFileSync(join(here, "modules", n, "module.json"), "utf8")).requires ?? {}).db;
-        assertValid(!need || need === db, `module "${n}" needs --db ${need}, but --db ${db} was chosen`);
-      }
+    for (const n of wanted) {
+      assertValid(have.includes(n), `Unknown ${kind} "${n}" (available: ${have.join(", ") || "none"})`);
+    }
+  }
+  // Fail before writing anything: every module and pack must find what it requires (db, backend, stacks, earlier modules).
+  const facts = { db, backend: backend === "hono", stacks: ids, extras: [] as string[] };
+  for (const kind of ["module", "pack"] as const) {
+    for (const n of selected(kind, values)) {
+      checkOverlay(kind, n, readOverlayDef(here, kind, n), facts);
+      facts.extras.push(n);
     }
   }
   say(`Creating ${target} with: ${ids.join(", ") || "no apps"}${backend === "hono" ? " + hono backend" : ""}`);
@@ -284,7 +330,16 @@ function newProject(argv: string[]): Result {
     // Two stacks wanting the same folder (spa + site): the later one gets its stack suffix.
     if (usedDirs.has(appDir)) appDir = `${appDir}-${s.id.split("-").pop()}`;
     usedDirs.add(appDir);
-    const { entry, tasks, workspace } = composeStack({ projectDir: target, blueprintDir: here, stack: s, appDir, displayName: name, bundleId, projectName: slug, islands });
+    const { entry, tasks, workspace } = composeStack({
+      projectDir: target,
+      blueprintDir: here,
+      stack: s,
+      appDir,
+      displayName: name,
+      bundleId,
+      projectName: slug,
+      islands,
+    });
     denoJson = mergeDenoJson(denoJson, { tasks, workspace }, entry.name);
     manifest = addToManifest(manifest, entry);
     const vars = varsFor({ appDir, displayName: name, bundleId });
@@ -298,28 +353,28 @@ function newProject(argv: string[]): Result {
   }
   writeJson(dj, denoJson);
   writeManifest(target, manifest);
-  trimCi(target, ids.includes("mobile-flutter"));
   for (const f of ["DISCLAIMER.md"]) if (existsSync(join(here, f))) copyTree(join(here, f), join(target, f));
   writeProjectReadme(target, name);
 
   must("git init -q -b main", target);
   must("deno install", target);
   for (const i of installs) must(i.run, join(target, i.cwd));
+  must("deno task security:sync", target); // dependabot entries for the ecosystems present (docker, pub, cargo)
   must("deno task sync", target);
   if (!values["no-check"]) must("deno task check", target);
 
   const { "git-name": gitName, "git-email": gitEmail, remote } = values;
   if (gitName && gitEmail) {
-    const a = ["scripts/git-setup.mjs", "--name", JSON.stringify(gitName), "--email", gitEmail, "--commit"];
+    const a = ["run", "-A", "scripts/git-setup.ts", "--name", gitName, "--email", gitEmail, "--commit"];
     if (remote) a.push("--remote", remote);
-    must(`deno run -A ${a.join(" ")}`, target);
+    if (!spawnStep(Deno.execPath(), a, target).ok) throw new StepError(`Failed: git setup (in ${target})`);
   }
   say(`
 Project ready: ${target}
 Next:
   1. Describe the product under "This project" in AGENTS.md and fill DESIGN.md.
   2. Ask which git identity and remote this project uses, then: deno task git:setup --name ... --email ... [--remote ...]
-     (nothing is committed until then).
+     (nothing is committed until then). Run: deno task setup to install the pre-commit hook (see docs/DEVSECOPS.md).
   3. Open it in your AI coding tool; it follows AGENTS.md, docs/ARCHITECTURE.md and the add-feature skill.`);
   return {
     command: "new",
@@ -331,14 +386,23 @@ Next:
     packs: selected("pack", values),
     ui,
     db,
-    next: ["Describe the product under \"This project\" in AGENTS.md", "Ask which git identity and remote to use before the first commit"],
+    next: [
+      'Describe the product under "This project" in AGENTS.md',
+      "Ask which git identity and remote to use before the first commit",
+    ],
   };
 }
 
 function addOverlays(kind: OverlayKind, args: string[]): Result {
-  const { values, positionals } = parseArgs({ args, allowPositionals: true, options: { project: { type: "string" }, "no-check": { type: "boolean" } } });
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: { project: { type: "string" }, "no-check": { type: "boolean" } },
+  });
   const projectDir = resolve(values.project ?? ".");
-  const names = csv(positionals[0] ?? ask(`${kind} name(s), comma-separated (${listOverlays(here, kind).join(" | ")})`));
+  const names = csv(
+    positionals[0] ?? ask(`${kind} name(s), comma-separated (${listOverlays(here, kind).join(" | ")})`),
+  );
   assertValid(names.length > 0, `Give at least one ${kind} name`);
   const dj = join(projectDir, "deno.json");
   const r = applyExtras(projectDir, kind, names, readManifest(projectDir), readJson<DenoJson>(dj));
@@ -346,6 +410,7 @@ function addOverlays(kind: OverlayKind, args: string[]): Result {
   writeManifest(projectDir, r.manifest);
   must("deno install", projectDir);
   for (const i of r.installs) must(i.run, join(projectDir, i.cwd));
+  must("deno task security:sync", projectDir);
   must("deno task sync", projectDir);
   if (!values["no-check"]) must("deno task check", projectDir);
   say(`\nApplied ${kind}(s): ${names.join(", ")}.`);
@@ -356,7 +421,12 @@ function addApp(args: string[]): Result {
   const { values, positionals } = parseArgs({
     args,
     allowPositionals: true,
-    options: { project: { type: "string" }, id: { type: "string" }, display: { type: "string" }, "no-check": { type: "boolean" } },
+    options: {
+      project: { type: "string" },
+      id: { type: "string" },
+      display: { type: "string" },
+      "no-check": { type: "boolean" },
+    },
   });
   const projectDir = resolve(values.project ?? ".");
   const manifest = readManifest(projectDir);
@@ -372,7 +442,15 @@ function addApp(args: string[]): Result {
   const displayName = values.display ?? name;
   assertValid(isDisplayName(displayName), `--display must be plain text, got: ${displayName}`);
 
-  const { entry, tasks, workspace } = composeStack({ projectDir, blueprintDir: here, stack, appDir, displayName, bundleId, projectName: manifest.name });
+  const { entry, tasks, workspace } = composeStack({
+    projectDir,
+    blueprintDir: here,
+    stack,
+    appDir,
+    displayName,
+    bundleId,
+    projectName: manifest.name,
+  });
   const dj = join(projectDir, "deno.json");
   writeJson(dj, mergeDenoJson(readJson<DenoJson>(dj), { tasks, workspace }, entry.name));
   writeManifest(projectDir, addToManifest(manifest, entry));
@@ -383,6 +461,7 @@ function addApp(args: string[]): Result {
     const r = resolveCmd(c, vars);
     must(r.run, join(projectDir, r.cwd));
   }
+  must("deno task security:sync", projectDir);
   must("deno task sync", projectDir);
   if (!values["no-check"]) must("deno task check", projectDir);
   say(`\nAdded ${appDir} (${stackId}). Describe it in AGENTS.md "This project".`);

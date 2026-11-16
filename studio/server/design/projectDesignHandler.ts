@@ -32,13 +32,21 @@ export function createDesignHandler(options: {
         let list = await listDesigns(root);
         const { wrote, errors } = await settlePatches(root, list.screens);
         if (wrote) list = await listDesigns(root);
-        return { ...list, screens: list.screens.map((s) => (errors.has(s.slug) ? { ...s, patchErrors: errors.get(s.slug) } : s)) };
+        return {
+          ...list,
+          screens: list.screens.map((s) => (errors.has(s.slug) ? { ...s, patchErrors: errors.get(s.slug) } : s)),
+        };
       }
       case "read":
         return readDesign(root, cmd.slug, cmd.file);
       case "begin": {
         const ref = (cmd as { reference?: { mime: string; base64?: string; bytes?: Uint8Array } }).reference;
-        if (ref?.base64) cmd.reference = { mime: ref.mime, bytes: Uint8Array.from(atob(ref.base64), (c) => c.charCodeAt(0)) };
+        if (ref?.base64) {
+          cmd.reference = {
+            mime: ref.mime,
+            bytes: Uint8Array.from(atob(ref.base64), (c) => c.charCodeAt(0)),
+          };
+        }
         const begun = await beginStep(root, cmd);
         onBegun?.({ kind: "step", slug: begun.slug, stepId: begun.step.id });
         return begun;

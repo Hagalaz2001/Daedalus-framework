@@ -44,7 +44,9 @@ Deno.test("anthropic: claude-opus-5-5, adaptive thinking, streaming tool use, ca
     }],
   }, ['{"files":', '[{"file":"v1.html"']);
   const partials: string[] = [];
-  const out = await createAnthropicProvider("sk-test", "claude-opus-5-5", client).call(input({ onPartial: (p) => partials.push(p) }));
+  const out = await createAnthropicProvider("sk-test", "claude-opus-5-5", client).call(
+    input({ onPartial: (p) => partials.push(p) }),
+  );
   assertEquals(out, { files: [{ file: "v1.html", html: "<p/>" }] });
   const p = seen.params!;
   assertEquals(p.model, "claude-opus-5-5");
@@ -65,7 +67,9 @@ Deno.test("anthropic: a reference image is sent as an image block before the tex
     stop_reason: "tool_use",
     content: [{ type: "tool_use", name: "write_designs", input: { files: [] } }],
   });
-  await createAnthropicProvider("k", "claude-opus-5-5", client).call(input({ image: { mime: "image/png", base64: "AAAA" } }));
+  await createAnthropicProvider("k", "claude-opus-5-5", client).call(
+    input({ image: { mime: "image/png", base64: "AAAA" } }),
+  );
   const content = ((seen.params!.messages as { content: { type: string }[] }[])[0]!).content;
   assertEquals(content.map((b) => b.type), ["image", "text"]);
 });
@@ -74,12 +78,18 @@ Deno.test("anthropic: refusals, truncation and a missing tool call become readab
   const run = (message: unknown) => createAnthropicProvider("k", "m", fakeClient(message).client).call(input());
   await assertRejects(() => run({ stop_reason: "refusal", content: [] }), Error, "declined");
   await assertRejects(() => run({ stop_reason: "max_tokens", content: [] }), Error, "cut off");
-  await assertRejects(() => run({ stop_reason: "end_turn", content: [{ type: "text", text: "hi" }] }), Error, "without calling");
+  await assertRejects(
+    () => run({ stop_reason: "end_turn", content: [{ type: "text", text: "hi" }] }),
+    Error,
+    "without calling",
+  );
 });
 
 Deno.test("ollama: native /api/chat with the schema as format, streamed NDJSON, labelled lower quality", async () => {
   let body: Record<string, unknown> = {};
-  const lines = ['{"message":{"content":"{\\"files\\":["}}', '{"message":{"content":"]}"}}'].map((l) => l + "\n").join("");
+  const lines = ['{"message":{"content":"{\\"files\\":["}}', '{"message":{"content":"]}"}}'].map((l) => l + "\n").join(
+    "",
+  );
   const fakeFetch = ((url: string, init: RequestInit) => {
     assertEquals(url, "http://127.0.0.1:11434/api/chat");
     body = JSON.parse(String(init.body));
@@ -118,7 +128,8 @@ Deno.test("ollama: unreachable server and invalid JSON give actionable messages"
 Deno.test("fake provider: deterministic, streams in chunks, honours abort", async () => {
   const fake = createFakeProvider(0);
   const prompt = input({
-    user: "Design variant 1 of 1 of one screen. Brief:\n<<<BRIEF-aa\nsales dashboard\nBRIEF-aa>>>\n\nReturn exactly these files: v1.html.",
+    user:
+      "Design variant 1 of 1 of one screen. Brief:\n<<<BRIEF-aa\nsales dashboard\nBRIEF-aa>>>\n\nReturn exactly these files: v1.html.",
   });
   const chunks: number[] = [];
   const a = await fake.call({ ...prompt, onPartial: (p) => chunks.push(p.length) });
@@ -143,7 +154,11 @@ Deno.test("environment: key from the process or .env, the process wins, auto is 
       "claude-opus-5-5",
       "llama3",
     ]);
-    assertEquals(loadEnv([dotenv], { ANTHROPIC_API_KEY: "sk-env" }).anthropicKey, "sk-env", "real environment wins over .env");
+    assertEquals(
+      loadEnv([dotenv], { ANTHROPIC_API_KEY: "sk-env" }).anthropicKey,
+      "sk-env",
+      "real environment wins over .env",
+    );
     const none = loadEnv([`${dir}/missing.env`], {});
     assertEquals([none.provider, none.anthropicKey, none.port], ["auto", null, 4310]);
   } finally {

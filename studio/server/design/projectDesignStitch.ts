@@ -21,7 +21,10 @@ export interface StitchScreenLike {
 export interface StitchSdkLike {
   open(
     apiKey: string,
-  ): { generate(title: string, prompt: string, device: "MOBILE" | "DESKTOP"): Promise<StitchScreenLike>; close(): Promise<void> };
+  ): {
+    generate(title: string, prompt: string, device: "MOBILE" | "DESKTOP"): Promise<StitchScreenLike>;
+    close(): Promise<void>;
+  };
 }
 /** What is being fetched decides which hosts and sizes are acceptable. */
 export type AssetKind = "result" | "script" | "style" | "image";
@@ -67,7 +70,13 @@ const isPng = (b: Uint8Array) => b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e
 const isJpeg = (b: Uint8Array) => b[0] === 0xff && b[1] === 0xd8;
 
 /** Stores the raw download (for a later user-triggered embed), the sanitised page and the screenshot. */
-export async function saveStitchVariant(dir: string, slug: string, file: string, raw: string, image: Uint8Array | null): Promise<void> {
+export async function saveStitchVariant(
+  dir: string,
+  slug: string,
+  file: string,
+  raw: string,
+  image: Uint8Array | null,
+): Promise<void> {
   const stem = designStem(file);
   await writeProjectFile(dir, join(screenDir(dir, slug), `${stem}.source.html`), raw);
   await writeProjectFile(dir, designFilePath(dir, slug, file), sanitizeDesignHtml(raw));
@@ -78,7 +87,12 @@ export async function saveStitchVariant(dir: string, slug: string, file: string,
 
 type Generate = Extract<DesignCommand, { kind: "stitch-generate" }>;
 
-export async function runStitch(dir: string, cmd: Generate, apiKey: string, deps: StitchDeps): Promise<{ slug: string }> {
+export async function runStitch(
+  dir: string,
+  cmd: Generate,
+  apiKey: string,
+  deps: StitchDeps,
+): Promise<{ slug: string }> {
   const { slug, step } = await beginStep(dir, {
     kind: "begin",
     step: "generate",
@@ -154,7 +168,11 @@ export async function inlineRemote(dir: string, slug: unknown, file: unknown, do
   if (!isDesignFile(file)) throw new Error("Not a design file.");
   const manifest = await readManifest(dir, String(slug));
   if (!manifest || manifest.engine !== "stitch") throw new Error("Only Stitch designs keep remote assets.");
-  const source = await readProjectText(dir, join(screenDir(dir, manifest.slug), `${designStem(file)}.source.html`), 8 * 1024 * 1024);
+  const source = await readProjectText(
+    dir,
+    join(screenDir(dir, manifest.slug), `${designStem(file)}.source.html`),
+    8 * 1024 * 1024,
+  );
   const $ = cheerio.load(source);
   let budget = MAX_INLINE_ASSETS;
   let usesScript = false;
@@ -181,7 +199,9 @@ export async function inlineRemote(dir: string, slug: unknown, file: unknown, do
   $("link").each((_, el) => {
     const node = $(el);
     const href = node.attr("href") ?? "";
-    if (!/stylesheet/i.test(node.attr("rel") ?? "") || hostOf(href) !== "fonts.googleapis.com" || budget-- <= 0) return void node.remove();
+    if (!/stylesheet/i.test(node.attr("rel") ?? "") || hostOf(href) !== "fonts.googleapis.com" || budget-- <= 0) {
+      return void node.remove();
+    }
     tasks.push(
       download(absolute(href), "style").then(
         (fetched) => void node.replaceWith(`<style>${text(fetched.bytes).replace(/</g, "")}</style>`),

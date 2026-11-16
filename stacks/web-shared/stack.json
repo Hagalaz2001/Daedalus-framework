@@ -7,5 +7,5 @@
     "packages/ui",
     "packages/ui-vue"
   ],
-  "tokens": "deno run -A packages/ui/scripts/tokens.mjs"
+  "tokens": "deno run -A scripts/tokens/web.ts"
 }

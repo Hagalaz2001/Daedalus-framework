@@ -54,14 +54,20 @@ test("plan dialog: nothing to write disables the button, errors are announced", 
     id: "x",
     files: [{ path: "DESIGN.md", status: "unchanged", binary: false, bytes: 3, diff: [{ kind: "same", text: "x" }] }],
   };
-  const html = renderToStaticMarkup(<PlanDialog plan={same} title="t" busy={false} error="Disk is full" onWrite={noop} onCancel={noop} />);
+  const html = renderToStaticMarkup(
+    <PlanDialog plan={same} title="t" busy={false} error="Disk is full" onWrite={noop} onCancel={noop} />,
+  );
   assert.match(html, /<button[^>]*disabled[^>]*>Write 0 files/);
   assert.match(html, /role="alert">Disk is full/);
   assert.match(html, /already identical/);
 });
 
 test("checks panel: failing rules show their reason, passing rules their label, and a fix button appears", () => {
-  const warnings = [{ id: "contrast", message: "Text below WCAG AA contrast (4.5:1): .pill (2.8:1).", fix: "raise it" }];
+  const warnings = [{
+    id: "contrast",
+    message: "Text below WCAG AA contrast (4.5:1): .pill (2.8:1).",
+    fix: "raise it",
+  }];
   const html = renderToStaticMarkup(<ChecksPanel warnings={warnings} busy={false} onFix={noop} />);
   assert.match(html, /Text below WCAG AA contrast/);
   assert.match(html, /Uses design tokens/);
@@ -168,7 +174,10 @@ test("flow board renders a card per screen and the connect control", () => {
 });
 
 test("kit button exposes variant and size for styling", () => {
-  assert.match(renderToStaticMarkup(<Button variant="outline" size="sm">Go</Button>), /data-variant="outline" data-size="sm"/);
+  assert.match(
+    renderToStaticMarkup(<Button variant="outline" size="sm">Go</Button>),
+    /data-variant="outline" data-size="sm"/,
+  );
 });
 
 test("previews: the bridge frame has a nonce CSP with no network, the static preview has no script at all, and dark is a class", () => {
@@ -181,7 +190,11 @@ test("previews: the bridge frame has a nonce CSP with no network, the static pre
   assert.match(stat, /<html class="dark" data-platform="ios">/);
   assert.match(stat, /script-src 'none'/);
   assert.ok(!stat.includes("<script"));
-  assert.match(previewSrcDoc("<p>not canonical</p>"), /default-src 'none'/, "a non-canonical page is replaced, not patched");
+  assert.match(
+    previewSrcDoc("<p>not canonical</p>"),
+    /default-src 'none'/,
+    "a non-canonical page is replaced, not patched",
+  );
 });
 
 test("copy table: placeholders and plurals", () => {
@@ -191,7 +204,11 @@ test("copy table: placeholders and plurals", () => {
   assert.equal(t("no.such.key"), "no.such.key");
   for (
     const text of Object.values(
-      JSON.parse(JSON.stringify(Object.fromEntries(["design.brief", "design.stitchHint", "design.waiting"].map((k) => [k, t(k)])))),
+      JSON.parse(
+        JSON.stringify(
+          Object.fromEntries(["design.brief", "design.stitchHint", "design.waiting"].map((k) => [k, t(k)])),
+        ),
+      ),
     )
   ) {
     // Built from parts so the scan of this file stays clean.
@@ -210,12 +227,15 @@ test("flow order follows the arrows, then creation order, and survives cycles", 
     "settings",
     "orders",
   ]);
-  assert.deepEqual(flowOrder(screens, [{ from: "sign-in", to: "overview" }, { from: "overview", to: "orders" }]).map((x) => x.slug), [
-    "sign-in",
-    "settings",
-    "overview",
-    "orders",
-  ]);
+  assert.deepEqual(
+    flowOrder(screens, [{ from: "sign-in", to: "overview" }, { from: "overview", to: "orders" }]).map((x) => x.slug),
+    [
+      "sign-in",
+      "settings",
+      "overview",
+      "orders",
+    ],
+  );
   assert.deepEqual(flowOrder(screens, []).map((x) => x.slug), ["sign-in", "overview", "orders", "settings"]);
   assert.equal(flowOrder(screens, [{ from: "orders", to: "overview" }, { from: "overview", to: "orders" }]).length, 4);
 });
@@ -234,8 +254,20 @@ test("model panel lists every provider with its state; the no-AI banner offers L
         detail: "Set ANTHROPIC_API_KEY in studio/.env to use it.",
         note: null,
       },
-      { id: "lemonade" as const, label: "Local AI (Lemonade)", available: true, detail: "Ready: user.M.", note: "Runs on this computer" },
-      { id: "fake" as const, label: "Demo fixtures", available: true, detail: "Deterministic sample designs.", note: null },
+      {
+        id: "lemonade" as const,
+        label: "Local AI (Lemonade)",
+        available: true,
+        detail: "Ready: user.M.",
+        note: "Runs on this computer",
+      },
+      {
+        id: "fake" as const,
+        label: "Demo fixtures",
+        available: true,
+        detail: "Deterministic sample designs.",
+        note: null,
+      },
     ],
   };
   const html = renderToStaticMarkup(<ModelPanel state={state} progress={null} onChange={noop} onClose={noop} />);
@@ -244,7 +276,11 @@ test("model panel lists every provider with its state; the no-AI banner offers L
   assert.match(html, /Local AI on this computer/);
   assert.match(html, /Ready: user\.M\./);
   assert.match(html, /in use/);
-  assert.match(html, /<input[^>]*disabled[^>]*name="provider"|name="provider"[^>]*disabled/, "an unavailable provider cannot be picked");
+  assert.match(
+    html,
+    /<input[^>]*disabled[^>]*name="provider"|name="provider"[^>]*disabled/,
+    "an unavailable provider cannot be picked",
+  );
   const banner = renderToStaticMarkup(<NoAiBanner onOpen={noop} />);
   assert.match(banner, /No AI is configured/);
   assert.match(banner, /Set up Local AI/);

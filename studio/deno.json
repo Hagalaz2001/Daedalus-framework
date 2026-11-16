@@ -32,7 +32,8 @@
     "build": "deno run -A npm:vite@8.3.8 build --config ui/vite.config.ts ui",
     "dev": "deno run -A npm:vite@8.3.8 --config ui/vite.config.ts ui",
     "test": "deno test -A server/ ui/test/",
-    "check": "deno check server/main.ts ui/src/main.tsx && deno task test",
+    "typecheck": "deno check server/main.ts ui/src/main.tsx",
+    "check": "deno task typecheck && deno task test",
     "doctor": "deno run -A server/doctor.ts"
   },
   "fmt": {

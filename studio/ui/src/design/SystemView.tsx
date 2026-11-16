@@ -116,9 +116,14 @@ export function SystemView({ config, onPlan, onDirections }: {
                         <td key={i} className="py-1.5">
                           {v === null ? <span className="text-foreground-subtle">-</span> : (
                             <span
-                              className={cn("inline-flex items-center gap-1.5 tabular-nums", v >= 4.5 ? "text-ok" : "text-destructive")}
+                              className={cn(
+                                "inline-flex items-center gap-1.5 tabular-nums",
+                                v >= 4.5 ? "text-ok" : "text-destructive",
+                              )}
                             >
-                              {v >= 4.5 ? <Check className="size-3.5" aria-hidden /> : <X className="size-3.5" aria-hidden />}
+                              {v >= 4.5
+                                ? <Check className="size-3.5" aria-hidden />
+                                : <X className="size-3.5" aria-hidden />}
                               {v.toFixed(1)}:1
                             </span>
                           )}
@@ -135,7 +140,9 @@ export function SystemView({ config, onPlan, onDirections }: {
 
       <section>
         <h3 className="mb-1 text-ui-sm font-semibold">Visual presets</h3>
-        <p className="mb-3 text-ui-xs text-foreground-subtle">Complete token sets. Pick one as the starting point and review the diff.</p>
+        <p className="mb-3 text-ui-xs text-foreground-subtle">
+          Complete token sets. Pick one as the starting point and review the diff.
+        </p>
         <ul className="grid grid-cols-3 gap-4">
           {config.presets.map((p) => (
             <li key={p.id} className="flex flex-col gap-3 rounded-xl border border-border bg-panel-2 p-4">
@@ -152,7 +159,10 @@ export function SystemView({ config, onPlan, onDirections }: {
                 size="sm"
                 variant="outline"
                 onClick={() =>
-                  onPlan([{ path: "design/tokens.json", content: `${JSON.stringify(p.tokens, null, 2)}\n` }], `Use the ${p.name} preset`)}
+                  onPlan(
+                    [{ path: "design/tokens.json", content: `${JSON.stringify(p.tokens, null, 2)}\n` }],
+                    `Use the ${p.name} preset`,
+                  )}
               >
                 Use this preset
               </Button>

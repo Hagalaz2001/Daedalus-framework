@@ -7,9 +7,17 @@ export interface CssRule {
 }
 
 export function readRules(html: string): CssRule[] {
-  const css = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "")).join("\n");
-  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selector: m[1]!.trim(), decls: declarations(m[2]!) }));
-  const inline = [...html.matchAll(/\sstyle\s*=\s*"([^"]*)"/gi)].map((m) => ({ selector: "[style]", decls: declarations(m[1]!) }));
+  const css = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((m) =>
+    m[1]!.replace(/\/\*[\s\S]*?\*\//g, "")
+  ).join("\n");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+    selector: m[1]!.trim(),
+    decls: declarations(m[2]!),
+  }));
+  const inline = [...html.matchAll(/\sstyle\s*=\s*"([^"]*)"/gi)].map((m) => ({
+    selector: "[style]",
+    decls: declarations(m[1]!),
+  }));
   return [...rules, ...inline];
 }
 

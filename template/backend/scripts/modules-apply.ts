@@ -7,6 +7,9 @@
 import { parse, stringify } from "@std/yaml";
 import { copy } from "@std/fs/copy";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { runArgs } from "../../scripts/lib/exec.ts";
+import { OPENAPI_TYPESCRIPT } from "../../scripts/versions.ts";
 
 type Json = Record<string, unknown>;
 interface Setup {
@@ -17,15 +20,14 @@ interface Setup {
   ui?: Record<string, { from: string; to: string }[]>;
 }
 
-const backend = new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1").replace(/\/$/, "");
+const backend = fileURLToPath(new URL("..", import.meta.url)).replace(/[\\/]$/, "");
 const root = join(backend, "..");
 const read = async (f: string) => await Deno.readTextFile(f);
 const exists = (f: string) => Deno.stat(f).then(() => true, () => false);
 
 function run(args: string[], cwd: string) {
   console.log(`> [${cwd === root ? "." : "backend"}] deno ${args.join(" ")}`);
-  const r = new Deno.Command(Deno.execPath(), { args, cwd, stdout: "inherit", stderr: "inherit" }).outputSync();
-  if (!r.success) throw new Error(`failed: deno ${args.join(" ")}`);
+  if (!runArgs(Deno.execPath(), args, { cwd }).ok) throw new Error(`failed: deno ${args.join(" ")}`);
 }
 
 /** Adds what `extra` has and `base` lacks; keeps existing values (a module never overrides project settings). */
@@ -103,6 +105,23 @@ for (const id of ids) {
   migration ||= !!setup.database?.migration;
 }
 
+// Every module folder is already copied when the first one is applied (the generator copies them all, then applies
+// one by one), and the auth-schema step below loads all of them. So make the imports of the others resolvable too;
+// each module's own apply later finds them in place and skips them.
+for await (const e of Deno.readDir(join(backend, "src", "modules"))) {
+  if (!e.isDirectory || ids.includes(e.name)) continue;
+  const f = join(backend, "src", "modules", e.name, "setup.json");
+  if (!await exists(f)) continue;
+  const other = JSON.parse(await read(f)) as Setup;
+  if (other.deno) {
+    const file = join(backend, "deno.json");
+    await Deno.writeTextFile(
+      file,
+      JSON.stringify(fill(JSON.parse(await read(file)), other.deno as Json), null, 2) + "\n",
+    );
+  }
+}
+
 // The MongoDB flavour has no Drizzle tasks: its schema lives in src/shared/db/models.ts and migrations/.
 const sql = "db:generate" in (JSON.parse(await read(join(backend, "deno.json"))).tasks ?? {});
 run(["install"], root);
@@ -116,7 +135,7 @@ if (
     "-A",
     "--no-config",
     "--no-lock",
-    "npm:openapi-typescript@7.13.0",
+    `npm:openapi-typescript@${OPENAPI_TYPESCRIPT}`,
     "contracts/openapi.yaml",
     "-o",
     "packages/api_ts/src/schema.d.ts",

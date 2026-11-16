@@ -47,24 +47,41 @@ export function parseFrontMatter(text: string): { tree: MdTree; prose: string } 
 
 const group = (tree: MdTree, name: string): Record<string, string> =>
   Object.fromEntries(
-    Object.entries((tree[name] as MdTree | undefined) ?? {}).filter((e): e is [string, string] => typeof e[1] === "string"),
+    Object.entries((tree[name] as MdTree | undefined) ?? {}).filter((e): e is [string, string] =>
+      typeof e[1] === "string"
+    ),
   );
 
 const cssVars = (prefix: string, values: Record<string, string>) =>
   Object.entries(values).map(([k, v]) => `  --${prefix}-${k.toLowerCase()}: ${v};`);
 
 export function checkDesignMd(text: string): DesignMdReport {
-  const empty: DesignMdReport = { name: "", css: "", count: 0, errors: [], failing: [], checkedPairs: 0, mismatches: [], tree: null };
+  const empty: DesignMdReport = {
+    name: "",
+    css: "",
+    count: 0,
+    errors: [],
+    failing: [],
+    checkedPairs: 0,
+    mismatches: [],
+    tree: null,
+  };
   const parsed = parseFrontMatter(text);
   if (!parsed) return { ...empty, errors: ["DESIGN.md has no YAML front matter."] };
   const { tree, prose } = parsed;
   const colors = group(tree, "colors");
   const lines: string[] = [];
-  lines.push(...cssVars("color", colors), ...cssVars("radius", group(tree, "rounded")), ...cssVars("space", group(tree, "spacing")));
+  lines.push(
+    ...cssVars("color", colors),
+    ...cssVars("radius", group(tree, "rounded")),
+    ...cssVars("space", group(tree, "spacing")),
+  );
   for (const [tier, spec] of Object.entries((tree.typography as MdTree | undefined) ?? {})) {
     if (typeof spec === "string") continue;
     for (const [prop, value] of Object.entries(spec)) {
-      if (typeof value === "string") lines.push(`  --type-${tier}-${prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}: ${value};`);
+      if (typeof value === "string") {
+        lines.push(`  --type-${tier}-${prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}: ${value};`);
+      }
     }
   }
   const errors: string[] = [];

@@ -1,6 +1,10 @@
 {
   "$comment": "Preset 'editorial': magazine feel. Serif display type, ink on paper, one oxblood accent, square-ish corners, rules instead of cards.",
-  "meta": { "id": "editorial", "name": "Editorial", "description": "Serif display type, ink on paper, one oxblood accent, near-square corners." },
+  "meta": {
+    "id": "editorial",
+    "name": "Editorial",
+    "description": "Serif display type, ink on paper, one oxblood accent, near-square corners."
+  },
   "color": {
     "primary": "#9b1c2c",
     "onPrimary": "#ffffff",

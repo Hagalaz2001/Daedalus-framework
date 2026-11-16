@@ -90,7 +90,9 @@ export function DesignDirections({ onApply }: {
   const scores = useMemo(() => {
     const out: Record<string, number | null> = {};
     for (const direction of view?.set?.directions ?? []) {
-      const pages = direction.screens.map((s) => html[`${direction.id}/${s.id}`]?.html).filter((h): h is string => h !== undefined);
+      const pages = direction.screens.map((s) => html[`${direction.id}/${s.id}`]?.html).filter((h): h is string =>
+        h !== undefined
+      );
       out[direction.id] = directionScore(pages, view?.set?.brief ?? "");
     }
     return out;
@@ -116,13 +118,22 @@ export function DesignDirections({ onApply }: {
       setHtml({});
     });
 
-  const pick = (direction: DirectionPlan) => guard(async () => void (await api.directions.lock(direction.id, notes[direction.id] ?? "")));
+  const pick = (direction: DirectionPlan) =>
+    guard(async () => void (await api.directions.lock(direction.id, notes[direction.id] ?? "")));
   const complete = (direction: DirectionPlan) =>
     view?.designMd[direction.id] === true &&
     direction.screens.every((s) => (view?.files[direction.id] ?? []).some((f) => f.screen === s.id && f.ok));
 
   if (!view) return <p className="py-6 text-ui-base text-foreground-subtle">{t("loading")}</p>;
-  if (!view.set || replacing) return <DirectionsForm busy={busy} error={error} onSubmit={(input) => void generate(input)} />;
+  if (!view.set || replacing) {
+    return (
+      <DirectionsForm
+        busy={busy}
+        error={error}
+        onSubmit={(input) => void generate(input)}
+      />
+    );
+  }
 
   const { set, selection } = view;
   const platforms: DirectionPlatform[] = choice === "all" ? [...DIRECTION_PLATFORMS] : [choice];
@@ -144,17 +155,32 @@ export function DesignDirections({ onApply }: {
           ))}
         </div>
         <span className="text-ui-xs text-foreground-subtle">{t(`design.stack.${set.stack}`)}</span>
-        <Button className="ml-auto" size="sm" variant="outline" disabled={busy || selection !== null} onClick={() => setReplacing(true)}>
+        <Button
+          className="ml-auto"
+          size="sm"
+          variant="outline"
+          disabled={busy || selection !== null}
+          onClick={() => setReplacing(true)}
+        >
           {t("design.directionsNew")}
         </Button>
       </div>
       {selection
         ? (
-          <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-surface-hover px-4 py-3" role="status">
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-surface-hover px-4 py-3"
+            role="status"
+          >
             <Lock className="size-4" aria-hidden />
             <span className="text-ui-sm font-medium">{t("design.locked", { name: selection.name })}</span>
             <span className="text-ui-xs text-foreground-subtle">design/selected.json</span>
-            <Button className="ml-auto" size="sm" variant="primary" disabled={busy} onClick={() => onApply(selection.directionId)}>
+            <Button
+              className="ml-auto"
+              size="sm"
+              variant="primary"
+              disabled={busy}
+              onClick={() => onApply(selection.directionId)}
+            >
               {t("design.applyDirection")}
             </Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => void guard(() => api.directions.unlock())}>
@@ -180,7 +206,9 @@ export function DesignDirections({ onApply }: {
           ))}
           {set.directions.map((direction) => {
             const score = scores[direction.id] ?? null;
-            const missing = direction.screens.filter((s) => !(view.files[direction.id] ?? []).some((f) => f.screen === s.id)).length;
+            const missing = direction.screens.filter((s) =>
+              !(view.files[direction.id] ?? []).some((f) => f.screen === s.id)
+            ).length;
             const chosen = selection?.directionId === direction.id;
             return (
               <div key={direction.id} className="contents">
@@ -191,7 +219,11 @@ export function DesignDirections({ onApply }: {
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="size-3 rounded-full border border-border" style={{ background: direction.seed }} aria-hidden />
+                    <span
+                      className="size-3 rounded-full border border-border"
+                      style={{ background: direction.seed }}
+                      aria-hidden
+                    />
                     <span className="text-ui-base font-semibold">{direction.name}</span>
                     {chosen ? <Check className="size-4 text-emerald-600" aria-label={t("design.chosen")} /> : null}
                   </div>

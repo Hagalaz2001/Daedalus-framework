@@ -103,7 +103,10 @@ export function nestsTooDeeply(html: string): boolean {
   return false;
 }
 
-export function analyzeDesignHtml(html: string, options: { allowInlineScripts?: boolean; fragment?: boolean } = {}): DesignAnalysis {
+export function analyzeDesignHtml(
+  html: string,
+  options: { allowInlineScripts?: boolean; fragment?: boolean } = {},
+): DesignAnalysis {
   const report = newReport();
   if (html.length > MAX_DESIGN_HTML_CHARS) return { html: "", problems: [PROBLEM.tooLarge], remote: false };
   if (nestsTooDeeply(html)) return { html: "", problems: ["Nested too deeply."], remote: false };
@@ -159,7 +162,9 @@ export function analyzeDesignHtml(html: string, options: { allowInlineScripts?: 
       // The page frame is ours to describe: the preview sets <html> attributes itself.
       node.attribs = tag === "html" || tag === "head" ? {} : clean;
       if (tag === "style") {
-        for (const child of node.children ?? []) if (child.type === "text") child.data = cleanCss(child.data ?? "", report);
+        for (const child of node.children ?? []) {
+          if (child.type === "text") child.data = cleanCss(child.data ?? "", report);
+        }
         frame.out.push(node);
         continue;
       }
@@ -183,4 +188,5 @@ export const validateDesignHtml = (html: string, options: { allowInlineScripts?:
   analyzeDesignHtml(html, options).problems;
 
 /** The page with everything outside the allowlist removed. */
-export const sanitizeDesignHtml = (html: string, options: { fragment?: boolean } = {}): string => analyzeDesignHtml(html, options).html;
+export const sanitizeDesignHtml = (html: string, options: { fragment?: boolean } = {}): string =>
+  analyzeDesignHtml(html, options).html;

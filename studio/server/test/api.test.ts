@@ -34,7 +34,10 @@ Deno.test("the server only answers its own host and refuses cross-origin posts",
       PORT,
     );
     assertEquals(evil.status, 403);
-    assertEquals((await call("/api/design", { command: { kind: "list" } }, { origin: "http://evil.example" })).status, 403);
+    assertEquals(
+      (await call("/api/design", { command: { kind: "list" } }, { origin: "http://evil.example" })).status,
+      403,
+    );
     assertEquals((await call("/api/design", { command: { kind: "list" } }, { origin: `http://${HOST}` })).status, 200);
   } finally {
     cleanup(root);
@@ -120,7 +123,10 @@ Deno.test("end to end with the fake provider: brief, variants, edit by chat, exp
       screenshots: false,
       force: false,
     })).json();
-    assertEquals(flutter.plan.files.map((f: { path: string }) => f.path), ["apps/mobile/lib/features/sales/ui/sales_screen.dart"]);
+    assertEquals(flutter.plan.files.map((f: { path: string }) => f.path), [
+      "apps/mobile/lib/features/sales/presentation/sales_screen.dart",
+      "apps/mobile/lib/features/sales/sales.dart",
+    ]);
   } finally {
     cleanup(root);
   }

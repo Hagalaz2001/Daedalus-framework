@@ -168,9 +168,10 @@ export function assess(hw: Hardware): Assessment {
   else {
     const need = pick.model ? Math.max(MIN_FREE_DISK_GB, gb(pick.model.bytes) + 8) : MIN_FREE_DISK_GB;
     checks.push(
-      hw.freeDiskBytes / GB >= need
-        ? { level: "ok", text: `${gb(hw.freeDiskBytes)} GB free disk: enough.` }
-        : { level: "fail", text: `${gb(hw.freeDiskBytes)} GB free disk: ${need} GB are needed for the model and the runtime.` },
+      hw.freeDiskBytes / GB >= need ? { level: "ok", text: `${gb(hw.freeDiskBytes)} GB free disk: enough.` } : {
+        level: "fail",
+        text: `${gb(hw.freeDiskBytes)} GB free disk: ${need} GB are needed for the model and the runtime.`,
+      },
     );
   }
   checks.push(
@@ -182,16 +183,25 @@ export function assess(hw: Hardware): Assessment {
       ? { level: "warn", text: "AVX2 support could not be checked (nearly every processor since 2015 has it)." }
       : { level: "ok", text: `${hw.arch}${hw.avx2 ? " with AVX2" : ""}: supported.` },
   );
-  if (hw.unifiedMemory) checks.push({ level: "ok", text: `Apple Silicon: ${gb(hw.ramBytes)} GB of memory shared with the GPU (Metal).` });
-  else if (discrete) {
+  if (hw.unifiedMemory) {
+    checks.push({ level: "ok", text: `Apple Silicon: ${gb(hw.ramBytes)} GB of memory shared with the GPU (Metal).` });
+  } else if (discrete) {
     checks.push({
       level: discrete.vramBytes >= 7.5 * GB ? "ok" : "warn",
       text: `${discrete.name}: ${gb(discrete.vramBytes)} GB of graphics memory${
         discrete.vramBytes >= 7.5 * GB ? "." : " (too little to help much; the processor does the work)."
       }`,
     });
-  } else checks.push({ level: "warn", text: "No dedicated GPU found: the model runs on the processor (slow, but it works)." });
-  if (hw.ryzenAi) checks.push({ level: "ok", text: "Ryzen AI processor: Lemonade can use the NPU for some models, see docs/LOCAL-AI.md." });
+  } else {checks.push({
+      level: "warn",
+      text: "No dedicated GPU found: the model runs on the processor (slow, but it works).",
+    });}
+  if (hw.ryzenAi) {
+    checks.push({
+      level: "ok",
+      text: "Ryzen AI processor: Lemonade can use the NPU for some models, see docs/LOCAL-AI.md.",
+    });
+  }
 
   const failed = checks.some((c) => c.level === "fail");
   const verdict: Verdict = failed || !pick.model

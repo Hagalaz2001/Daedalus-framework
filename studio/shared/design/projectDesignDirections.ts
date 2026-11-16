@@ -99,8 +99,13 @@ export function planDirections(input: DirectionsInput, created: string): Directi
   if (!DIRECTION_STACKS.includes(input.stack)) throw new Error("Pick react-flutter or react-native.");
   const count = input.count ?? 3;
   if (!Number.isInteger(count) || count < 3 || count > 5) throw new Error("Ask for 3 to 5 directions.");
-  const titles = (input.screens?.length ? input.screens : DEFAULT_DIRECTION_SCREENS).map((t) => t.trim()).filter(Boolean);
-  const screens = [...new Map(titles.map((title) => [slugifyDesignName(title, "screen"), title])).entries()].slice(0, 6);
+  const titles = (input.screens?.length ? input.screens : DEFAULT_DIRECTION_SCREENS).map((t) => t.trim()).filter(
+    Boolean,
+  );
+  const screens = [...new Map(titles.map((title) => [slugifyDesignName(title, "screen"), title])).entries()].slice(
+    0,
+    6,
+  );
   if (screens.length < 3) throw new Error("Name 3 to 6 key screens.");
   return {
     version: 1,
@@ -151,7 +156,8 @@ const isPath = (v: unknown, folder: string): v is string =>
 export function parseDirectionSet(raw: unknown): DirectionSet | null {
   const s = raw as Partial<DirectionSet> | null;
   if (
-    !s || s.version !== 1 || !isStr(s.brief) || !DIRECTION_STACKS.includes(s.stack as DirectionStack) || !isStr(s.created, 40) ||
+    !s || s.version !== 1 || !isStr(s.brief) || !DIRECTION_STACKS.includes(s.stack as DirectionStack) ||
+    !isStr(s.created, 40) ||
     s.routes !== `${DIRECTIONS_FOLDER}/routes.json`
   ) return null;
   if (!Array.isArray(s.directions) || s.directions.length < 3 || s.directions.length > 5) return null;
@@ -162,13 +168,21 @@ export function parseDirectionSet(raw: unknown): DirectionSet | null {
       d.designMd !== `${DIRECTIONS_FOLDER}/${d.id}/DESIGN.md` || !Array.isArray(d.screens)
     ) return null;
     const screens = d.screens.filter((x) =>
-      x && isSafeDesignName(x.id) && isStr(x.title, 60) && isSafeDesignName(x.route) && isPath(x.file, `${DIRECTIONS_FOLDER}/${d.id}`) &&
+      x && isSafeDesignName(x.id) && isStr(x.title, 60) && isSafeDesignName(x.route) &&
+      isPath(x.file, `${DIRECTIONS_FOLDER}/${d.id}`) &&
       x.file === `${DIRECTIONS_FOLDER}/${d.id}/${x.id}.html`
     );
     if (screens.length < 3 || screens.length > 6) return null;
     directions.push({ id: d.id, name: d.name, seed: d.seed, designMd: d.designMd, screens });
   }
-  return { version: 1, brief: s.brief, stack: s.stack as DirectionStack, created: s.created, routes: s.routes, directions };
+  return {
+    version: 1,
+    brief: s.brief,
+    stack: s.stack as DirectionStack,
+    created: s.created,
+    routes: s.routes,
+    directions,
+  };
 }
 
 export function parseDirectionSelection(raw: unknown): DirectionSelection | null {

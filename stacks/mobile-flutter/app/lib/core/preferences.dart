@@ -43,7 +43,9 @@ class OnboardedController extends AsyncNotifier<bool> {
     state = const AsyncData(true);
     try {
       await (await SharedPreferences.getInstance()).setBool(_key, true);
-    } catch (_) {}
+    } catch (_) {
+      // Storage can be unavailable; onboarding is simply shown again next launch.
+    }
   }
 }
 

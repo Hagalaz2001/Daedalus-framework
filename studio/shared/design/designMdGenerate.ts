@@ -48,12 +48,15 @@ async function schemes(seed: string): Promise<{ light: Roles; dark: Roles }> {
   const colors = new m.MaterialDynamicColors() as unknown as Record<string, () => { getArgb(s: unknown): number }>;
   const build = (dark: boolean): Roles => {
     const scheme = new m.SchemeTonalSpot(m.Hct.fromInt(argb), dark, 0);
-    return Object.fromEntries(ROLES.map((role) => [kebab(role), m.hexFromArgb(colors[role]!().getArgb(scheme)).toLowerCase()]));
+    return Object.fromEntries(
+      ROLES.map((role) => [kebab(role), m.hexFromArgb(colors[role]!().getArgb(scheme)).toLowerCase()]),
+    );
   };
   return { light: build(false), dark: build(true) };
 }
 
-const yamlColors = (key: string, roles: Roles) => `${key}:\n${Object.entries(roles).map(([k, v]) => `  ${k}: '${v}'`).join("\n")}`;
+const yamlColors = (key: string, roles: Roles) =>
+  `${key}:\n${Object.entries(roles).map(([k, v]) => `  ${k}: '${v}'`).join("\n")}`;
 
 const TYPE: [string, number, number, number, string][] = [
   ["display-lg", 36, 44, 700, "-0.03em"],

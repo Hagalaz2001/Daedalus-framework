@@ -59,10 +59,11 @@ test("a generated DESIGN.md passes its own checks, light and dark, with prose eq
   assert.ok(report.checkedPairs > 10);
   assert.ok(md.includes("colors-dark:"));
   const dark = checkDesignMd(
-    md.replace(/\ncolors:\n[\s\S]*?\ncolors-dark:/, "\ncolors-light:").replace("colors-light:", "colors-light-removed:").replace(
-      "\ncolors-dark:",
-      "\ncolors:",
-    ),
+    md.replace(/\ncolors:\n[\s\S]*?\ncolors-dark:/, "\ncolors-light:").replace("colors-light:", "colors-light-removed:")
+      .replace(
+        "\ncolors-dark:",
+        "\ncolors:",
+      ),
   );
   assert.deepEqual(dark.failing, []);
   await assert.rejects(buildDesignMd({ name: "x", seed: "blue" }), /seed colour/);

@@ -6,5 +6,8 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: { outDir: "dist", emptyOutDir: true },
-  server: { port: 5173, proxy: { "/api": { target: "http://127.0.0.1:4310", changeOrigin: false, headers: { host: "127.0.0.1:4310" } } } },
+  server: {
+    port: 5173,
+    proxy: { "/api": { target: "http://127.0.0.1:4310", changeOrigin: false, headers: { host: "127.0.0.1:4310" } } },
+  },
 });

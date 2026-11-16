@@ -9,7 +9,9 @@ export function validateJson(value: unknown, schema: Schema, path = "$"): string
   const problems: string[] = [];
   const type = schema.type as string | undefined;
   const kind = value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
-  if (Array.isArray(schema.enum) && !schema.enum.includes(value)) problems.push(`${path}: must be one of ${JSON.stringify(schema.enum)}`);
+  if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
+    problems.push(`${path}: must be one of ${JSON.stringify(schema.enum)}`);
+  }
   if (type && !(type === "integer" ? Number.isInteger(value) : type === kind)) {
     problems.push(`${path}: expected ${type}, got ${kind}`);
     return problems;
@@ -17,15 +19,21 @@ export function validateJson(value: unknown, schema: Schema, path = "$"): string
   if (type === "object" && value && typeof value === "object") {
     const obj = value as Record<string, unknown>;
     const props = (schema.properties ?? {}) as Record<string, Schema>;
-    for (const key of (schema.required as string[] | undefined) ?? []) if (!(key in obj)) problems.push(`${path}.${key}: missing`);
+    for (const key of (schema.required as string[] | undefined) ?? []) {
+      if (!(key in obj)) problems.push(`${path}.${key}: missing`);
+    }
     for (const [key, v] of Object.entries(obj)) {
       if (props[key]) problems.push(...validateJson(v, props[key]!, `${path}.${key}`));
       else if (schema.additionalProperties === false) problems.push(`${path}.${key}: not allowed`);
     }
   }
   if (type === "array" && Array.isArray(value)) {
-    if (typeof schema.maxItems === "number" && value.length > schema.maxItems) problems.push(`${path}: at most ${schema.maxItems} items`);
-    if (schema.items) value.forEach((v, i) => problems.push(...validateJson(v, schema.items as Schema, `${path}[${i}]`)));
+    if (typeof schema.maxItems === "number" && value.length > schema.maxItems) {
+      problems.push(`${path}: at most ${schema.maxItems} items`);
+    }
+    if (schema.items) {
+      value.forEach((v, i) => problems.push(...validateJson(v, schema.items as Schema, `${path}[${i}]`)));
+    }
   }
   return problems;
 }

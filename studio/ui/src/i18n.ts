@@ -76,7 +76,8 @@ export const messages: Record<string, string> = {
   "design.name": "Screen name",
   "design.namePlaceholder": "Billing overview",
   "design.brief": "Brief",
-  "design.briefPlaceholder": 'What is this screen for, who uses it, what must it show? Add constraints such as "no sidebar".',
+  "design.briefPlaceholder":
+    'What is this screen for, who uses it, what must it show? Add constraints such as "no sidebar".',
   "design.target": "Target",
   "design.engine": "Engine",
   "design.engineModel": "Your model",
@@ -108,7 +109,8 @@ export const messages: Record<string, string> = {
   "design.inspector": "Design details",
   "design.byModel": "your model",
   "design.byStitch": "Google Stitch",
-  "design.remoteNote": "This design points at remote assets, which the preview blocks. You can fetch the allowed ones once and embed them.",
+  "design.remoteNote":
+    "This design points at remote assets, which the preview blocks. You can fetch the allowed ones once and embed them.",
   "design.inline": "Embed remote assets",
   "design.checks": "Checks {pass}/{total}",
   "design.pass": "Passed",

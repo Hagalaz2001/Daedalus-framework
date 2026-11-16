@@ -11,6 +11,8 @@ from one API contract and one set of design tokens. You choose the stacks; the g
 architecture, checks, documentation and AI-agent rules already in place.
 
 
+**New here? Start with [docs/learn](docs/learn/README.md)** (plain-language guide, install, first app in 30 minutes). Working with AI agents: [the Daedalus Method](docs/METHOD.md). For developers: [docs/dev](docs/dev/README.md).
+
 Who it is for: small teams and solo developers who build several kinds of apps and want the same structure,
 checks and workflow in every one, with AI agents as part of the team.
 
@@ -40,7 +42,7 @@ project (the same as the `deno task` equivalents below).
 | `--db` | `postgres`, `mongodb` (needs the backend). Modules that need Postgres are refused with `mongodb` (exit 2). | `postgres` |
 | `--modules` | comma-separated module names from `modules/` (see `template/docs/MODULES.md`) | none |
 | `--packs` | comma-separated domain packs from `packs/` ([packs/README.md](packs/README.md)) | none |
-| `--ui` | `clean`, `editorial` (token preset) | `clean` |
+| `--ui` | `clean`, `editorial`, `playful` (token preset) | `clean` |
 | `--id` | reverse-domain bundle id, required for mobile apps you will publish | `com.example.<app>` |
 | `--git-name`, `--git-email`, `--remote` | set the repository identity and remote, then make the first commit | not set |
 
@@ -48,6 +50,22 @@ The generator copies `template/`, composes the chosen stacks into `apps/`, merge
 `deno.json`, replaces placeholders (name, bundle id), runs `deno install`, `deno task sync` and `deno task check`, and
 runs `git init`. It does not commit unless you pass `--git-name` and `--git-email`; ask which identity and remote
 the project uses before the first commit.
+
+## From idea to shipped app
+
+```mermaid
+flowchart LR
+  A["Idea"] --> B["daedalus new"]
+  B --> C["Edit contract<br/>and tokens"]
+  C --> D["deno task sync"]
+  D --> E["Build with agents<br/>or by hand"]
+  E --> F{"deno task check"}
+  F -- red --> E
+  F -- green --> G["Review: screenshots<br/>and the diff"]
+  G --> H["A human ships"]
+```
+
+More diagrams: [docs/diagrams](docs/diagrams/README.md).
 
 ## Choosing a stack
 
@@ -186,10 +204,22 @@ rules; `.claude/` has project skills and agents (add-feature, plan-project, desi
 drafts design directions and screens from the project's UI kit. How to brief an agent, what stays non-negotiable and
 a checklist against low-quality output: [`template/docs/AI-WORKFLOW.md`](template/docs/AI-WORKFLOW.md).
 
+The way of working that goes with it, the [Daedalus Method](docs/METHOD.md) (roles, a cycle from intent to shipped,
+Definition of Done, mapping to Scrum and Kanban):
+
+```mermaid
+flowchart LR
+  I["Intent"] --> S["Spec"] --> P["Plan"] --> B["Build in parallel"] --> G{"Gate"}
+  G -- fails --> B
+  G -- passes --> D["Demo"] --> H{"Ship: a human approves"} --> L["Learn"] --> I
+```
+
 Design skills from other authors are not bundled (their licences differ). `template/.agents/README.md` lists the
 design rules that apply either way and how to install the skills named in `skills-lock.json`.
 
 ## Documentation
+
+Learning: [docs/learn](docs/learn/README.md) (beginner guide, glossary, FAQ, troubleshooting). Way of working: [docs/METHOD.md](docs/METHOD.md) and [docs/diagrams](docs/diagrams/README.md). Developers: [docs/dev](docs/dev/README.md) (cheatsheet, recipes, anatomy of a project).
 
 For AI tools: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) (MCP server `daedalus mcp`, configuration for Claude Code, Codex,
 Gemini CLI, Cursor, Kimi CLI and ACP clients) and [docs/CLI.md](docs/CLI.md) (`--json` output, exit codes).

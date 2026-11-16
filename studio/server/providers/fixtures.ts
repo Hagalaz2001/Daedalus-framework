@@ -66,10 +66,34 @@ a{color:inherit;text-decoration:none}
 `;
 
 const kpis = [
-  { label: "Revenue", value: "$48,260", delta: "+12.4% vs last week", tone: "ok", pts: "0,30 12,26 24,28 36,18 48,20 60,10 72,12 84,4" },
-  { label: "Orders", value: "1,284", delta: "+6.1% vs last week", tone: "ok", pts: "0,22 12,24 24,18 36,20 48,14 60,16 72,8 84,10" },
-  { label: "Conversion", value: "3.8%", delta: "-0.4 pts vs last week", tone: "bad", pts: "0,8 12,12 24,10 36,16 48,14 60,22 72,20 84,26" },
-  { label: "Refund rate", value: "1.1%", delta: "Steady", tone: "", pts: "0,18 12,20 24,16 36,18 48,17 60,19 72,16 84,17" },
+  {
+    label: "Revenue",
+    value: "$48,260",
+    delta: "+12.4% vs last week",
+    tone: "ok",
+    pts: "0,30 12,26 24,28 36,18 48,20 60,10 72,12 84,4",
+  },
+  {
+    label: "Orders",
+    value: "1,284",
+    delta: "+6.1% vs last week",
+    tone: "ok",
+    pts: "0,22 12,24 24,18 36,20 48,14 60,16 72,8 84,10",
+  },
+  {
+    label: "Conversion",
+    value: "3.8%",
+    delta: "-0.4 pts vs last week",
+    tone: "bad",
+    pts: "0,8 12,12 24,10 36,16 48,14 60,22 72,20 84,26",
+  },
+  {
+    label: "Refund rate",
+    value: "1.1%",
+    delta: "Steady",
+    tone: "",
+    pts: "0,18 12,20 24,16 36,18 48,17 60,19 72,16 84,17",
+  },
 ];
 
 const kpiCards = (): string =>
@@ -99,11 +123,11 @@ const ordersList = (): string => `
   <div data-state="ready"><ul class="list">
 ${
   orders.map((o) =>
-    `    <li class="row" data-ui="ListRow"><span class="avatar" data-ui="Avatar">${o[5]}</span><div class="grow"><p class="title">${
-      o[0]
-    }</p><p class="muted">${o[1]}</p></div><span class="badge ${o[4]}" data-ui="Badge">${o[3]}</span><span class="amount">${
-      o[2]
-    }</span></li>`
+    `    <li class="row" data-ui="ListRow"><span class="avatar" data-ui="Avatar">${
+      o[5]
+    }</span><div class="grow"><p class="title">${o[0]}</p><p class="muted">${o[1]}</p></div><span class="badge ${
+      o[4]
+    }" data-ui="Badge">${o[3]}</span><span class="amount">${o[2]}</span></li>`
   ).join("\n")
 }
   </ul></div>
@@ -217,7 +241,9 @@ main{max-width:1040px;margin:0 auto;padding:var(--space-8) var(--space-8)}
 <!-- section: Headline -->
 <section class="hero" data-ui="PageHeader"><div><p class="muted">Revenue, last 7 days</p><p class="big">$48,260</p><p style="margin-top:var(--space-3)"><span class="badge ok">+12.4% vs last week</span></p></div><svg class="spark" viewBox="0 0 84 36" preserveAspectRatio="none" role="img" aria-label="Revenue over the last 7 days"><polyline points="0,30 12,26 24,28 36,18 48,20 60,10 72,12 84,4"/></svg></section>
 <!-- section: Supporting numbers -->
-<div class="strip">${kpiCards().split("</article>").slice(1, 4).filter(Boolean).map((a) => a + "</article>").join("")}</div>
+<div class="strip">${
+    kpiCards().split("</article>").slice(1, 4).filter(Boolean).map((a) => a + "</article>").join("")
+  }</div>
 <!-- section: Recent orders -->
 ${ordersList()}
 </main></body></html>`;
@@ -275,7 +301,12 @@ main{min-height:100vh;display:grid;place-items:center;padding:var(--space-6) var
   }<body><main><form class="card panel" data-ui="Card"><div class="brand"><span class="mark"></span>Acme Shop</div><div><h1>Welcome back</h1><p class="muted">Sign in to see today's orders.</p></div><div class="field" data-ui="Input"><label for="e">Email</label><input id="e" type="email" autocomplete="email" placeholder="you@example.com"></div><div class="field" data-ui="Input"><label for="p">Password</label><input id="p" type="password" autocomplete="current-password"></div><button class="btn primary full" type="submit" data-ui="Button">Sign in</button><p class="muted"><a href="#forgot">Forgot your password?</a></p></form></main></body></html>`;
 
 /** Picks a fixture by words in the brief. Dashboard is the default. */
-export function fixtureDesigns(brief: string, files: string[], tokensCss: string, offset = 0): { file: string; html: string }[] {
+export function fixtureDesigns(
+  brief: string,
+  files: string[],
+  tokensCss: string,
+  offset = 0,
+): { file: string; html: string }[] {
   const wantsSignIn = /sign.?in|log.?in|login|auth/i.test(brief);
   const layouts = wantsSignIn ? [signIn] : [sidebarLayout, topNavLayout, splitLayout];
   return files.map((file, i) => ({ file, html: layouts[(i + offset) % layouts.length]!(tokensCss) }));

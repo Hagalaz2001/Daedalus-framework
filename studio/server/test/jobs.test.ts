@@ -36,9 +36,13 @@ Deno.test("generate: one call per variant, all files written, sanitised, streame
     const layouts = new Set<string>();
     for (const f of files) {
       const html = await readDesign(root, begun.slug, f.file);
-      layouts.add(html.includes('<aside class="sidebar"') ? "sidebar" : html.includes('<nav class="rail"') ? "rail" : "top");
+      layouts.add(
+        html.includes('<aside class="sidebar"') ? "sidebar" : html.includes('<nav class="rail"') ? "rail" : "top",
+      );
       assertEquals(
-        lintDesign(html, { brief: "Sales dashboard", target: "web-desktop", projectTokens: tokenMap(TOKENS) }).map((w) => w.id),
+        lintDesign(html, { brief: "Sales dashboard", target: "web-desktop", projectTokens: tokenMap(TOKENS) }).map((
+          w,
+        ) => w.id),
         [],
         `${f.file} lint`,
       );
@@ -190,7 +194,14 @@ Deno.test("model output with scripts is sanitised before it is written", async (
   };
   const { root, jobs } = setup(provider);
   try {
-    const g = await beginStep(root, { kind: "begin", step: "generate", name: "Evil", brief: "x", target: "web-desktop", count: 1 });
+    const g = await beginStep(root, {
+      kind: "begin",
+      step: "generate",
+      name: "Evil",
+      brief: "x",
+      target: "web-desktop",
+      count: 1,
+    });
     await jobs.runStep(root, g.slug, g.step.id);
     await jobs.idle();
     const written = Deno.readTextFileSync(join(root, "design", g.slug, "v1.html"));

@@ -3,6 +3,8 @@
 //   design/tokens.json     -> each app's theme file, through the stack's tokens script (scripts/tokens/<stack>.ts)
 // Which stacks exist comes from .blueprint.json.
 import { existsSync, readFileSync } from "node:fs";
+import { shell } from "./lib/exec.ts";
+import { OPENAPI_TYPESCRIPT } from "./versions.ts";
 
 interface Cmd {
   cwd: string;
@@ -15,18 +17,19 @@ interface App {
   sync: Cmd[];
 }
 
-export const run = (cmd: string, cwd = ".") => {
-  console.log(`\n> [${cwd}] ${cmd}`);
-  const win = Deno.build.os === "windows";
-  const r = new Deno.Command(win ? "cmd" : "sh", { args: win ? ["/c", cmd] : ["-c", cmd], cwd, stdout: "inherit", stderr: "inherit" }).outputSync();
-  if (!r.success) throw new Error(`Failed: ${cmd} (in ${cwd})`);
+const run = (cmd: string, cwd = ".") => {
+  console.log(`
+> [${cwd}] ${cmd}`);
+  if (!shell(cmd, { cwd }).ok) throw new Error(`Failed: ${cmd} (in ${cwd})`);
 };
 
 const manifest = JSON.parse(readFileSync(".blueprint.json", "utf8")) as { apps: App[]; extras?: { sync: Cmd[] }[] };
 
 if (existsSync("packages/api_ts")) {
   // openapi-typescript needs the TypeScript 5 compiler API; --no-config keeps it away from the workspace's TypeScript 7.
-  run("deno run -A --no-config npm:openapi-typescript@7.13.0 contracts/openapi.yaml -o packages/api_ts/src/schema.d.ts");
+  run(
+    `deno run -A --no-config npm:openapi-typescript@${OPENAPI_TYPESCRIPT} contracts/openapi.yaml -o packages/api_ts/src/schema.d.ts`,
+  );
 }
 
 const done = new Set<string>();

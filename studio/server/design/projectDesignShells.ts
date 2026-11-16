@@ -41,7 +41,9 @@ export async function loadShell(dir: string, id: string): Promise<LoadedShell> {
 /** Shells that load cleanly; a broken one is skipped here and reported when a screen needs it. */
 export async function listShells(dir: string): Promise<{ id: string; map: DesignRouteMap }[]> {
   const names = (await readProjectDir(dir, join(dir, DESIGN_FOLDER, "shell"))).map((e) => e.name);
-  const ids = names.filter((n) => n.endsWith(".routes.json")).map((n) => n.slice(0, -".routes.json".length)).filter(isSafeDesignName).slice(
+  const ids = names.filter((n) => n.endsWith(".routes.json")).map((n) => n.slice(0, -".routes.json".length)).filter(
+    isSafeDesignName,
+  ).slice(
     0,
     10,
   );
@@ -57,13 +59,18 @@ export async function loadScreenShell(
   const marker = readShellMarker(html);
   if (!marker) return null;
   const shell = await loadShell(dir, marker.shellId).catch((error: unknown) => {
-    throw new Error(`Shell "${marker.shellId}" cannot be used: ${error instanceof Error ? error.message : "unreadable"}`);
+    throw new Error(
+      `Shell "${marker.shellId}" cannot be used: ${error instanceof Error ? error.message : "unreadable"}`,
+    );
   });
   return { shell, marker, key: contentSha(`${shell.key}\0${html}`) };
 }
 
 /** A screen body becomes a whole page; a self-contained page is returned as it is. */
-export async function resolveComposed(dir: string, html: string): Promise<{ html: string; shellId?: string; route?: string }> {
+export async function resolveComposed(
+  dir: string,
+  html: string,
+): Promise<{ html: string; shellId?: string; route?: string }> {
   const loaded = await loadScreenShell(dir, html);
   if (!loaded) return { html };
   return {
@@ -87,11 +94,13 @@ export function composeScreen(shellHtml: string, body: string, map: DesignRouteM
       // Only the two known kinds reach the markup, whatever a hand-built map says (parseRouteMap rejects others too).
       const kind = r.nav!.badge?.kind === "count" ? "count" : r.nav!.badge?.kind === "dot" ? "dot" : null;
       const badge = kind
-        ? `<span class="nav-badge" data-kind="${kind}">${kind === "count" ? Number(r.nav!.badge!.value ?? 0) || 0 : ""}</span>`
+        ? `<span class="nav-badge" data-kind="${kind}">${
+          kind === "count" ? Number(r.nav!.badge!.value ?? 0) || 0 : ""
+        }</span>`
         : "";
-      return `<a href="#${r.id}" data-route="${r.id}" class="nav-item"${r.id === active.id ? ' aria-current="page"' : ""}>${
-        escapeHtml(r.nav!.label)
-      }${badge}</a>`;
+      return `<a href="#${r.id}" data-route="${r.id}" class="nav-item"${
+        r.id === active.id ? ' aria-current="page"' : ""
+      }>${escapeHtml(r.nav!.label)}${badge}</a>`;
     })
     .join("");
   const $ = cheerio.load(shellHtml);

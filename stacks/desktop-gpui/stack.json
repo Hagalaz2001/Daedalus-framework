@@ -1,6 +1,7 @@
 {
   "id": "desktop-gpui",
   "kind": "desktop",
+  "flag": "gpui",
   "title": "Desktop app (Rust + GPUI)",
   "description": "Native desktop app in Rust on GPUI and GPUI Component: no webview, no Node. Generated API client, token-driven theme, feature crates with enforced boundaries.",
   "label": "Rust + GPUI (Windows first; macOS and Linux compile in principle)",

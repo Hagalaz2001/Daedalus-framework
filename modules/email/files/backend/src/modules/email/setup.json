@@ -6,7 +6,7 @@
       "jsxImportSourceTypes": "@types/react"
     },
     "imports": {
-      "nodemailer": "npm:nodemailer@7.0.13",
+      "nodemailer": "npm:nodemailer@10.6.0",
       "react-email": "npm:react-email@6.11.13",
       "@types/react": "npm:@types/react@19.3.0",
       "react": "npm:react@19.3.1",

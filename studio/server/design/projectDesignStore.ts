@@ -56,14 +56,20 @@ export function designFilePath(dir: string, slug: unknown, file: unknown): strin
 
 export async function readManifest(dir: string, slug: string): Promise<DesignManifest | null> {
   try {
-    return parseDesignManifest(JSON.parse(await readProjectText(dir, join(screenDir(dir, slug), "design.json"), MAX_MANIFEST_BYTES)));
+    return parseDesignManifest(
+      JSON.parse(await readProjectText(dir, join(screenDir(dir, slug), "design.json"), MAX_MANIFEST_BYTES)),
+    );
   } catch {
     return null;
   }
 }
 
 export async function writeManifest(dir: string, manifest: DesignManifest): Promise<void> {
-  await writeProjectFile(dir, join(screenDir(dir, manifest.slug), "design.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  await writeProjectFile(
+    dir,
+    join(screenDir(dir, manifest.slug), "design.json"),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
 }
 
 /** Verdicts by path, mtime, size and script trust: a poll that finds nothing changed parses nothing. */
@@ -129,7 +135,9 @@ async function inspectFile(dir: string, manifest: DesignManifest, file: string):
     }
   }
   const stem = designStem(file);
-  const image = ["png", "jpg"].map((ext) => `${stem}.${ext}`).find((name) => existsSync(join(screenDir(dir, manifest.slug), name)));
+  const image = ["png", "jpg"].map((ext) => `${stem}.${ext}`).find((name) =>
+    existsSync(join(screenDir(dir, manifest.slug), name))
+  );
   return {
     file,
     modifiedAt: info.mtime.toISOString(),
@@ -179,14 +187,16 @@ export async function listDesigns(dir: string): Promise<DesignList> {
       const manifest = await readManifest(dir, slug);
       if (!manifest) return null;
       const wanted = [...new Set(manifest.steps.flatMap((step) => step.files))];
-      const files = (await Promise.all(wanted.map((file) => inspectFile(dir, manifest, file)))).filter((f): f is DesignFileInfo =>
-        f !== null
-      );
+      const files = (await Promise.all(wanted.map((file) => inspectFile(dir, manifest, file)))).filter((
+        f,
+      ): f is DesignFileInfo => f !== null);
       return { slug, manifest, files, exports: await listExports(dir, slug) };
     }),
   );
   return {
-    screens: screens.filter((s): s is DesignScreen => s !== null).sort((a, b) => b.manifest.created.localeCompare(a.manifest.created)),
+    screens: screens.filter((s): s is DesignScreen => s !== null).sort((a, b) =>
+      b.manifest.created.localeCompare(a.manifest.created)
+    ),
     hasDesignMd,
     shells: await listShells(dir),
     designMd,
@@ -267,12 +277,24 @@ export async function beginStep(dir: string, cmd: Begin): Promise<DesignBeginRes
     files = [nextRevisionFile(parent, taken, cmd.step)];
   }
   const mode = cmd.step === "screens" ? undefined : cmd.mode === "full" ? "full" : "surgical";
-  const step: DesignStep = { id: stepId(), kind: cmd.step, instruction, created, parent, files, ...(mode ? { mode } : {}) };
+  const step: DesignStep = {
+    id: stepId(),
+    kind: cmd.step,
+    instruction,
+    created,
+    parent,
+    files,
+    ...(mode ? { mode } : {}),
+  };
   await writeManifest(dir, { ...manifest, steps: [...manifest.steps, step] });
   return { slug: manifest.slug, step };
 }
 
-export async function saveReference(dir: string, slug: string, ref: { mime: string; bytes: Uint8Array }): Promise<string> {
+export async function saveReference(
+  dir: string,
+  slug: string,
+  ref: { mime: string; bytes: Uint8Array },
+): Promise<string> {
   const type = REFERENCE_TYPES[ref.mime];
   const valid = type &&
     ref.bytes instanceof Uint8Array &&

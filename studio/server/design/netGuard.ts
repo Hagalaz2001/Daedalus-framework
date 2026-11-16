@@ -19,8 +19,10 @@ export function isPrivateAddress(address: string): boolean {
   const ip = address.replace(/^\[|\]$/g, "").toLowerCase().split("%")[0] ?? "";
   if (isIP(ip) === 4) {
     const [a = 0, b = 0, c = 0] = ip.split(".").map(Number);
-    return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || (a === 192 && b === 0 && (c === 0 || c === 2)) ||
+    return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) ||
+      (a === 192 && b === 0 && (c === 0 || c === 2)) ||
       (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) || (a === 203 && b === 0 && c === 113);
   }
   if (isIP(ip) !== 6) return true; // unparseable: never treat as public
@@ -33,9 +35,12 @@ export function isPrivateAddress(address: string): boolean {
   const first = groups[0] ?? 0;
   const v4 = (hi = 0, lo = 0) => isPrivateAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
   // NAT64 64:ff9b::/96 and 6to4 2002::/16 embed an IPv4 address: judge that. 64:ff9b:1::/48 is local-use.
-  if (first === 0x64 && groups[1] === 0xff9b) return groups.slice(2, 6).every((g) => g === 0) ? v4(groups[6], groups[7]) : true;
+  if (first === 0x64 && groups[1] === 0xff9b) {
+    return groups.slice(2, 6).every((g) => g === 0) ? v4(groups[6], groups[7]) : true;
+  }
   if (first === 0x2002) return v4(groups[1], groups[2]);
-  return (first & 0xffc0) === 0xfec0 || (first & 0xfe00) === 0xfc00 || (first & 0xffc0) === 0xfe80 || (first & 0xff00) === 0xff00;
+  return (first & 0xffc0) === 0xfec0 || (first & 0xfe00) === 0xfc00 || (first & 0xffc0) === 0xfe80 ||
+    (first & 0xff00) === 0xff00;
 }
 
 function expandV6(ip: string): number[] {
@@ -57,11 +62,15 @@ export async function vetHost(host: string, resolver: Resolver): Promise<PinnedL
   const bare = host.replace(/^\[|\]$/g, "");
   const addresses = isIP(bare) ? [{ address: bare, family: isIP(bare) }] : await resolver(bare);
   if (addresses.length === 0) throw new Error("the name does not resolve");
-  if (addresses.some((entry) => isPrivateAddress(entry.address))) throw new Error("resolves to a local or private address");
+  if (addresses.some((entry) => isPrivateAddress(entry.address))) {
+    throw new Error("resolves to a local or private address");
+  }
   const chosen = addresses[0]!;
   return (
     _host,
     options,
     callback,
-  ) => (options.all ? callback(null, [{ address: chosen.address, family: chosen.family }]) : callback(null, chosen.address, chosen.family));
+  ) => (options.all
+    ? callback(null, [{ address: chosen.address, family: chosen.family }])
+    : callback(null, chosen.address, chosen.family));
 }

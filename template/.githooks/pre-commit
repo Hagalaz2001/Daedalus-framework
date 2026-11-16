@@ -1,3 +1,4 @@
 #!/bin/sh
-# Installed by scripts/git-setup.mjs (core.hooksPath). Refuses commits that add secrets.
-exec deno run -A scripts/secret-scan.mjs
+# The only hook path (core.hooksPath=.githooks), set by `deno task setup` and `deno task git:setup`.
+# The logic lives in scripts/pre-commit.ts: secret scan, format and lint of staged files.
+exec deno run -A scripts/pre-commit.ts

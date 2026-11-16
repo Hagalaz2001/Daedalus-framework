@@ -28,7 +28,9 @@ function filesFrom(user: string): string[] {
 
 function patchFor(instruction: string): unknown {
   const i = instruction.toLowerCase();
-  if (/sticky/.test(i)) return { ops: [{ op: "classes", selector: "header, .bar, .sidebar", add: ["sticky-top"], all: false }] };
+  if (/sticky/.test(i)) {
+    return { ops: [{ op: "classes", selector: "header, .bar, .sidebar", add: ["sticky-top"], all: false }] };
+  }
   if (/empty/.test(i)) {
     return {
       ops: [{ op: "attr", selector: '[data-state="ready"]', name: "hidden", value: "hidden" }, {
@@ -58,7 +60,11 @@ export function createFakeProvider(delayMs = Number(Deno.env.get("STUDIO_FAKE_DE
       } else if (input.tool.name === "write_patch") {
         result = patchFor(fenced(input.user, "INSTRUCTION") ?? "");
       } else if (input.tool.name === "write_screen_code") {
-        const kind = /Dart widget/.test(input.user) ? "flutter" : /React Native/.test(input.user) ? "react-native" : "react";
+        const kind = /Dart widget/.test(input.user)
+          ? "flutter"
+          : /React Native/.test(input.user)
+          ? "react-native"
+          : "react";
         const name = between(input.user, /named (\w+)/) ?? "Screen";
         result = { screenName: name, code: fixtureScreenCode(kind, name) };
       } else throw new Error(`The fake provider does not know the tool ${input.tool.name}.`);

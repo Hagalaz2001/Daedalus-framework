@@ -21,12 +21,15 @@ const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "build", ".dart_tool"
 const SKIP_FILES = /(^|\/)(deno\.lock|pubspec\.lock|Cargo\.lock|schema\.d\.ts)$/;
 
 const COMMAND = new RegExp(
-  "(?:^|[`\"'(;&|]|\\$\\s|&&\\s|run:\\s|RUN\\s)\\s*(?:npx\\s+\\S|(?:npm|pnpm|yarn)\\s+" +
+  "(?:^|[`\"'(;&|]|\\$\\s|&&\\s|run:\\s|RUN\\s)\\s*(?:npx\\s+\\S|node\\s+[\\w./\\\\-]+\\.(?:mjs|cjs|js|ts)\\b|(?:npm|pnpm|yarn)\\s+" +
     "(?:install|i|ci|run|exec|add|init|create|start|test|build|dlx|publish|update|upgrade|link|remove|rm|uninstall|-g|--global)\\b)",
 );
 
 export function findNpmCommands(text: string): { line: number; text: string }[] {
-  return text.split("\n").flatMap((t, i) => (t.includes("deno-only:allow") || !COMMAND.test(t) ? [] : [{ line: i + 1, text: t.trim() }]));
+  return text.split("\n").flatMap((
+    t,
+    i,
+  ) => (t.includes("deno-only:allow") || !COMMAND.test(t) ? [] : [{ line: i + 1, text: t.trim() }]));
 }
 
 /** Frameworks whose versions must be exact: an unreviewed minor bump of these changes the whole app. */
@@ -43,7 +46,9 @@ export function findUnpinned(packageJson: string): string[] {
   const out: string[] = [];
   for (const group of ["dependencies", "devDependencies", "peerDependencies"]) {
     for (const [name, range] of Object.entries(pkg[group] ?? {})) {
-      if (PINNED.includes(name) && /^[\^~<>*]|\bx\b|latest/.test(range) && !range.startsWith("workspace:")) out.push(`${name}@${range}`);
+      if (PINNED.includes(name) && /^[\^~<>*]|\bx\b|latest/.test(range) && !range.startsWith("workspace:")) {
+        out.push(`${name}@${range}`);
+      }
     }
   }
   return out;
@@ -58,7 +63,11 @@ export function pinnedVersions(file: string, text: string): Map<string, Set<stri
   try {
     const json = JSON.parse(text);
     if (file.endsWith("package.json")) {
-      for (const g of ["dependencies", "devDependencies", "peerDependencies"]) for (const [n, v] of Object.entries(json[g] ?? {})) add(n, String(v));
+      for (const g of ["dependencies", "devDependencies", "peerDependencies"]) {
+        for (const [n, v] of Object.entries(json[g] ?? {})) {
+          add(n, String(v));
+        }
+      }
     } else {
       for (const spec of Object.values(json.imports ?? {})) {
         const m = /^npm:(@?[^@]+)@(\d[^/]*)/.exec(String(spec));
@@ -89,19 +98,31 @@ export function scanDenoOnly(root: string, ignore: RegExp[] = []): string[] {
     else if (TEXT.test(f) && !SKIP_FILES.test(f)) {
       if (/(^|\/)(package|deno)\.json$/.test(f)) {
         for (const [name, vs] of pinnedVersions(f, readFileSync(join(root, f), "utf8"))) {
-          for (const v of vs) versions.set(name, (versions.get(name) ?? new Map()).set(v, versions.get(name)?.get(v) ?? f));
+          for (const v of vs) {
+            versions.set(name, (versions.get(name) ?? new Map()).set(v, versions.get(name)?.get(v) ?? f));
+          }
         }
       }
       if (/(^|\/)package\.json$/.test(f)) {
-        for (const u of findUnpinned(readFileSync(join(root, f), "utf8"))) problems.push(`${f}: ${u} must be an exact version (no ^, ~ or range)`);
+        for (const u of findUnpinned(readFileSync(join(root, f), "utf8"))) {
+          problems.push(`${f}: ${u} must be an exact version (no ^, ~ or range)`);
+        }
       }
       for (const h of findNpmCommands(readFileSync(join(root, f), "utf8"))) {
-        problems.push(`${f}:${h.line}: npm-family command (${h.text.slice(0, 80)}); use deno install / deno task / deno run`);
+        problems.push(
+          `${f}:${h.line}: npm-family command (${h.text.slice(0, 80)}); use deno install / deno task / deno run`,
+        );
       }
     }
   }
   for (const [name, vs] of versions) {
-    if (vs.size > 1) problems.push(`${name}: mixed versions ${[...vs].map(([v, f]) => `${v} (${f})`).join(" vs ")}; use one version across the project`);
+    if (vs.size > 1) {
+      problems.push(
+        `${name}: mixed versions ${
+          [...vs].map(([v, f]) => `${v} (${f})`).join(" vs ")
+        }; use one version across the project`,
+      );
+    }
   }
   return problems;
 }

@@ -20,10 +20,12 @@ export interface CanvasItem {
 /** Every file the manifest expects, written or not, in the order the steps asked for them. */
 export function canvasItems(screen: DesignScreen): CanvasItem[] {
   const written = new Map(screen.files.map((f) => [f.file, f]));
-  return [...new Set(screen.manifest.steps.flatMap((s) => s.files.map((file) => `${s.parent ?? ""}|${file}`)))].map((key) => {
-    const [from, file] = key.split("|") as [string, string];
-    return { file, ...(from ? { from } : {}), ...(written.get(file) ? { info: written.get(file)! } : {}) };
-  });
+  return [...new Set(screen.manifest.steps.flatMap((s) => s.files.map((file) => `${s.parent ?? ""}|${file}`)))].map(
+    (key) => {
+      const [from, file] = key.split("|") as [string, string];
+      return { file, ...(from ? { from } : {}), ...(written.get(file) ? { info: written.get(file)! } : {}) };
+    },
+  );
 }
 
 /** Drag on empty canvas to pan sideways, like a design tool; wheel and scrollbars keep working. */
@@ -50,27 +52,32 @@ function usePan() {
 
 const name = (file: string) => file.replace(/\.html$/, "");
 
-function Frame({ slug, item, html, width, height, radius, zoom, selected, warnings, fresh, pick, mark, theme, onBridge, onSelect }: {
-  theme: "light" | "dark";
-  slug: string;
-  pick: boolean;
-  mark: BridgeMark | undefined;
-  onBridge: (message: BridgeMessage) => void;
-  item: CanvasItem;
-  /** Arrived while the studio was open: build it up on screen instead of snapping it in. */
-  fresh: boolean;
-  html: string | undefined;
-  width: number;
-  height: number;
-  radius: number;
-  zoom: number;
-  selected: boolean;
-  warnings: number;
-  onSelect: () => void;
-}) {
+function Frame(
+  { slug, item, html, width, height, radius, zoom, selected, warnings, fresh, pick, mark, theme, onBridge, onSelect }: {
+    theme: "light" | "dark";
+    slug: string;
+    pick: boolean;
+    mark: BridgeMark | undefined;
+    onBridge: (message: BridgeMessage) => void;
+    item: CanvasItem;
+    /** Arrived while the studio was open: build it up on screen instead of snapping it in. */
+    fresh: boolean;
+    html: string | undefined;
+    width: number;
+    height: number;
+    radius: number;
+    zoom: number;
+    selected: boolean;
+    warnings: number;
+    onSelect: () => void;
+  },
+) {
   const t = useProjectsT();
   const live = useLiveWrite(`${slug}/${item.file}`);
-  const srcDoc = useMemo(() => (html === undefined || !item.info?.scripts ? "" : trustedScriptSrcDoc(html)), [html, item.info?.scripts]);
+  const srcDoc = useMemo(() => (html === undefined || !item.info?.scripts ? "" : trustedScriptSrcDoc(html)), [
+    html,
+    item.info?.scripts,
+  ]);
   const blocked = item.info && !item.info.ok;
   const { ref, near } = useNearViewport<HTMLDivElement>();
   return (
@@ -81,8 +88,12 @@ function Frame({ slug, item, html, width, height, radius, zoom, selected, warnin
         aria-pressed={selected}
         className="mb-2 flex w-full items-baseline gap-2 text-left text-ui-sm"
       >
-        <span className={cn("font-medium", selected ? "text-foreground" : "text-foreground-subtle")}>{name(item.file)}</span>
-        {item.from ? <span className="text-ui-xs text-foreground-subtle">{t("design.from", { parent: name(item.from) })}</span> : null}
+        <span className={cn("font-medium", selected ? "text-foreground" : "text-foreground-subtle")}>
+          {name(item.file)}
+        </span>
+        {item.from
+          ? <span className="text-ui-xs text-foreground-subtle">{t("design.from", { parent: name(item.from) })}</span>
+          : null}
         {warnings > 0
           ? (
             <span className="ml-auto flex items-center gap-1 text-ui-xs text-amber-600 dark:text-amber-400">
@@ -100,7 +111,9 @@ function Frame({ slug, item, html, width, height, radius, zoom, selected, warnin
         )}
         style={{ width: width * zoom, height: height * zoom, borderRadius: radius * zoom }}
       >
-        {!near ? <div className="h-full w-full bg-background-alt" aria-hidden /> : live && (!live.done || html === undefined)
+        {!near
+          ? <div className="h-full w-full bg-background-alt" aria-hidden />
+          : live && (!live.done || html === undefined)
           ? (
             <LiveBody
               source={live.html}
@@ -172,20 +185,22 @@ function Frame({ slug, item, html, width, height, radius, zoom, selected, warnin
   );
 }
 
-export function DesignCanvas({ screen, htmlByFile, selected, zoom, warnings, fresh, pick, marks, theme, frame, onBridge, onSelect }: {
-  theme: "light" | "dark";
-  frame: { width: number; height: number; radius: number };
-  screen: DesignScreen;
-  pick: boolean;
-  marks: Record<string, BridgeMark>;
-  onBridge: (file: string, message: BridgeMessage) => void;
-  fresh: ReadonlySet<string>;
-  htmlByFile: Record<string, string>;
-  selected: string | null;
-  zoom: number;
-  warnings: Record<string, number>;
-  onSelect: (file: string) => void;
-}) {
+export function DesignCanvas(
+  { screen, htmlByFile, selected, zoom, warnings, fresh, pick, marks, theme, frame, onBridge, onSelect }: {
+    theme: "light" | "dark";
+    frame: { width: number; height: number; radius: number };
+    screen: DesignScreen;
+    pick: boolean;
+    marks: Record<string, BridgeMark>;
+    onBridge: (file: string, message: BridgeMessage) => void;
+    fresh: ReadonlySet<string>;
+    htmlByFile: Record<string, string>;
+    selected: string | null;
+    zoom: number;
+    warnings: Record<string, number>;
+    onSelect: (file: string) => void;
+  },
+) {
   const pan = usePan();
   const items = canvasItems(screen);
   return (

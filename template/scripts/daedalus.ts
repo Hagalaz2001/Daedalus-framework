@@ -12,7 +12,9 @@ const flagDir = i >= 0 ? args.splice(i, 2)[1] : undefined;
 
 function findDaedalus(): string | undefined {
   const candidates = [flagDir, Deno.env.get("DAEDALUS_HOME")];
-  for (let d = resolve("."); dirname(d) !== d; d = dirname(d)) for (const n of ["daedalus", "daedalus-framework"]) candidates.push(join(dirname(d), n));
+  for (let d = resolve("."); dirname(d) !== d; d = dirname(d)) {
+    for (const n of ["daedalus", "daedalus-framework"]) candidates.push(join(dirname(d), n));
+  }
   const home = Deno.env.get("USERPROFILE") ?? Deno.env.get("HOME");
   if (home) candidates.push(join(home, "daedalus"));
   return candidates.find((c) => c && existsSync(join(c, "new-project.ts")));
@@ -29,6 +31,14 @@ const invocation = cmd === "doctor"
   ? ["task", "--cwd", join(daedalus, "studio"), "doctor", ...rest]
   : cmd === "studio"
   ? ["task", "--cwd", join(daedalus, "studio"), "start", "--project", Deno.cwd(), ...rest]
-  : ["run", "-A", join(daedalus, "new-project.ts"), cmd === "module" ? "add-module" : cmd === "pack" ? "add-pack" : "add-app", ...(cmd === "module" || cmd === "pack" ? rest : args), "--project", Deno.cwd()];
+  : [
+    "run",
+    "-A",
+    join(daedalus, "new-project.ts"),
+    cmd === "module" ? "add-module" : cmd === "pack" ? "add-pack" : "add-app",
+    ...(cmd === "module" || cmd === "pack" ? rest : args),
+    "--project",
+    Deno.cwd(),
+  ];
 const r = new Deno.Command(Deno.execPath(), { args: invocation, stdout: "inherit", stderr: "inherit" }).outputSync();
 Deno.exit(r.code);

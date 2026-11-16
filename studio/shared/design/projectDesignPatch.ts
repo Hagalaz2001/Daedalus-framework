@@ -38,7 +38,8 @@ export const SAFE_PATCH_ATTRS = [
 ];
 
 const isStr = (v: unknown, max = 20000): v is string => typeof v === "string" && v.length <= max;
-const isList = (v: unknown): v is string[] => Array.isArray(v) && v.length <= 30 && v.every((c) => isStr(c, 80) && /^[\w:/.%-]+$/.test(c));
+const isList = (v: unknown): v is string[] =>
+  Array.isArray(v) && v.length <= 30 && v.every((c) => isStr(c, 80) && /^[\w:/.%-]+$/.test(c));
 /** Standard CSS only: no :contains, no script-ish selectors. */
 const goodSelector = (s: unknown): s is string => {
   if (!isStr(s, 200) || s.trim() === "" || /:contains|[{};]/.test(s)) return false;
@@ -46,7 +47,8 @@ const goodSelector = (s: unknown): s is string => {
   // alternatives, a bounded number of combinators, and no "of S" argument in :nth-*.
   const count = (needle: string) => s.split(needle).length - 1;
   const combinators = s.split(/[\s>+~]+/).length - 1;
-  return count(":has(") <= 1 && count(",") <= 3 && combinators <= 12 && count(":not(") <= 3 && !/:nth-[a-z-]+\([^)]*\sof\s/i.test(s);
+  return count(":has(") <= 1 && count(",") <= 3 && combinators <= 12 && count(":not(") <= 3 &&
+    !/:nth-[a-z-]+\([^)]*\sof\s/i.test(s);
 };
 
 /** Returns the patch, or throws with the reason. The caller then escalates to a full regenerate. */
@@ -82,7 +84,9 @@ export function parseDesignPatch(raw: unknown): DesignPatch {
         return { op: "remove", ...base };
       case "attr": {
         const name = String(o.name);
-        if (!SAFE_PATCH_ATTRS.includes(name) || !isStr(o.value, 2000) || /^\s*(javascript|data|vbscript):/i.test(o.value)) {
+        if (
+          !SAFE_PATCH_ATTRS.includes(name) || !isStr(o.value, 2000) || /^\s*(javascript|data|vbscript):/i.test(o.value)
+        ) {
           throw new Error(`${at}: attribute not allowed.`);
         }
         return { op: "attr", ...base, name, value: o.value };

@@ -1,0 +1,28 @@
+# Weekly grouped updates for what this repository itself runs: the workflows' pinned actions and the Deno projects.
+# The stacks' own dependency pins (stacks/*/package.json, pubspec.yaml, Cargo.toml) are bumped by hand together with the
+# generated-project test matrix, because a framework bump must pass every stack combination first.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/.github/actions/gitleaks"]
+    schedule:
+      interval: weekly
+      day: monday
+    # Wait a week after a release: most hijacked or broken releases are pulled within days.
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    groups:
+      actions:
+        update-types: [minor, patch]
+  - package-ecosystem: deno
+    directories: ["/", "/website", "/studio"]
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    groups:
+      deno:
+        update-types: [minor, patch]

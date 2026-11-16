@@ -38,7 +38,12 @@ export function createLemonadeProvider(opts: LemonadeProviderOptions): Provider 
         // Qwen-style models spend thousands of tokens thinking first; design pages do not need it.
         chat_template_kwargs: { enable_thinking: false },
         ...(withSchema
-          ? { response_format: { type: "json_schema", json_schema: { name: input.tool.name, strict: true, schema: input.tool.schema } } }
+          ? {
+            response_format: {
+              type: "json_schema",
+              json_schema: { name: input.tool.name, strict: true, schema: input.tool.schema },
+            },
+          }
           : {}),
       }),
     }).catch(() => {
@@ -94,14 +99,20 @@ export function createLemonadeProvider(opts: LemonadeProviderOptions): Provider 
           text: input.user,
         }]
         : input.user;
-      const messages: Message[] = [{ role: "system", content: `${system}\n\n${strict}` }, { role: "user", content: userContent }];
+      const messages: Message[] = [{ role: "system", content: `${system}\n\n${strict}` }, {
+        role: "user",
+        content: userContent,
+      }];
       let lastProblem = "";
       for (let attempt = 0; attempt <= RETRIES; attempt++) {
         let raw: string;
         try {
           raw = await chat(model, messages, input, schemaSupported);
         } catch (e) {
-          if (schemaSupported && e instanceof LemonadeHttpError && (e.status === 400 || e.status === 422 || e.status === 501)) {
+          if (
+            schemaSupported && e instanceof LemonadeHttpError &&
+            (e.status === 400 || e.status === 422 || e.status === 501)
+          ) {
             schemaSupported = false; // fall back to the strict prompt for this and later calls
             raw = await chat(model, messages, input, false);
           } else throw e;

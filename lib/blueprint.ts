@@ -1,7 +1,19 @@
 // Core of the generator: stack.json loading, input validation, placeholders, composing a stack into a project,
 // deno.json merge and the .blueprint.json manifest. No side effects at import time (tests import this).
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { runArgs } from "../template/scripts/lib/exec.ts";
 
 export type Cmd = string | { cwd?: string; run: string };
 export type Kind = "web" | "mobile" | "desktop";
@@ -11,6 +23,8 @@ export type StackKind = Kind | "shared";
 export interface StackDef {
   id: string;
   kind: StackKind;
+  /** Value of the generator flag for this stack (`--web spa`, `--mobile rn`): unique within its kind. */
+  flag?: string;
   label?: string;
   defaultAppDir: string;
   /** Folder inside the stack copied to the app dir. Default "app". */
@@ -56,8 +70,16 @@ export const ADVISORY_ID = /^(GHSA(-[23456789cfghjmpqrvwx]{4}){3}|CVE-\d{4}-\d{4
 export function validateAudit(a: AuditIgnore | undefined, where: string) {
   if (!a) return;
   assertValid(Array.isArray(a.ignore) && a.ignore.length > 0, `${where}: audit.ignore must be a non-empty list`);
-  for (const id of a.ignore) assertValid(typeof id === "string" && ADVISORY_ID.test(id), `${where}: audit.ignore entry "${id}" is not a GHSA or CVE id`);
-  assertValid(typeof a.reason === "string" && a.reason.trim().length >= 10, `${where}: audit.reason is required (say why the advisory is acceptable)`);
+  for (const id of a.ignore) {
+    assertValid(
+      typeof id === "string" && ADVISORY_ID.test(id),
+      `${where}: audit.ignore entry "${id}" is not a GHSA or CVE id`,
+    );
+  }
+  assertValid(
+    typeof a.reason === "string" && a.reason.trim().length >= 10,
+    `${where}: audit.reason is required (say why the advisory is acceptable)`,
+  );
 }
 
 export interface ResolvedCmd {
@@ -109,12 +131,16 @@ export function assertValid(ok: boolean, msg: string) {
 
 // ---------- stacks ----------
 export function loadStack(blueprintDir: string, id: string): StackDef & { root: string } {
+  assertValid(/^[a-z0-9][a-z0-9_-]*$/.test(id), `Invalid stack id "${id}"`);
   const root = join(blueprintDir, "stacks", id);
   const f = join(root, "stack.json");
   assertValid(existsSync(f), `Unknown or unfinished stack "${id}" (no ${f})`);
   const def = JSON.parse(readFileSync(f, "utf8")) as StackDef;
   assertValid(def.id === id, `${f}: id "${def.id}" does not match folder "${id}"`);
-  assertValid(["web", "mobile", "desktop", "shared"].includes(def.kind), `${f}: kind must be web, mobile, desktop or shared`);
+  assertValid(
+    ["web", "mobile", "desktop", "shared"].includes(def.kind),
+    `${f}: kind must be web, mobile, desktop or shared`,
+  );
   if (def.kind !== "shared") {
     validateAudit(def.audit, f);
     assertValid(isAppDir(def.defaultAppDir), `${f}: defaultAppDir must look like apps/<name>`);
@@ -127,27 +153,40 @@ export function listStacks(blueprintDir: string): string[] {
   const dir = join(blueprintDir, "stacks");
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((d) => existsSync(join(dir, d, "stack.json")) && JSON.parse(readFileSync(join(dir, d, "stack.json"), "utf8")).kind !== "shared")
+    .filter((d) =>
+      existsSync(join(dir, d, "stack.json")) &&
+      JSON.parse(readFileSync(join(dir, d, "stack.json"), "utf8")).kind !== "shared"
+    )
     .sort();
 }
 
-// Maps generator flags to stack ids; "none" and "" mean nothing.
-export function stacksFromFlags(f: { web?: string; mobile?: string; desktop?: string }): string[] {
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+const KINDS: Kind[] = ["web", "mobile", "desktop"];
+
+/** Flag value -> stack id per kind (--web spa, --mobile rn ...), read from each stack.json's `flag`. The one registry. */
+export function stackFlags(blueprintDir = ROOT): Record<Kind, Record<string, string>> {
+  const out: Record<Kind, Record<string, string>> = { web: {}, mobile: {}, desktop: {} };
+  for (const id of listStacks(blueprintDir)) {
+    const def = loadStack(blueprintDir, id);
+    if (def.flag && def.kind !== "shared") out[def.kind][def.flag] = id;
+  }
+  return out;
+}
+
+/** "spa|spa-vue|site|site-next" for the help text and prompts. */
+export const flagChoices = (kind: Kind, blueprintDir = ROOT) => Object.keys(stackFlags(blueprintDir)[kind]).join("|");
+
+// Maps generator flags to stack ids; "none" and "" mean nothing. Only --web takes a comma list.
+export function stacksFromFlags(f: { web?: string; mobile?: string; desktop?: string }, blueprintDir = ROOT): string[] {
+  const flags = stackFlags(blueprintDir);
   const out: string[] = [];
-  const web = { spa: "web-spa", "spa-vue": "web-spa-vue", site: "web-site-astro", "site-next": "web-site-next" } as Record<string, string>;
-  for (const w of (f.web ?? "none").split(",").map((s) => s.trim()).filter((s) => s && s !== "none")) {
-    assertValid(w in web, `--web must be spa, spa-vue, site, site-next or none (got "${w}")`);
-    out.push(web[w]);
-  }
-  const m = f.mobile ?? "none";
-  if (m !== "none") {
-    assertValid(m === "flutter" || m === "rn", `--mobile must be flutter, rn or none (got "${m}")`);
-    out.push(m === "rn" ? "mobile-rn" : "mobile-flutter");
-  }
-  const d = f.desktop ?? "none";
-  if (d !== "none") {
-    assertValid(d === "gpui" || d === "tauri", `--desktop must be gpui, tauri or none (got "${d}")`);
-    out.push(`desktop-${d}`);
+  for (const kind of KINDS) {
+    const raw = f[kind] ?? "none";
+    const values = (kind === "web" ? raw.split(",") : [raw]).map((s) => s.trim()).filter((s) => s && s !== "none");
+    for (const v of values) {
+      assertValid(v in flags[kind], `--${kind} must be ${Object.keys(flags[kind]).join(", ")} or none (got "${v}")`);
+      out.push(flags[kind][v]);
+    }
   }
   return out;
 }
@@ -156,7 +195,9 @@ export function stacksFromFlags(f: { web?: string; mobile?: string; desktop?: st
 export type Vars = Record<string, string>;
 export const subst = (s: string, vars: Vars) => s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 
-export function varsFor(o: { appDir: string; name?: string; displayName?: string; bundleId?: string; projectName?: string; islands?: string }): Vars {
+export function varsFor(
+  o: { appDir: string; name?: string; displayName?: string; bundleId?: string; projectName?: string; islands?: string },
+): Vars {
   const appName = basename(o.appDir).replace(/-/g, "_");
   const bundleId = o.bundleId ?? `com.example.${appName}`;
   return {
@@ -176,9 +217,13 @@ export const resolveCmd = (c: Cmd, vars: Vars): ResolvedCmd => {
   return { cwd: subst(o.cwd ?? ".", vars), run: subst(o.run, vars) };
 };
 
-const TEXT = /\.(json|ya?ml|md|mdx|ts|tsx|js|jsx|mjs|cjs|dart|kt|kts|java|swift|plist|xml|gradle|properties|pbxproj|html|css|toml|rs|txt|env|example|gitignore)$/i;
+const TEXT =
+  /\.(json|ya?ml|md|mdx|ts|tsx|js|jsx|mjs|cjs|dart|kt|kts|java|swift|plist|xml|gradle|properties|pbxproj|html|css|toml|rs|txt|env|example|gitignore)$/i;
 
-export function walk(dir: string, skip = new Set(["node_modules", ".git", "build", "dist", ".dart_tool", "target", ".next"])): string[] {
+export function walk(
+  dir: string,
+  skip = new Set(["node_modules", ".git", "build", "dist", ".dart_tool", "target", ".next"]),
+): string[] {
   const out: string[] = [];
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     if (skip.has(e.name)) continue;
@@ -213,16 +258,65 @@ export function moveDir(root: string, from: string, to: string) {
   if (!existsSync(a) || a === b) return;
   mkdirSync(dirname(b), { recursive: true });
   renameSync(a, b);
-  for (let d = dirname(a); d.length > root.length && existsSync(d) && readdirSync(d).length === 0; d = dirname(d)) rmSync(d, { recursive: true });
+  for (let d = dirname(a); d.length > root.length && existsSync(d) && readdirSync(d).length === 0; d = dirname(d)) {
+    rmSync(d, { recursive: true });
+  }
 }
 
 // ---------- compose ----------
-const COPY_SKIP = new Set(["node_modules", "dist", "build", ".dart_tool", "Pods", ".idea", ".gradle", "ephemeral", ".data", ".autopilot", "target", ".next", ".expo"]);
+// Build output and machine-local tool files never ship, even from a checkout where Flutter, Node or Cargo already ran
+// (Flutter writes absolute local paths into Generated.xcconfig and flutter_export_environment.sh).
+const COPY_SKIP = new Set([
+  "node_modules",
+  "dist",
+  "build",
+  ".dart_tool",
+  "Pods",
+  ".idea",
+  ".gradle",
+  "ephemeral",
+  ".data",
+  ".autopilot",
+  "target",
+  ".next",
+  ".expo",
+  "Generated.xcconfig",
+  "flutter_export_environment.sh",
+  ".flutter-plugins",
+  ".flutter-plugins-dependencies",
+  ".packages",
+]);
 export const copyFilter = (src: string) =>
   !COPY_SKIP.has(basename(src)) && !src.endsWith(".iml") && !/\.log$/.test(src) && !/[\\/]docs[\\/]screens$/.test(src);
 
+/** Paths under `root` that git ignores (collapsed to the topmost ignored folder). Empty outside a git checkout. */
+const ignoredCache = new Map<string, Set<string>>();
+export function gitIgnored(root: string): Set<string> {
+  const key = resolve(root);
+  let out = ignoredCache.get(key);
+  if (!out) {
+    out = new Set();
+    try {
+      const cwd = statSync(key).isDirectory() ? key : dirname(key);
+      const r = runArgs("git", ["ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z"], {
+        cwd,
+        capture: true,
+      });
+      if (r.ok) { for (const p of r.stdout.split("\0")) if (p) out.add(resolve(cwd, p.replace(/\/$/, ""))); }
+    } catch { /* no git: the fixed skip list still applies */ }
+    ignoredCache.set(key, out);
+  }
+  return out;
+}
+
+/** The copy filter for a source folder: the fixed skip list plus everything the repo's .gitignore files exclude. */
+export function copyFilterFor(root: string): (src: string) => boolean {
+  const ignored = gitIgnored(root);
+  return (src) => copyFilter(src) && !ignored.has(resolve(src));
+}
+
 export function copyTree(from: string, to: string) {
-  cpSync(from, to, { recursive: true, filter: copyFilter });
+  cpSync(from, to, { recursive: true, filter: statSync(from).isDirectory() ? copyFilterFor(from) : copyFilter });
 }
 
 export interface ComposeOpts {
@@ -247,7 +341,12 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
   const workspace: string[] = [];
   const choice = stack.variants ? (o.islands ?? stack.variants.default) : undefined;
   const variant = stack.variants && choice ? stack.variants.values[choice] : undefined;
-  if (stack.variants) assertValid(!!variant, `--${stack.variants.key} must be one of: ${Object.keys(stack.variants.values).join(", ")} (got "${choice}")`);
+  if (stack.variants) {
+    assertValid(
+      !!variant,
+      `--${stack.variants.key} must be one of: ${Object.keys(stack.variants.values).join(", ")} (got "${choice}")`,
+    );
+  }
 
   // The app is the stack "app" folder, else its single apps/<name>, else the stack folder itself minus packages.
   let src = join(stack.root, stack.appSource ?? "app");
@@ -263,21 +362,34 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
   }
   mkdirSync(dirname(dest), { recursive: true });
   const NOT_APP = new Set(["stack.json", "packages"]);
-  cpSync(src, dest, { recursive: true, filter: (f) => copyFilter(f) && !(rootCopy && NOT_APP.has(basename(f)) && dirname(f) === src) });
+  const keep = copyFilterFor(src);
+  cpSync(src, dest, {
+    recursive: true,
+    filter: (f) => keep(f) && !(rootCopy && NOT_APP.has(basename(f)) && dirname(f) === src),
+  });
 
   // The variant overlay replaces files of the app copy; the variants/ folder itself never ships.
-  if (variant?.overlay) cpSync(join(stack.root, variant.overlay), dest, { recursive: true, filter: copyFilter });
+  if (variant?.overlay) {
+    cpSync(join(stack.root, variant.overlay), dest, {
+      recursive: true,
+      filter: copyFilterFor(join(stack.root, variant.overlay)),
+    });
+  }
   rmSync(join(dest, "variants"), { recursive: true, force: true });
 
   for (const p of [...(stack.packages ?? []), ...(variant?.packages ?? [])]) {
     const m = /^(stack|shared):(.+)$/.exec(p);
     if (!m) continue;
     const parts = m[2].split("/");
-    const [fromDir, rel] = m[1] === "stack" ? [stack.root, m[2]] : [join(stack.root, "..", parts[0]), parts.slice(1).join("/")];
+    const [fromDir, rel] = m[1] === "stack"
+      ? [stack.root, m[2]]
+      : [join(stack.root, "..", parts[0]), parts.slice(1).join("/")];
     const to = join(projectDir, rel);
     if (existsSync(to)) continue; // shared by every app that needs it: copy once
     copyTree(join(fromDir, rel), to);
-    if (stack.workspaceMember && (existsSync(join(to, "package.json")) || existsSync(join(to, "deno.json")))) workspace.push(`./${rel}`);
+    if (stack.workspaceMember && (existsSync(join(to, "package.json")) || existsSync(join(to, "deno.json")))) {
+      workspace.push(`./${rel}`);
+    }
   }
   if (stack.scripts && existsSync(join(stack.root, stack.scripts))) {
     for (const f of readdirSync(join(stack.root, stack.scripts))) {
@@ -288,7 +400,12 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
   // Placeholder rules touch only the app; package-level text has no placeholders.
   const rules = [
     ...(stack.replace ?? []),
-    ...Object.entries(stack.placeholders ?? {}).map(([token, files]) => ({ files, from: token, to: subst(token, vars), raw: true })),
+    ...Object.entries(stack.placeholders ?? {}).map(([token, files]) => ({
+      files,
+      from: token,
+      to: subst(token, vars),
+      raw: true,
+    })),
   ];
   applyReplacements(dest, rules, vars);
   for (const m of stack.move ?? []) moveDir(dest, subst(m.from, vars), subst(m.to, vars));
@@ -320,7 +437,8 @@ export function composeStack(o: ComposeOpts): { entry: AppEntry; tasks: Record<s
       sync: (stack.sync ?? []).map((c) => resolveCmd(c, vars)),
       tokens,
       audit: stack.audit,
-      boundaries: stack.boundaries ?? (existsSync(join(dest, "src", "features")) ? { lang: "ts", src: "src" } : undefined),
+      boundaries: stack.boundaries ??
+        (existsSync(join(dest, "src", "features")) ? { lang: "ts", src: "src" } : undefined),
     },
     tasks,
     workspace,
@@ -335,7 +453,11 @@ export interface DenoJson {
 }
 
 /** Adds workspace members and tasks. A task name already taken gets ":<appName>" so a second app never overwrites the first. */
-export function mergeDenoJson(dj: DenoJson, add: { tasks: Record<string, string>; workspace?: string[] }, appName: string): DenoJson {
+export function mergeDenoJson(
+  dj: DenoJson,
+  add: { tasks: Record<string, string>; workspace?: string[] },
+  appName: string,
+): DenoJson {
   const out: DenoJson = { ...dj, workspace: [...(dj.workspace ?? [])], tasks: { ...(dj.tasks ?? {}) } };
   for (const w of add.workspace ?? []) if (!out.workspace!.includes(w)) out.workspace!.push(w);
   for (const [k, v] of Object.entries(add.tasks)) {
@@ -349,7 +471,12 @@ export function mergeDenoJson(dj: DenoJson, add: { tasks: Record<string, string>
 export function readManifest(projectDir: string): Manifest {
   const f = join(projectDir, MANIFEST);
   assertValid(existsSync(f), `${f} not found: not a Daedalus project`);
-  return JSON.parse(readFileSync(f, "utf8")) as Manifest;
+  const m = JSON.parse(readFileSync(f, "utf8")) as Manifest;
+  assertValid(
+    m.version === 2,
+    `${f}: manifest version ${m.version} is not supported by this Daedalus (expects 2); update Daedalus`,
+  );
+  return m;
 }
 export function writeManifest(projectDir: string, m: Manifest) {
   writeFileSync(join(projectDir, MANIFEST), JSON.stringify(m, null, 2) + "\n");
@@ -402,7 +529,10 @@ export function defaultOverlays(blueprintDir: string, kind: OverlayKind): string
 const SETTINGS = ".claude/settings.json";
 
 /** Merges two Claude settings objects: hook entries are concatenated per event without duplicates, other keys are kept (existing wins). */
-export function mergeSettings(existing: Record<string, unknown>, add: Record<string, unknown>): Record<string, unknown> {
+export function mergeSettings(
+  existing: Record<string, unknown>,
+  add: Record<string, unknown>,
+): Record<string, unknown> {
   const out: Record<string, unknown> = { ...add, ...existing };
   const a = (existing.hooks ?? {}) as Record<string, unknown[]>;
   const b = (add.hooks ?? {}) as Record<string, unknown[]>;
@@ -410,12 +540,37 @@ export function mergeSettings(existing: Record<string, unknown>, add: Record<str
     const hooks: Record<string, unknown[]> = {};
     for (const event of new Set([...Object.keys(a), ...Object.keys(b)])) {
       const seen = new Set<string>();
-      hooks[event] = [...(a[event] ?? []), ...(b[event] ?? [])].filter((h) => !seen.has(JSON.stringify(h)) && seen.add(JSON.stringify(h)));
+      hooks[event] = [...(a[event] ?? []), ...(b[event] ?? [])].filter((h) =>
+        !seen.has(JSON.stringify(h)) && seen.add(JSON.stringify(h))
+      );
     }
     out.hooks = hooks;
   }
   return out;
 }
+
+/** What a project has when an overlay is applied: used both before anything is written and by applyOverlay. */
+export interface ProjectFacts {
+  db: string;
+  backend: boolean;
+  stacks: string[];
+  /** Names of modules and packs already applied (or selected earlier in the same command). */
+  extras: string[];
+}
+
+/** Throws a UsageError when the project lacks something the overlay's `requires` asks for. The one place these rules live. */
+export function checkOverlay(kind: OverlayKind, name: string, def: OverlayDef, have: ProjectFacts) {
+  const req = def.requires ?? {};
+  if (req.db) assertValid(have.db === req.db, `${kind} "${name}" needs --db ${req.db}, this project uses ${have.db}`);
+  if (req.backend) assertValid(have.backend, `${kind} "${name}" needs the backend (generate with --backend hono)`);
+  for (const s of req.stacks ?? []) assertValid(have.stacks.includes(s), `${kind} "${name}" needs the ${s} stack`);
+  for (const m of req.modules ?? []) {
+    assertValid(have.extras.includes(m), `${kind} "${name}" needs the "${m}" module applied first`);
+  }
+}
+
+export const readOverlayDef = (blueprintDir: string, kind: OverlayKind, name: string): OverlayDef =>
+  JSON.parse(readFileSync(join(blueprintDir, `${kind}s`, name, `${kind}.json`), "utf8")) as OverlayDef;
 
 export function applyOverlay(
   o: { blueprintDir: string; projectDir: string; kind: OverlayKind; name: string; manifest: Manifest },
@@ -423,16 +578,21 @@ export function applyOverlay(
   assertValid(isAppName(o.name), `${o.kind} name: lowercase letters, digits, - and _, got: ${o.name}`);
   const root = join(o.blueprintDir, `${o.kind}s`, o.name);
   const f = join(root, `${o.kind}.json`);
-  assertValid(existsSync(f), `Unknown ${o.kind} "${o.name}" (available: ${listOverlays(o.blueprintDir, o.kind).join(", ") || "none"})`);
-  assertValid(!(o.manifest.extras ?? []).some((e) => e.kind === o.kind && e.name === o.name), `${o.kind} "${o.name}" is already applied`);
+  assertValid(
+    existsSync(f),
+    `Unknown ${o.kind} "${o.name}" (available: ${listOverlays(o.blueprintDir, o.kind).join(", ") || "none"})`,
+  );
+  assertValid(
+    !(o.manifest.extras ?? []).some((e) => e.kind === o.kind && e.name === o.name),
+    `${o.kind} "${o.name}" is already applied`,
+  );
   const def = JSON.parse(readFileSync(f, "utf8")) as OverlayDef;
-  const req = def.requires ?? {};
-  if (req.db) {
-    const db = o.manifest.db ?? "postgres";
-    assertValid(db === req.db, `${o.kind} "${o.name}" needs --db ${req.db}, this project uses ${db}`);
-  }
-  if (req.backend) assertValid(o.manifest.backend, `${o.kind} "${o.name}" needs the backend (generate with --backend hono)`);
-  for (const s of req.stacks ?? []) assertValid(o.manifest.apps.some((a) => a.stack === s), `${o.kind} "${o.name}" needs the ${s} stack`);
+  checkOverlay(o.kind, o.name, def, {
+    db: o.manifest.db ?? "postgres",
+    backend: o.manifest.backend,
+    stacks: o.manifest.apps.map((a) => a.stack),
+    extras: (o.manifest.extras ?? []).map((e) => e.name),
+  });
   const vars = varsFor({ appDir: "apps/app", projectName: o.manifest.name });
 
   const files = join(root, def.files ?? "files");
@@ -440,13 +600,19 @@ export function applyOverlay(
     // Refuse to overwrite: an overlay adds files, it never silently replaces project code.
     const all = walk(files).map((p) => relPosix(files, p));
     for (const rel of all) {
-      assertValid(rel === SETTINGS || !existsSync(join(o.projectDir, rel)), `${o.kind} "${o.name}" would overwrite ${rel}`);
+      assertValid(
+        rel === SETTINGS || !existsSync(join(o.projectDir, rel)),
+        `${o.kind} "${o.name}" would overwrite ${rel}`,
+      );
     }
     for (const rel of all) {
       const to = join(o.projectDir, rel);
       mkdirSync(dirname(to), { recursive: true });
       if (rel === SETTINGS && existsSync(to)) {
-        const merged = mergeSettings(JSON.parse(readFileSync(to, "utf8")), JSON.parse(readFileSync(join(files, rel), "utf8")));
+        const merged = mergeSettings(
+          JSON.parse(readFileSync(to, "utf8")),
+          JSON.parse(readFileSync(join(files, rel), "utf8")),
+        );
         writeFileSync(to, JSON.stringify(merged, null, 2) + "\n");
       } else cpSync(join(files, rel), to);
     }
@@ -454,7 +620,12 @@ export function applyOverlay(
   if (def.rules && existsSync(join(root, def.rules)) && existsSync(join(o.projectDir, "AGENTS.md"))) {
     const agents = join(o.projectDir, "AGENTS.md");
     const text = readFileSync(agents, "utf8").replace(/\s*$/, "\n");
-    writeFileSync(agents, `${text}\n## ${o.kind === "pack" ? "Pack" : "Module"}: ${o.name}\n\n${readFileSync(join(root, def.rules), "utf8").trim()}\n`);
+    writeFileSync(
+      agents,
+      `${text}\n## ${o.kind === "pack" ? "Pack" : "Module"}: ${o.name}\n\n${
+        readFileSync(join(root, def.rules), "utf8").trim()
+      }\n`,
+    );
   }
   const tasks: Record<string, string> = {};
   for (const [k, c] of Object.entries(def.tasks ?? {})) {

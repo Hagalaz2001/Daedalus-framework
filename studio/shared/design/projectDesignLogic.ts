@@ -71,7 +71,9 @@ export function parseDesignManifest(raw: unknown): DesignManifest | null {
     model: m.model,
     engine: m.engine,
     created: m.created,
-    ...(typeof m.reference === "string" && /^reference\.(png|jpe?g|webp)$/.test(m.reference) ? { reference: m.reference } : {}),
+    ...(typeof m.reference === "string" && /^reference\.(png|jpe?g|webp)$/.test(m.reference)
+      ? { reference: m.reference }
+      : {}),
     steps,
   };
 }

@@ -46,7 +46,9 @@ export function normaliseBaseUrl(raw: string): string {
   } catch {
     throw new Error(`LEMONADE_BASE_URL is not a URL: ${raw}`);
   }
-  if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("LEMONADE_BASE_URL must start with http:// or https://");
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("LEMONADE_BASE_URL must start with http:// or https://");
+  }
   return url.toString().replace(/\/+$/, "");
 }
 
@@ -68,7 +70,12 @@ export class LemonadeClient {
     };
   }
 
-  private async request(path: string, init: RequestInit = {}, timeoutMs = QUICK_MS, signal?: AbortSignal): Promise<Response> {
+  private async request(
+    path: string,
+    init: RequestInit = {},
+    timeoutMs = QUICK_MS,
+    signal?: AbortSignal,
+  ): Promise<Response> {
     const timeout = AbortSignal.timeout(timeoutMs);
     const res = await this.fetchImpl(`${this.base}${path}`, {
       ...init,
@@ -156,7 +163,9 @@ export class LemonadeClient {
       24 * 3_600_000,
       signal,
     );
-    if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) return this.readPullStream(res, onProgress);
+    if ((res.headers.get("content-type") ?? "").includes("text/event-stream")) {
+      return this.readPullStream(res, onProgress);
+    }
     const id = str(obj(await res.json()).id) ?? `model:${model}`;
     for (;;) {
       if (signal?.aborted) {
@@ -170,7 +179,9 @@ export class LemonadeClient {
       if (status === "cancelled") throw new DOMException("The download was cancelled.", "AbortError");
       const total = num(cur?.total_download_size);
       const done = num(cur?.cumulative_bytes_downloaded);
-      if (status === "completed" || cur?.complete === true) return onProgress({ percent: 100, bytesDownloaded: total, bytesTotal: total });
+      if (status === "completed" || cur?.complete === true) {
+        return onProgress({ percent: 100, bytesDownloaded: total, bytesTotal: total });
+      }
       onProgress({
         percent: total && done !== null ? Math.min(100, (done / total) * 100) : num(cur?.percent),
         bytesDownloaded: done,
@@ -181,7 +192,11 @@ export class LemonadeClient {
   }
 
   async cancelDownload(id: string): Promise<void> {
-    await this.request("/downloads/control", { method: "POST", body: JSON.stringify({ id, action: "cancel" }) }, SLOW_MS);
+    await this.request(
+      "/downloads/control",
+      { method: "POST", body: JSON.stringify({ id, action: "cancel" }) },
+      SLOW_MS,
+    );
   }
 
   private async readPullStream(res: Response, onProgress: (p: PullProgress) => void): Promise<void> {
@@ -197,14 +212,22 @@ export class LemonadeClient {
         if (!ev) continue;
         if (ev.name === "error") throw new Error(str(ev.data.message) ?? str(ev.data.error) ?? "The download failed.");
         if (ev.name === "complete") return;
-        onProgress({ percent: num(ev.data.percent), bytesDownloaded: num(ev.data.bytes_downloaded), bytesTotal: num(ev.data.bytes_total) });
+        onProgress({
+          percent: num(ev.data.percent),
+          bytesDownloaded: num(ev.data.bytes_downloaded),
+          bytesTotal: num(ev.data.bytes_total),
+        });
       }
     }
   }
 
   /** Loads a model with a context size. `llamacppArgs` is optional (the speed tip lives in the server's environment instead). */
   async load(model: string, contextSize: number): Promise<void> {
-    await this.request("/load", { method: "POST", body: JSON.stringify({ model_name: model, ctx_size: contextSize }) }, LOAD_MS);
+    await this.request(
+      "/load",
+      { method: "POST", body: JSON.stringify({ model_name: model, ctx_size: contextSize }) },
+      LOAD_MS,
+    );
   }
 
   async unload(): Promise<void> {

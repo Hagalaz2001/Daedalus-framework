@@ -39,9 +39,13 @@ export function renderDoctor(r: DoctorReport): string {
   const m = r.assessment.model;
   if (m) {
     lines.push(
-      `Model    ${m.label} (${m.licence}), download ${humanBytes(m.bytes)}, about ${humanBytes(m.runBytes)} of memory while running.`,
+      `Model    ${m.label} (${m.licence}), download ${humanBytes(m.bytes)}, about ${
+        humanBytes(m.runBytes)
+      } of memory while running.`,
     );
-    if (r.assessment.bestQuality === "gpu") lines.push("Optional The 27B best-quality model fits your GPU (see docs/LOCAL-AI.md).");
+    if (r.assessment.bestQuality === "gpu") {
+      lines.push("Optional The 27B best-quality model fits your GPU (see docs/LOCAL-AI.md).");
+    }
   } else {lines.push(`Model    none: ${
       r.assessment.reason === "close-apps"
         ? "not enough memory is free right now; close programs and run the check again"
@@ -51,9 +55,9 @@ export function renderDoctor(r: DoctorReport): string {
   if (r.lemonade === null) lines.push("Lemonade not checked (--no-probe).");
   else if (r.lemonade.running) {
     lines.push(
-      `Lemonade running at ${r.lemonade.base}${r.lemonade.version ? ` (version ${r.lemonade.version})` : ""}; loaded model: ${
-        r.lemonade.loadedModel ?? "none"
-      }.`,
+      `Lemonade running at ${r.lemonade.base}${
+        r.lemonade.version ? ` (version ${r.lemonade.version})` : ""
+      }; loaded model: ${r.lemonade.loadedModel ?? "none"}.`,
     );
   } else {lines.push(
       `Lemonade not running at ${r.lemonade.base}. Install it from https://lemonade-server.ai/ and start it, then open the studio's model panel.`,
@@ -74,7 +78,10 @@ export async function runDoctor(
   const assessment = assess(hardware);
   let lemonade: DoctorReport["lemonade"] = null;
   if (!flag("no-probe")) {
-    const client = new LemonadeClient(value("lemonade-url") ?? cfg.lemonadeBaseUrl ?? LEMONADE_DEFAULT_BASE_URL, cfg.lemonadeApiKey);
+    const client = new LemonadeClient(
+      value("lemonade-url") ?? cfg.lemonadeBaseUrl ?? LEMONADE_DEFAULT_BASE_URL,
+      cfg.lemonadeApiKey,
+    );
     const health = await client.health();
     lemonade = {
       base: client.base,

@@ -39,7 +39,9 @@ function Segmented<T extends string>({ label, value, options, onChange }: {
           onClick={() => onChange(option.value)}
           className={cn(
             "px-2 py-1.5 text-ui-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-            option.value === value ? "bg-foreground text-background" : "bg-background text-foreground-subtle hover:bg-surface-hover",
+            option.value === value
+              ? "bg-foreground text-background"
+              : "bg-background text-foreground-subtle hover:bg-surface-hover",
           )}
         >
           {option.label}
@@ -68,7 +70,9 @@ export function DesignBriefForm({ hasDesignMd, stitchConfigured, busy, error, on
 
   const pick = async (file: File | undefined) => {
     if (!file) return;
-    if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > MAX_REFERENCE) return setRefError(t("design.referenceBad"));
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > MAX_REFERENCE) {
+      return setRefError(t("design.referenceBad"));
+    }
     setRefError(null);
     setReference({ name: file.name, mime: file.type, bytes: new Uint8Array(await file.arrayBuffer()) });
   };
@@ -78,12 +82,26 @@ export function DesignBriefForm({ hasDesignMd, stitchConfigured, busy, error, on
       className="flex flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault();
-        if (brief.trim()) onSubmit({ name, brief, target, count, engine, ...(reference && engine === "model" ? { reference } : {}) });
+        if (brief.trim()) {
+          onSubmit({
+            name,
+            brief,
+            target,
+            count,
+            engine,
+            ...(reference && engine === "model" ? { reference } : {}),
+          });
+        }
       }}
     >
       <label className="flex flex-col gap-1.5 text-ui-sm font-medium">
         {t("design.name")}
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("design.namePlaceholder")} maxLength={40} />
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t("design.namePlaceholder")}
+          maxLength={40}
+        />
       </label>
       <label className="flex flex-col gap-1.5 text-ui-sm font-medium">
         {t("design.brief")}
@@ -129,7 +147,9 @@ export function DesignBriefForm({ hasDesignMd, stitchConfigured, busy, error, on
             className="w-16"
           />
         </label>
-        <span className="text-ui-xs text-foreground-subtle">{hasDesignMd ? t("design.designMdFound") : t("design.designMdMissing")}</span>
+        <span className="text-ui-xs text-foreground-subtle">
+          {hasDesignMd ? t("design.designMdFound") : t("design.designMdMissing")}
+        </span>
       </div>
       {engine === "model"
         ? (
@@ -152,7 +172,13 @@ export function DesignBriefForm({ hasDesignMd, stitchConfigured, busy, error, on
                 </span>
               )
               : (
-                <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => picker.current?.click()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => picker.current?.click()}
+                >
                   <ImagePlus className="size-4" aria-hidden />
                   {t("design.reference")}
                 </Button>

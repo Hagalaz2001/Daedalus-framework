@@ -192,7 +192,7 @@ stacks/<id>/
   "packages": ["packages/api_ts"],
   "tasks": { "dev:web": { "cwd": "{appDir}", "run": "deno task dev" } },
   "replace": [{ "files": ["package.json"], "from": "\"name\": \"web\"", "to": "\"name\": \"{appName}\"" }],
-  "tokens": "scripts/tokens.ts",
+  "tokens": "deno run -A scripts/tokens/web.ts",
   "check": [{ "cwd": "{appDir}", "run": "deno task check" }],
   "boundaries": { "lang": "ts", "src": "src" },
   "requires": { "backend": "optional" }

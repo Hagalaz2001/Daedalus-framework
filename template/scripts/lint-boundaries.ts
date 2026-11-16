@@ -22,7 +22,9 @@ function inFeature(rel: string): { feature: string; rest: string } | null {
 /** Turns an import specifier into a path relative to the source root, or null for external packages. */
 function resolveSpec(lang: Lang, fileRel: string, spec: string): string | null {
   // Dart treats any import that is not dart: or package: as relative to the importing file.
-  if (spec.startsWith(".") || (lang === "dart" && !/^(dart|package):/.test(spec))) return posix.normalize(posix.join(posix.dirname(fileRel), spec));
+  if (spec.startsWith(".") || (lang === "dart" && !/^(dart|package):/.test(spec))) {
+    return posix.normalize(posix.join(posix.dirname(fileRel), spec));
+  }
   if (lang === "ts" && /^[@~]\//.test(spec)) return spec.slice(2);
   if (lang === "dart") {
     const m = /^package:[^/]+\/(.+)$/.exec(spec);
@@ -73,7 +75,11 @@ if (import.meta.main) {
     for (const f of files(root, ext)) {
       scanned++;
       const rel = f.slice(root.length + 1).split("\\").join("/");
-      problems.push(...findViolations(app.boundaries.lang, rel, readFileSync(f, "utf8")).map((p) => `${root.split("\\").join("/")}/${p}`));
+      problems.push(
+        ...findViolations(app.boundaries.lang, rel, readFileSync(f, "utf8")).map((p) =>
+          `${root.split("\\").join("/")}/${p}`
+        ),
+      );
     }
   }
   if (problems.length) {

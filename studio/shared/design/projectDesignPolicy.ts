@@ -222,7 +222,21 @@ const SVG_ATTRS = new Set([
 const TAG_ATTRS: Record<string, readonly string[]> = {
   a: ["href", "rel"],
   img: ["src", "alt", "width", "height"],
-  input: ["type", "name", "value", "placeholder", "checked", "disabled", "for", "min", "max", "step", "required", "readonly", "maxlength"],
+  input: [
+    "type",
+    "name",
+    "value",
+    "placeholder",
+    "checked",
+    "disabled",
+    "for",
+    "min",
+    "max",
+    "step",
+    "required",
+    "readonly",
+    "maxlength",
+  ],
   button: ["type", "disabled", "name", "value"],
   label: ["for"],
   textarea: ["name", "placeholder", "rows", "cols", "disabled", "readonly", "required"],
@@ -263,7 +277,10 @@ export const normalizeUrl = (value: string): string => {
   let out = "";
   for (const ch of value) {
     const c = ch.codePointAt(0)!;
-    if (c <= 0x20 || (c >= 0x7f && c <= 0x9f) || (c >= 0x200b && c <= 0x200f) || c === 0x2028 || c === 0x2029 || c === 0xfeff) continue;
+    if (
+      c <= 0x20 || (c >= 0x7f && c <= 0x9f) || (c >= 0x200b && c <= 0x200f) || c === 0x2028 || c === 0x2029 ||
+      c === 0xfeff
+    ) continue;
     out += ch.toLowerCase();
   }
   return out;
@@ -366,8 +383,9 @@ export function cleanCss(input: string, report: DesignReport): string {
     const end = css.indexOf(")", next);
     const inner = css.slice(next + 4, end === -1 ? css.length : end).trim().replace(/^["']|["']$/g, "");
     const normalized = normalizeUrl(inner);
-    if (normalized.startsWith("#") || DATA_IMAGE.test(normalized)) out += css.slice(next, end === -1 ? css.length : end + 1);
-    else {
+    if (normalized.startsWith("#") || DATA_IMAGE.test(normalized)) {
+      out += css.slice(next, end === -1 ? css.length : end + 1);
+    } else {
       if (normalized.startsWith("//") || normalized.startsWith("http:") || normalized.startsWith("https:")) {
         report.remote = true;
         report.problems.add(PROBLEM.remote);
@@ -390,7 +408,8 @@ export function cleanAttribute(tag: string, name: string, value: string, report:
   }
   if (value.length > MAX_ATTR_CHARS) return null;
   if (name === "style") return cleanCss(value, report);
-  const allowed = GLOBAL_ATTRS.has(name) || name.startsWith("aria-") || name.startsWith("data-") || TAG_ATTRS[tag]?.includes(name) ||
+  const allowed = GLOBAL_ATTRS.has(name) || name.startsWith("aria-") || name.startsWith("data-") ||
+    TAG_ATTRS[tag]?.includes(name) ||
     (SVG_ATTRS.has(name) && isSvgTag(tag));
   if (!allowed) {
     if (FETCHING_ATTRS.has(name)) {

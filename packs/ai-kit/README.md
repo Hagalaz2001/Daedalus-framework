@@ -7,7 +7,7 @@ it installs is described in `docs/AI-KIT.md` inside the generated project (`file
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Spec-driven development | `specs/` templates and constitution, `scripts/ai/spec.ts`, skills `spec-new`, `spec-implement`, Gemini commands in `.gemini/commands/` |
 | Agent guardrails        | `.claude/settings.json` hook, `scripts/ai/guard.ts`                                                                                    |
-| Checks                  | `scripts/ai/sast.ts`, `audit.ts`, `sbom.ts`, `.gitleaks.toml`                                                                          |
+| Checks                  | `scripts/ai/sast.ts`, `audit.ts`, `sbom.ts` (`.gitleaks.toml` ships in the base template)                                                                        |
 | Review and roles        | skill `ai-review`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/ROLE-PLAYBOOKS.md`, eight role agents                                     |
 | Metrics                 | `docs/DELIVERY-METRICS.md`                                                                                                             |
 

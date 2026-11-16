@@ -26,16 +26,29 @@ describe("design logic", () => {
 
   it("rejects scripts, remote URLs and non-HTML", () => {
     assert.deepEqual(validateDesignHtml(GOOD), []);
-    assert.ok(validateDesignHtml('<div><script src="https://x.com/a.js"></script></div>').some((p) => /external script/.test(p)));
+    assert.ok(
+      validateDesignHtml('<div><script src="https://x.com/a.js"></script></div>').some((p) =>
+        /external script/.test(p)
+      ),
+    );
     assert.ok(validateDesignHtml("<div><script>1</script></div>").some((p) => /script/.test(p)));
     assert.deepEqual(validateDesignHtml("<div><script>1</script></div>", { allowInlineScripts: true }), []);
     assert.ok(validateDesignHtml('<div><img src="https://x.com/a.png"></div>').some((p) => /remote/.test(p)));
     assert.ok(validateDesignHtml('<div style="background:url(//x.com/a.png)"></div>').some((p) => /remote/.test(p)));
-    assert.ok(validateDesignHtml('<div><link href="https://fonts.googleapis.com/x" rel="stylesheet"></div>').some((p) => /remote/.test(p)));
-    assert.ok(validateDesignHtml("<style>@import 'https://x.com/a.css';</style><div></div>").some((p) => /remote/.test(p)));
+    assert.ok(
+      validateDesignHtml('<div><link href="https://fonts.googleapis.com/x" rel="stylesheet"></div>').some((p) =>
+        /remote/.test(p)
+      ),
+    );
+    assert.ok(
+      validateDesignHtml("<style>@import 'https://x.com/a.css';</style><div></div>").some((p) => /remote/.test(p)),
+    );
     assert.ok(validateDesignHtml("# just markdown").some((p) => /Not an HTML/.test(p)));
     assert.ok(validateDesignHtml('<div onclick="x()"></div>').some((p) => /event handlers/.test(p)));
-    assert.deepEqual(validateDesignHtml('<div><a href="https://example.com">link</a><img src="data:image/png;base64,AA"></div>'), []);
+    assert.deepEqual(
+      validateDesignHtml('<div><a href="https://example.com">link</a><img src="data:image/png;base64,AA"></div>'),
+      [],
+    );
   });
 
   it("sanitises what it rejects", () => {
@@ -84,7 +97,13 @@ describe("design store", () => {
     assert.equal(files.find((f) => f.file === "v2.html")?.ok, false);
     assert.ok((await readDesign(dir, slug, "v1.html")).includes("<main>Hi</main>"));
     await assert.rejects(readDesign(dir, slug, "v2.html"), /external script/);
-    const second = await beginStep(dir, { kind: "begin", step: "generate", name: "Billing", brief: "Other", target: "web-mobile" });
+    const second = await beginStep(dir, {
+      kind: "begin",
+      step: "generate",
+      name: "Billing",
+      brief: "Other",
+      target: "web-mobile",
+    });
     assert.equal(second.slug, "billing-2");
     rmSync(dir, { recursive: true, force: true });
   });
@@ -99,9 +118,21 @@ describe("design store", () => {
       target: "flutter-phone",
       count: 1,
     });
-    const refine = await beginStep(dir, { kind: "begin", step: "refine", slug, parent: "v1.html", instruction: "Bigger title" });
+    const refine = await beginStep(dir, {
+      kind: "begin",
+      step: "refine",
+      slug,
+      parent: "v1.html",
+      instruction: "Bigger title",
+    });
     assert.deepEqual(refine.step.files, ["v1-r1.html"]);
-    const again = await beginStep(dir, { kind: "begin", step: "refine", slug, parent: "v1-r1.html", instruction: "Darker" });
+    const again = await beginStep(dir, {
+      kind: "begin",
+      step: "refine",
+      slug,
+      parent: "v1-r1.html",
+      instruction: "Darker",
+    });
     assert.deepEqual(again.step.files, ["v1-r2.html"]);
     const screens = await beginStep(dir, {
       kind: "begin",
@@ -114,7 +145,10 @@ describe("design store", () => {
     const manifest = JSON.parse(readFileSync(join(screenDir(dir, slug), "design.json"), "utf8"));
     assert.equal(manifest.steps.length, 4);
     assert.equal(manifest.steps[2].parent, "v1-r1.html");
-    await assert.rejects(beginStep(dir, { kind: "begin", step: "refine", slug, parent: "../x.html", instruction: "x" }), /variant/);
+    await assert.rejects(
+      beginStep(dir, { kind: "begin", step: "refine", slug, parent: "../x.html", instruction: "x" }),
+      /variant/,
+    );
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -166,9 +200,14 @@ function fakeStitch(downloads: string[]): StitchDeps {
     download: async (url) => {
       downloads.push(url);
       if (url.includes("/img/")) return { bytes: PNG, type: "image/png" };
-      if (url.includes("tailwindcss")) return { bytes: new TextEncoder().encode("window.tailwind={}"), type: "text/javascript" };
+      if (url.includes("tailwindcss")) {
+        return { bytes: new TextEncoder().encode("window.tailwind={}"), type: "text/javascript" };
+      }
       if (url.includes("fonts.googleapis")) {
-        return { bytes: new TextEncoder().encode("@font-face{src:url(https://fonts.gstatic.com/a.woff2)}"), type: "text/css" };
+        return {
+          bytes: new TextEncoder().encode("@font-face{src:url(https://fonts.gstatic.com/a.woff2)}"),
+          type: "text/css",
+        };
       }
       if (url.includes("googleusercontent")) return { bytes: PNG, type: "image/png" };
       return { bytes: new TextEncoder().encode(STITCH_HTML), type: "text/html" };
@@ -220,7 +259,12 @@ describe("stitch engine (mocked SDK)", () => {
       },
     };
     await assert.rejects(
-      runStitch(dir, { kind: "stitch-generate", name: "x", brief: "b", target: "web-mobile", count: 1 }, "SECRET-KEY-123", deps),
+      runStitch(
+        dir,
+        { kind: "stitch-generate", name: "x", brief: "b", target: "web-mobile", count: 1 },
+        "SECRET-KEY-123",
+        deps,
+      ),
       (e: Error) => !e.message.includes("SECRET-KEY-123"),
     );
     await assert.rejects(guardedDownload("http://example.com/a", { maxBytes: 10, hostAllowed: () => true }), /https/);
@@ -233,7 +277,10 @@ describe("design handler", () => {
     const dir = tmp();
     const none = createDesignHandler({ root: dir, stitchKey: null, stitch: fakeStitch([]) });
     assert.deepEqual(await none({ kind: "stitch-status" }), { configured: false });
-    await assert.rejects(none({ kind: "stitch-generate", name: "x", brief: "b", target: "web-desktop", count: 1 }), /STITCH_API_KEY/);
+    await assert.rejects(
+      none({ kind: "stitch-generate", name: "x", brief: "b", target: "web-desktop", count: 1 }),
+      /STITCH_API_KEY/,
+    );
     await assert.rejects(none({ kind: "nope" }), /Unknown design command/);
     const some = createDesignHandler({ root: dir, stitchKey: "abcdefgh1234", stitch: fakeStitch([]) });
     assert.deepEqual(await some({ kind: "stitch-status" }), { configured: true });
@@ -243,12 +290,23 @@ describe("design handler", () => {
   it("announces a recorded step so the server can start the model work", async () => {
     const dir = tmp();
     const seen: unknown[] = [];
-    const handle = createDesignHandler({ root: dir, stitchKey: null, stitch: fakeStitch([]), onBegun: (e) => seen.push(e) });
-    const begun =
-      (await handle({ kind: "begin", step: "generate", name: "Billing", brief: "Invoices", target: "web-desktop", count: 2 })) as {
-        slug: string;
-        step: { id: string };
-      };
+    const handle = createDesignHandler({
+      root: dir,
+      stitchKey: null,
+      stitch: fakeStitch([]),
+      onBegun: (e) => seen.push(e),
+    });
+    const begun = (await handle({
+      kind: "begin",
+      step: "generate",
+      name: "Billing",
+      brief: "Invoices",
+      target: "web-desktop",
+      count: 2,
+    })) as {
+      slug: string;
+      step: { id: string };
+    };
     assert.deepEqual(seen, [{ kind: "step", slug: begun.slug, stepId: begun.step.id }]);
     rmSync(dir, { recursive: true, force: true });
   });

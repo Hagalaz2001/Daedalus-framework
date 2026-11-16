@@ -199,8 +199,15 @@ Deno.test("lemonade provider: a reference image goes as an image part", async ()
   try {
     const p = createLemonadeProvider({ client: new LemonadeClient(fake.base), model: () => "m" });
     await p.call(input({ image: { mime: "image/png", base64: "AAAA" } }));
-    const user = (fake.requests.find((r) => r.path === "/chat/completions")!.body!.messages as { content: { type: string }[] }[])[1]!;
-    assertEquals(user.content.map((c) => c.type), ["image_url", "text"]);
+    const user = (fake.requests.find((r) =>
+      r.path === "/chat/completions"
+    )!.body!.messages as { content: { type: string }[] }[])[1]!;
+    assertEquals(
+      user.content.map((c) =>
+        c.type
+      ),
+      ["image_url", "text"],
+    );
   } finally {
     await fake.close();
   }

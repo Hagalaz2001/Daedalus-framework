@@ -25,20 +25,36 @@ describe("shell composition in the design store", () => {
     mkdirSync(join(dir, "design", "shell"), { recursive: true });
     writeFileSync(join(dir, "design", "shell", "app.html"), SHELL);
     writeFileSync(join(dir, "design", "shell", "app.routes.json"), JSON.stringify(MAP));
-    const { slug } = await beginStep(dir, { kind: "begin", step: "generate", name: "Home", brief: "Home", target: "web-mobile", count: 1 });
+    const { slug } = await beginStep(dir, {
+      kind: "begin",
+      step: "generate",
+      name: "Home",
+      brief: "Home",
+      target: "web-mobile",
+      count: 1,
+    });
     writeFileSync(join(screenDir(dir, slug), "v1.html"), "<!-- shell: app route: home -->\n<section>Welcome</section>");
     const list = await listDesigns(dir);
     assert.deepEqual(list.shells.map((s) => s.id), ["app"]);
     const file = list.screens[0]!.files[0]!;
     assert.deepEqual([file.ok, file.shellId, file.route], [true, "app", "home"]);
     const html = await readDesign(dir, slug, "v1.html");
-    assert.ok(html.includes("<section>Welcome</section>") && html.includes('aria-current="page"') && html.includes(">Plans<"));
+    assert.ok(
+      html.includes("<section>Welcome</section>") && html.includes('aria-current="page"') && html.includes(">Plans<"),
+    );
     rmSync(dir, { recursive: true, force: true });
   });
 
   it("a screen whose shell is missing or broken is blocked with the reason, never previewed half-built", async () => {
     const dir = mkdtempSync(join(tmpdir(), "design-shell-bad-"));
-    const { slug } = await beginStep(dir, { kind: "begin", step: "generate", name: "Home", brief: "Home", target: "web-mobile", count: 1 });
+    const { slug } = await beginStep(dir, {
+      kind: "begin",
+      step: "generate",
+      name: "Home",
+      brief: "Home",
+      target: "web-mobile",
+      count: 1,
+    });
     writeFileSync(join(screenDir(dir, slug), "v1.html"), "<!-- shell: app route: home -->\n<section>x</section>");
     const file = (await listDesigns(dir)).screens[0]!.files[0]!;
     assert.equal(file.ok, false);

@@ -5,15 +5,54 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   blueprint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
           deno-version: 2.9.8
-      - run: deno task check # unit tests, oss:check, deno audit
+      - run: deno task lint
+      - run: deno task typecheck
+      - run: deno task test
+      - run: deno task oss:check
+      - run: deno audit
+
+  verify-dbs:
+    needs: blueprint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: 2.9.8
+      - run: deno task verify:dbs
+
+  # Slow: builds a backend per module and runs its checks. Runs in parallel with the generated-project matrix.
+  verify-modules:
+    needs: blueprint
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: 2.9.8
+      - run: deno task verify:modules
 
   generate:
     needs: blueprint
@@ -27,15 +66,24 @@ jobs:
           - { name: site-next-flutter-hono, flags: "--web site-next --mobile flutter --id com.example.shop --backend hono", flutter: true }
           - { name: spa-flutter-hono, flags: "--web spa --mobile flutter --id com.example.shop --backend hono", flutter: true }
           - { name: rn-only, flags: "--mobile rn --backend none", flutter: false }
+          - { name: spa-mongodb-modules, flags: "--web spa --backend hono --db mongodb --modules rbac,email,realtime", flutter: false }
+          - { name: spa-modules-fintech, flags: "--web spa --backend hono --modules auth-extras,rbac,email,storage,jobs --packs fintech", flutter: false }
     steps:
-      - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
           deno-version: 2.9.8
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         if: matrix.flutter
         with:
           channel: stable
+          flutter-version: 3.47.9 # Forui 0.27.x needs Flutter 3.47 or newer
           cache: true
       - name: Generate and check
-        run: deno run -A new-project.ts "$RUNNER_TEMP/${{ matrix.name }}" --yes --name "Acme Shop" ${{ matrix.flags }}
+        run: |
+          dir="$RUNNER_TEMP/${{ matrix.name }}"
+          set +e
+          deno run -A cli.ts new "$dir" --yes --name "Acme Shop" ${{ matrix.flags }} --json > "$RUNNER_TEMP/result.json"
+          deno run -A tools/ci-report.ts "$RUNNER_TEMP/result.json" "$dir"

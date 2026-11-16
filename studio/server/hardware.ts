@@ -8,7 +8,12 @@ export type Run = (cmd: string, args: string[]) => Promise<string | null>;
 /** Runs a program with a 5 s timeout and returns its stdout, or null when it is missing or fails. */
 export const defaultRun: Run = async (cmd, args) => {
   try {
-    const out = await new Deno.Command(cmd, { args, stdout: "piped", stderr: "null", signal: AbortSignal.timeout(5_000) }).output();
+    const out = await new Deno.Command(cmd, {
+      args,
+      stdout: "piped",
+      stderr: "null",
+      signal: AbortSignal.timeout(5_000),
+    }).output();
     return out.success ? new TextDecoder().decode(out.stdout) : null;
   } catch {
     return null;
@@ -22,7 +27,9 @@ export function parseNvidiaSmi(out: string): Hardware["gpus"] {
   return out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).flatMap((line) => {
     const at = line.lastIndexOf(",");
     const mib = Number(line.slice(at + 1));
-    return at > 0 && Number.isFinite(mib) ? [{ name: line.slice(0, at).trim(), vramBytes: Math.round(mib * 1024 * 1024) }] : [];
+    return at > 0 && Number.isFinite(mib)
+      ? [{ name: line.slice(0, at).trim(), vramBytes: Math.round(mib * 1024 * 1024) }]
+      : [];
   });
 }
 
@@ -51,7 +58,8 @@ export function parseDf(out: string): number | null {
   return Number.isFinite(kb) ? kb * 1024 : null;
 }
 
-export const parseCpuNameLinux = (cpuinfo: string): string | null => /^model name\s*:\s*(.+)$/im.exec(cpuinfo)?.[1]?.trim() ?? null;
+export const parseCpuNameLinux = (cpuinfo: string): string | null =>
+  /^model name\s*:\s*(.+)$/im.exec(cpuinfo)?.[1]?.trim() ?? null;
 export const hasAvx2Linux = (cpuinfo: string): boolean | null => {
   const flags = /^flags\s*:\s*(.+)$/im.exec(cpuinfo)?.[1];
   return flags ? flags.split(/\s+/).includes("avx2") : null;
@@ -103,10 +111,19 @@ export async function collectHardware(run: Run = defaultRun): Promise<Hardware> 
     if (arch === "x86_64") avx2 = /AVX2/i.test((await run("sysctl", ["-n", "machdep.cpu.leaf7_features"])) ?? "");
     freeDiskBytes = parseDfOrNull(await run("df", ["-Pk", home]));
   } else if (os === "windows") {
-    const reg = await run("reg", ["query", "HKLM\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "/v", "ProcessorNameString"]);
+    const reg = await run("reg", [
+      "query",
+      "HKLM\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+      "/v",
+      "ProcessorNameString",
+    ]);
     cpu = /ProcessorNameString\s+REG_SZ\s+(.+)/i.exec(reg ?? "")?.[1]?.trim() ?? null;
     gpus = parseWindowsDisplayRegistry(
-      (await run("reg", ["query", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}", "/s"])) ?? "",
+      (await run("reg", [
+        "query",
+        "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}",
+        "/s",
+      ])) ?? "",
     );
     if (arch === "x86_64") {
       // PF_AVX2_INSTRUCTIONS_AVAILABLE (40) through kernel32; works in Windows PowerShell 5.1.
@@ -118,11 +135,15 @@ export async function collectHardware(run: Run = defaultRun): Promise<Hardware> 
       avx2 = out?.trim() === "True" ? true : out?.trim() === "False" ? false : null;
     }
     const drive = /^([A-Za-z]):/.exec(home)?.[1] ?? "C";
-    const free = Number((await run("powershell", ["-NoProfile", "-Command", `(Get-PSDrive -Name ${drive}).Free`]))?.trim());
+    const free = Number(
+      (await run("powershell", ["-NoProfile", "-Command", `(Get-PSDrive -Name ${drive}).Free`]))?.trim(),
+    );
     freeDiskBytes = Number.isFinite(free) && free > 0 ? free : null;
   }
   // NVIDIA's tool reports real VRAM on every OS and wins over the guesses above for the same card.
-  const nv = parseNvidiaSmi((await run("nvidia-smi", ["--query-gpu=name,memory.total", "--format=csv,noheader,nounits"])) ?? "");
+  const nv = parseNvidiaSmi(
+    (await run("nvidia-smi", ["--query-gpu=name,memory.total", "--format=csv,noheader,nounits"])) ?? "",
+  );
   if (nv.length) gpus = [...nv, ...gpus.filter((g) => !/nvidia|geforce|rtx|gtx|quadro/i.test(g.name))];
 
   const appleSilicon = os === "darwin" && arch === "aarch64";

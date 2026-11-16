@@ -28,7 +28,7 @@ with `mongodb`, exit 2).
 
 ## Non-interactive and JSON mode
 
-Add `--json` to any command except `studio` and `mcp`. Then:
+Add `--json` to any command except `studio`, `doctor` and `mcp`. Then:
 
 - stdout contains exactly one JSON document; progress and prompts-free logs go to stderr;
 - nothing is ever asked: missing optional values take their defaults, missing required ones are an error;

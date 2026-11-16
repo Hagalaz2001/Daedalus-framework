@@ -34,7 +34,10 @@ export async function writeProjectFile(projectDir: string, full: string, data: s
 }
 
 /** Entries of a folder inside the project; links are skipped. */
-export async function readProjectDir(projectDir: string, folder: string): Promise<{ name: string; isDirectory: boolean }[]> {
+export async function readProjectDir(
+  projectDir: string,
+  folder: string,
+): Promise<{ name: string; isDirectory: boolean }[]> {
   const info = await lstat(folder).catch(() => null);
   if (!info || info.isSymbolicLink() || !info.isDirectory() || !(await realInside(projectDir, folder))) return [];
   const entries = await readdir(folder, { withFileTypes: true });

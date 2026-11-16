@@ -66,7 +66,7 @@ Shared code is split by purpose: `shared/ui` (design-system components), `shared
 Stack-specific details (commands, libraries, conventions) are in each app's own README. The shapes below are the
 contract between stacks; a stack README documents any difference.
 
-TypeScript apps (web-spa, web-spa-vue, web-site-astro, web-site-next, mobile-rn, desktop-tauri frontend):
+TypeScript apps (web-spa, web-spa-vue, web-site-next, mobile-rn, desktop-tauri frontend):
 
 ```
 apps/<name>/src/
@@ -76,13 +76,18 @@ apps/<name>/src/
   styles/tokens.*          generated
 ```
 
+The Astro site (`web-site-astro`) is content-first and has no feature folders: `components/` (UI), `content/`
+(collections), `layouts/`, `lib/` (pure logic and the contact client) and `pages/` (routes). The boundary check does not
+apply to it; keep logic in `lib/` with tests and UI in `components/`.
+
 Flutter (`mobile-flutter`):
 
 ```
 apps/<name>/lib/
   main.dart                composition root
-  core/                    providers shared by features (API client, auth)
-  features/<feature>/{data,domain,presentation}/<feature>.dart
+  core/                    providers and helpers shared by features (API client, auth, theme, errors)
+  features/<feature>/{data,presentation}/   plus <feature>.dart, the public barrel; a feature without a
+                           backend has presentation/ only. State lives in Riverpod providers next to the data code.
 packages/app_core/         generated API client, generated tokens, appTheme()
 ```
 
@@ -121,8 +126,9 @@ of the data layer, not the network.
 
 ## 7. Naming
 
-- Folders and files: `kebab-case` for TypeScript files and folders, `snake_case` for Dart and Rust, components in
-  `PascalCase.tsx`.
+- Folders: `kebab-case`. TypeScript files: one style per app, set by its stack (`web-spa` and `web-spa-vue` use
+  `camelCase.ts` for modules such as `notesApi.ts`; `mobile-rn` uses `kebab-case.ts`), components in `PascalCase.tsx` or
+  `.vue`. Dart and Rust files and folders: `snake_case`. Follow the style already in the app you are editing.
 - Features are named for the user capability (`notes`, `billing`), not the technology (`api`, `forms`).
 - API: `operationId` is `verbNoun` (`listNotes`, `createNote`); one tag per resource; the tag becomes the client name.
 - Tokens are semantic (`primary`, `surfaceMuted`, `danger`), never the colour (`blue500`).

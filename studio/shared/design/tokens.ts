@@ -13,7 +13,9 @@ export interface Tokens {
 
 const group = (tree: MdTree, name: string): Record<string, string> =>
   Object.fromEntries(
-    Object.entries((tree[name] as MdTree | undefined) ?? {}).filter((e): e is [string, string] => typeof e[1] === "string"),
+    Object.entries((tree[name] as MdTree | undefined) ?? {}).filter((e): e is [string, string] =>
+      typeof e[1] === "string"
+    ),
   );
 
 const pick = (roles: Record<string, string>, fallback: Tokens["color"]): Tokens["color"] => ({
@@ -86,7 +88,9 @@ const vars = (t: Tokens, dark: boolean): string[] => {
   if (!dark) {
     out.push(...Object.entries(t.radius ?? {}).map(([k, v]) => `--radius-${k}: ${v}px;`));
     out.push(...Object.entries(t.space ?? {}).map(([k, v]) => `--space-${k}: ${v}px;`));
-    out.push(...Object.entries(t.font ?? {}).map(([k, v]) => `--font-${k}: "${v}", ui-sans-serif, system-ui, sans-serif;`));
+    out.push(
+      ...Object.entries(t.font ?? {}).map(([k, v]) => `--font-${k}: "${v}", ui-sans-serif, system-ui, sans-serif;`),
+    );
   }
   return out;
 };

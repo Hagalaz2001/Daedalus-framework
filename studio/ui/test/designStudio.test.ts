@@ -38,7 +38,9 @@ test("flags the default slop patterns", () => {
 });
 
 test("flags fonts, sizes, spacing, contrast and missing tokens", () => {
-  assert.ok(ids(page(`${CLEAN}.a{font-family:Georgia,serif}.b{font-family:Roboto,sans-serif}`)).includes("font-families"));
+  assert.ok(
+    ids(page(`${CLEAN}.a{font-family:Georgia,serif}.b{font-family:Roboto,sans-serif}`)).includes("font-families"),
+  );
   const sizes = [11, 12, 14, 16, 20, 28].map((s, i) => `.t${i}{font-size:${s}px}`).join("");
   assert.ok(ids(page(CLEAN + sizes)).includes("type-scale"));
   assert.ok(ids(page(`${CLEAN}.a{padding:13px}.b{margin:7px 22px}`)).includes("spacing-scale"));
@@ -71,7 +73,8 @@ test("fix prompt lists every warning", () => {
 
 test("the studio's own rules: list states, token drift, touch targets, no false placeholder hit", () => {
   const rows = "<li>a</li><li>b</li><li>c</li>";
-  const states = '<div data-state="loading" hidden></div><div data-state="empty" hidden></div><div data-state="error" hidden></div>';
+  const states =
+    '<div data-state="loading" hidden></div><div data-state="empty" hidden></div><div data-state="error" hidden></div>';
   assert.ok(ids(page(CLEAN, `<main><ul>${rows}</ul></main>`)).includes("list-states"));
   assert.ok(!ids(page(CLEAN, `<main><ul data-state="ready">${rows}</ul>${states}</main>`)).includes("list-states"));
   const project = { "--bg": "#ffffff", "--ink": "#1a1a1a" };
@@ -82,5 +85,7 @@ test("the studio's own rules: list states, token drift, touch targets, no false 
       ids(page("body{color:#111}"), { projectTokens: project }).includes("token-drift") || true,
   );
   assert.ok(ids(page(`${CLEAN}.btn{min-height:32px}`), { target: "web-desktop" }).includes("touch-targets"));
-  assert.ok(!ids(page(CLEAN, '<main><input placeholder="Search" aria-label="Search"></main>')).includes("placeholder-images"));
+  assert.ok(
+    !ids(page(CLEAN, '<main><input placeholder="Search" aria-label="Search"></main>')).includes("placeholder-images"),
+  );
 });

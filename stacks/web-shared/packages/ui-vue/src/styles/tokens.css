@@ -1,4 +1,4 @@
-/* Generated from design/tokens.json by packages/ui/scripts/tokens.mjs. Do not edit; run `deno task sync`. */
+/* Generated from design/tokens.json by scripts/tokens/web.ts. Do not edit; run `deno task sync`. */
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 

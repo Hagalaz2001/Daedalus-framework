@@ -33,7 +33,7 @@ the sitemap and Open Graph use it.
   Markdown renders to React elements; raw HTML is not allowed through.
 - Copy and plans live in `src/features/marketing/model/content.ts`; the site name and nav in `src/shared/lib/site.ts`.
 - The footer shows backend status using the generated client (`@app/api`, `GET /health`) when the backend is reachable.
-- The contact form posts to `CONTACT_WEBHOOK_URL` when set, otherwise it only logs. The OpenAPI contract has no contact
+- The contact form posts to `CONTACT_WEBHOOK_URL`; without it the form shows a "not connected" error (it never reports a message as sent when it was not). The OpenAPI contract has no contact
   operation; add one and call the generated client from `features/contact/state/sendMessage.ts` to move it into the backend.
 
 ## Structure

@@ -6,7 +6,16 @@ export interface PartialJsonString {
   closed: boolean;
 }
 
-const SIMPLE_ESCAPES: Record<string, string> = { n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", "/": "/", "\\": "\\", '"': '"' };
+const SIMPLE_ESCAPES: Record<string, string> = {
+  n: "\n",
+  t: "\t",
+  r: "\r",
+  b: "\b",
+  f: "\f",
+  "/": "/",
+  "\\": "\\",
+  '"': '"',
+};
 
 /** Reads one JSON string starting after its opening quote. A trailing half-written escape is dropped, never guessed. */
 export function readString(raw: string, start: number): { value: string; closed: boolean; end: number } {

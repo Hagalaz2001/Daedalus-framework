@@ -101,7 +101,10 @@ export function EditPanel({ screen, info, jobs, busy, prefill, onRefine, onSelec
                 ))}
                 {step.files.map((
                   f,
-                ) => (patchErrors[f] ? <span key={f} className="text-destructive" role="alert">{patchErrors[f]}</span> : null))}
+                ) => (patchErrors[f]
+                  ? <span key={f} className="text-destructive" role="alert">{patchErrors[f]}</span>
+                  : null)
+                )}
               </div>
             </div>
           );
@@ -164,14 +167,21 @@ export function EditPanel({ screen, info, jobs, busy, prefill, onRefine, onSelec
           </button>
           <span className="truncate">
             {text.trim()
-              ? (mode === "surgical" ? "Small edit: patches only what you name" : "Bigger change: rewrites this version")
+              ? (mode === "surgical"
+                ? "Small edit: patches only what you name"
+                : "Bigger change: rewrites this version")
               : "Enter to send"}
           </span>
         </div>
         <details className="text-ui-xs">
           <summary className="cursor-pointer text-foreground-subtle">Related screens</summary>
           <div className="mt-2 flex flex-col gap-2">
-            <Input value={names} onChange={(e) => setNames(e.target.value)} placeholder="detail, settings" aria-label="Related screens" />
+            <Input
+              value={names}
+              onChange={(e) => setNames(e.target.value)}
+              placeholder="detail, settings"
+              aria-label="Related screens"
+            />
             <div className="flex gap-2">
               <Button
                 size="sm"

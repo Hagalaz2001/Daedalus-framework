@@ -1,6 +1,10 @@
 {
   "$comment": "Preset 'playful': friendly consumer app. Rounded shapes, warm coral accent on a soft lilac-tinted surface, chunky rounded type.",
-  "meta": { "id": "playful", "name": "Playful", "description": "Rounded shapes, coral accent, soft lilac surfaces, chunky friendly type." },
+  "meta": {
+    "id": "playful",
+    "name": "Playful",
+    "description": "Rounded shapes, coral accent, soft lilac surfaces, chunky friendly type."
+  },
   "color": {
     "primary": "#d13138",
     "onPrimary": "#ffffff",

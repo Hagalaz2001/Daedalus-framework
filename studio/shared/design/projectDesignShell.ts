@@ -40,8 +40,12 @@ const str = (v: unknown, max = 120): v is string => typeof v === "string" && v.l
 export function parseRouteMap(raw: unknown): DesignRouteMap {
   const m = raw as Partial<DesignRouteMap> | null;
   if (!m || !isSafeDesignName(m.appId)) throw new Error("appId must be a short lowercase name.");
-  if (!NAV_ARCHETYPES.includes(m.navArchetype as NavArchetype)) throw new Error("navArchetype must be bottomTabs, sidebar or topNav.");
-  if (!Array.isArray(m.routes) || m.routes.length === 0 || m.routes.length > 40) throw new Error("A route map needs 1-40 routes.");
+  if (!NAV_ARCHETYPES.includes(m.navArchetype as NavArchetype)) {
+    throw new Error("navArchetype must be bottomTabs, sidebar or topNav.");
+  }
+  if (!Array.isArray(m.routes) || m.routes.length === 0 || m.routes.length > 40) {
+    throw new Error("A route map needs 1-40 routes.");
+  }
   const seen = new Set<string>();
   const routes = m.routes.map((r, i): DesignRoute => {
     const at = `Route ${i + 1}`;
@@ -50,15 +54,24 @@ export function parseRouteMap(raw: unknown): DesignRouteMap {
     if (!str(r.path, 200) || !r.path.startsWith("/")) throw new Error(`${at}: path must start with /.`);
     if (!str(r.title)) throw new Error(`${at}: title missing.`);
     if (!ROUTE_SLOTS.includes(r.slot)) throw new Error(`${at}: slot must be primary, secondary, detail or modal.`);
-    if (r.nav && (!str(r.nav.label, 40) || typeof r.nav.order !== "number")) throw new Error(`${at}: nav needs a label and an order.`);
+    if (r.nav && (!str(r.nav.label, 40) || typeof r.nav.order !== "number")) {
+      throw new Error(`${at}: nav needs a label and an order.`);
+    }
     if (
-      r.nav?.badge && (!BADGE_KINDS.includes(r.nav.badge.kind) || (r.nav.badge.value !== undefined && !Number.isFinite(r.nav.badge.value)))
+      r.nav?.badge &&
+      (!BADGE_KINDS.includes(r.nav.badge.kind) ||
+        (r.nav.badge.value !== undefined && !Number.isFinite(r.nav.badge.value)))
     ) throw new Error(`${at}: badge kind must be count or dot.`);
     if (r.slot === "primary" && !r.nav) throw new Error(`${at}: a primary route needs a nav entry.`);
     return r;
   });
   if (!seen.has(m.defaultRoute as string)) throw new Error("defaultRoute is not one of the routes.");
-  return { appId: m.appId, defaultRoute: m.defaultRoute as string, navArchetype: m.navArchetype as NavArchetype, routes };
+  return {
+    appId: m.appId,
+    defaultRoute: m.defaultRoute as string,
+    navArchetype: m.navArchetype as NavArchetype,
+    routes,
+  };
 }
 
 const MARKER = /^\s*<!--\s*shell:\s*([a-z0-9][a-z0-9-]*)\s+route:\s*([a-z0-9][a-z0-9-]*)\s*-->/;

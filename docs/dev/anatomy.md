@@ -53,8 +53,8 @@ shop/
   packages/
     api_ts/                 Generated TypeScript client, shared by backend and TypeScript apps (generated)
     ui/                     Shared web UI kit (shadcn-style components) and the tokens.css generator
-  scripts/                  sync.ts, check.ts, lint-boundaries.ts, lint-deno-only.ts, secret-scan.mjs,
-                            git-setup.mjs, timeline.mjs, daedalus.ts (bridge to the checkout), tokens/
+  scripts/                  sync.ts, check.ts, lint-boundaries.ts, lint-deno-only.ts, secret-scan.ts,
+                            git-setup.ts, timeline.ts, pre-commit.ts, setup.ts, daedalus.ts (bridge to the checkout), tokens/
     ai/                     ai-kit pack: spec.ts, guard.ts, sast.ts, audit.ts, sbom.ts and their tests
   specs/                    Spec-driven development: constitution.md, templates/, one folder per spec
   docs/

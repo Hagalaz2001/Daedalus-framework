@@ -30,13 +30,17 @@ const MAX_PATCH_ELEMENTS = 8000;
 export function applyDesignPatch(html: string, patch: DesignPatch, budgetMs = PATCH_BUDGET_MS): string {
   const started = performance.now();
   const $ = cheerio.load(html);
-  if ($("*").length > MAX_PATCH_ELEMENTS) throw new Error("This page is too large for a targeted edit; regenerate it in full.");
+  if ($("*").length > MAX_PATCH_ELEMENTS) {
+    throw new Error("This page is too large for a targeted edit; regenerate it in full.");
+  }
   for (const [i, op] of patch.ops.entries()) {
     if (performance.now() - started > budgetMs) throw new Error("The patch took too long to apply.");
     const found = $(op.selector);
     if (found.length === 0 || (found.length > 1 && !op.all)) {
       throw new Error(
-        `Operation ${i + 1}: "${op.selector}" matched ${found.length} elements, expected ${op.all ? "at least 1" : "exactly 1"}.`,
+        `Operation ${i + 1}: "${op.selector}" matched ${found.length} elements, expected ${
+          op.all ? "at least 1" : "exactly 1"
+        }.`,
       );
     }
     switch (op.op) {
@@ -66,7 +70,8 @@ export function applyDesignPatch(html: string, patch: DesignPatch, budgetMs = PA
 
 const stemOf = (file: string) => file.replace(/\.html$/, "");
 const patchPath = (dir: string, slug: string, file: string) => join(screenDir(dir, slug), `${stemOf(file)}.patch.json`);
-const errorPath = (dir: string, slug: string, file: string) => join(screenDir(dir, slug), `${stemOf(file)}.patch-error.txt`);
+const errorPath = (dir: string, slug: string, file: string) =>
+  join(screenDir(dir, slug), `${stemOf(file)}.patch-error.txt`);
 const mtime = (path: string) => stat(path).then((s) => s.mtimeMs, () => 0);
 
 /**
@@ -76,11 +81,18 @@ const mtime = (path: string) => stat(path).then((s) => s.mtimeMs, () => 0);
  * not an error (it may appear later), and a recorded error is only reused while neither the patch nor
  * the parent changed since.
  */
-export async function settlePatch(dir: string, manifest: DesignManifest, file: string, parent: string | undefined): Promise<string | null> {
+export async function settlePatch(
+  dir: string,
+  manifest: DesignManifest,
+  file: string,
+  parent: string | undefined,
+): Promise<string | null> {
   if (!parent) return null;
   const source = patchPath(dir, manifest.slug, file);
   const parentPath = designFilePath(dir, manifest.slug, parent);
-  if (existsSync(designFilePath(dir, manifest.slug, file)) || !existsSync(source) || !existsSync(parentPath)) return null;
+  if (existsSync(designFilePath(dir, manifest.slug, file)) || !existsSync(source) || !existsSync(parentPath)) {
+    return null;
+  }
   const failed = errorPath(dir, manifest.slug, file);
   const failedAt = await mtime(failed);
   if (failedAt > 0 && failedAt > (await mtime(source)) && failedAt > (await mtime(parentPath))) {

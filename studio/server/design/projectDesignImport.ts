@@ -50,7 +50,13 @@ export async function importStitchExport(dir: string, folder: string): Promise<I
   const manifest = await readManifest(dir, slug);
   if (!manifest) throw new Error("Could not create the screen.");
   await writeManifest(dir, { ...manifest, engine: "stitch", model: "stitch-export" });
-  await saveStitchVariant(dir, slug, "v1.html", source, await readPickedFile(join(folder, "screen.png"), MAX_PNG_BYTES));
+  await saveStitchVariant(
+    dir,
+    slug,
+    "v1.html",
+    source,
+    await readPickedFile(join(folder, "screen.png"), MAX_PNG_BYTES),
+  );
   const md = await readPickedFile(join(folder, "DESIGN.md"), MAX_MD_BYTES);
   const text = md?.toString("utf8").replace(/\r\n/g, "\n") ?? null;
   const importedMd = text?.startsWith("---\n") ? text : null;

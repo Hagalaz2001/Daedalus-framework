@@ -1,4 +1,9 @@
-import { DEFAULT_DIRECTION_SCREENS, DIRECTION_STACKS, type DirectionsInput, type DirectionStack } from "../../../shared/design/index.ts";
+import {
+  DEFAULT_DIRECTION_SCREENS,
+  DIRECTION_STACKS,
+  type DirectionsInput,
+  type DirectionStack,
+} from "../../../shared/design/index.ts";
 import { useState } from "react";
 import { cn } from "../kit.tsx";
 import { Button } from "../kit.tsx";
@@ -53,7 +58,9 @@ export function DirectionsForm(
               onClick={() => setStack(value)}
               className={cn(
                 "px-3 py-2 text-ui-sm transition-colors",
-                value === stack ? "bg-foreground text-background" : "bg-background text-foreground-subtle hover:bg-surface-hover",
+                value === stack
+                  ? "bg-foreground text-background"
+                  : "bg-background text-foreground-subtle hover:bg-surface-hover",
               )}
             >
               {t(`design.stack.${value}`)}
@@ -75,7 +82,11 @@ export function DirectionsForm(
         </label>
         <label className="flex flex-col gap-1.5 text-ui-sm font-medium">
           {t("design.directionsScreens")}
-          <Input value={screens} onChange={(e) => setScreens(e.target.value)} placeholder={DEFAULT_DIRECTION_SCREENS.join(", ")} />
+          <Input
+            value={screens}
+            onChange={(e) => setScreens(e.target.value)}
+            placeholder={DEFAULT_DIRECTION_SCREENS.join(", ")}
+          />
         </label>
       </div>
       {error ? <p className="text-ui-sm text-destructive" role="alert">{error}</p> : null}

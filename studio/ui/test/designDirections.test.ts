@@ -11,7 +11,10 @@ test("fence tokens are random per prompt and 16 hex characters", () => {
 });
 
 test("plans 3 to 5 directions with the same key screens", () => {
-  const set = planDirections({ brief: "A booking app for a small clinic", stack: "react-flutter", count: 4 }, "2026-01-01T00:00:00Z");
+  const set = planDirections(
+    { brief: "A booking app for a small clinic", stack: "react-flutter", count: 4 },
+    "2026-01-01T00:00:00Z",
+  );
   assert.equal(set.directions.length, 4);
   assert.deepEqual(set.directions[0]!.screens.map((s) => s.id), set.directions[3]!.screens.map((s) => s.id));
 });

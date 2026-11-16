@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseRouteMap, readShellMarker } from "../../shared/design/index.ts";
-import { bridgeSrcDoc, parseBridgeMessage, selectorOfInstruction, trustedScriptSrcDoc } from "../src/design/designBridge.ts";
+import {
+  bridgeSrcDoc,
+  parseBridgeMessage,
+  selectorOfInstruction,
+  trustedScriptSrcDoc,
+} from "../src/design/designBridge.ts";
 
 const MAP = {
   appId: "clinic",
@@ -35,13 +40,19 @@ test("route map: valid, and every rule rejects with a reason", () => {
   bad({ routes: [] }, /1-40/);
   bad({ defaultRoute: "nope" }, /defaultRoute/);
   bad({ routes: [{ ...MAP.routes[0] }, { ...MAP.routes[0] }] }, /unique/);
-  bad({ routes: [{ id: "a", path: "x", title: "A", slot: "primary", nav: { label: "A", order: 1 } }], defaultRoute: "a" }, /path/);
+  bad({
+    routes: [{ id: "a", path: "x", title: "A", slot: "primary", nav: { label: "A", order: 1 } }],
+    defaultRoute: "a",
+  }, /path/);
   bad({ routes: [{ id: "a", path: "/", title: "A", slot: "primary" }], defaultRoute: "a" }, /nav entry/);
   bad({ routes: [{ id: "a", path: "/", title: "A", slot: "sideways" }], defaultRoute: "a" }, /slot/);
 });
 
 test("shell marker is read from the first line only", () => {
-  assert.deepEqual(readShellMarker("<!-- shell: clinic route: patients -->\n<p>x</p>"), { shellId: "clinic", route: "patients" });
+  assert.deepEqual(readShellMarker("<!-- shell: clinic route: patients -->\n<p>x</p>"), {
+    shellId: "clinic",
+    route: "patients",
+  });
   assert.equal(readShellMarker("<p>x</p><!-- shell: clinic route: patients -->"), null);
   assert.equal(readShellMarker("<!-- shell: ../x route: a -->"), null);
 });
@@ -81,7 +92,13 @@ test("bridge page: canonical head only, nonce CSP first, our script only, no net
   assert.match(doc, /connect-src 'none'/);
   assert.equal((doc.match(/<script/g) ?? []).length, 1);
   // Anything that is not main's canonical serialisation is replaced, never patched with a regex.
-  for (const tampered of ["<!-- <head> --><html><head></head><body></body></html>", "<p>no head</p>", "<html><head></head></html>"]) {
+  for (
+    const tampered of [
+      "<!-- <head> --><html><head></head><body></body></html>",
+      "<p>no head</p>",
+      "<html><head></head></html>",
+    ]
+  ) {
     const blocked = bridgeSrcDoc(tampered, "n");
     assert.ok(!blocked.includes("<script") && blocked.includes("default-src 'none'"), tampered);
   }
@@ -92,7 +109,10 @@ test("bridge page: canonical head only, nonce CSP first, our script only, no net
 test("a streamed write_designs call is read file by file from the partial tool input", async () => {
   const { readPartialDesigns } = await import("../../shared/design/toolInput.ts");
   const whole = JSON.stringify({
-    files: [{ file: "v1.html", html: '<html><body><h1 class="a">Hi</h1></body></html>' }, { file: "v2.html", html: "<p>two</p>" }],
+    files: [{ file: "v1.html", html: '<html><body><h1 class="a">Hi</h1></body></html>' }, {
+      file: "v2.html",
+      html: "<p>two</p>",
+    }],
   });
   const cut = whole.slice(0, whole.indexOf("v2.html") + 20);
   const partial = readPartialDesigns(cut);

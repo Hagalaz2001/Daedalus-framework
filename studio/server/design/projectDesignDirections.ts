@@ -47,7 +47,12 @@ async function screenStatus(dir: string, relative: string, screen: string): Prom
   if (info.isSymbolicLink() || !info.isFile()) problems = ["Not a regular file."];
   else if (info.size > MAX_DESIGN_HTML_BYTES) problems = ["File is larger than 2 MB."];
   else problems = analyzeDesignHtml(await readProjectText(dir, full, MAX_DESIGN_HTML_BYTES).catch(() => "")).problems;
-  const status: DirectionFileStatus = { screen, ok: problems.length === 0, problems, modifiedAt: info.mtime.toISOString() };
+  const status: DirectionFileStatus = {
+    screen,
+    ok: problems.length === 0,
+    problems,
+    modifiedAt: info.mtime.toISOString(),
+  };
   if (verdicts.size >= MAX_VERDICTS) verdicts.clear();
   verdicts.set(key, status);
   return status;
@@ -67,7 +72,9 @@ export async function listDirections(dir: string): Promise<DirectionsView> {
   const designMd: DirectionsView["designMd"] = {};
   await Promise.all(
     set.directions.map(async (direction) => {
-      files[direction.id] = (await Promise.all(direction.screens.map((screen) => screenStatus(dir, screen.file, screen.id)))).filter((
+      files[direction.id] = (await Promise.all(direction.screens.map((screen) =>
+        screenStatus(dir, screen.file, screen.id)
+      ))).filter((
         s,
       ): s is DirectionFileStatus => s !== null);
       const md = await lstat(join(dir, direction.designMd)).catch(() => null);
@@ -93,7 +100,9 @@ export async function writeDirectionDesignMd(dir: string, id: unknown, text: unk
   const set = parseDirectionSet(await readJson(dir, SET_FILE));
   const direction = set?.directions.find((d) => d.id === id);
   if (!direction) throw new Error("Unknown direction.");
-  if (typeof text !== "string" || !text.startsWith("---\n") || text.length > MAX_MD_BYTES || !text.includes("\ncolors:")) {
+  if (
+    typeof text !== "string" || !text.startsWith("---\n") || text.length > MAX_MD_BYTES || !text.includes("\ncolors:")
+  ) {
     throw new Error("That is not a DESIGN.md with colour tokens.");
   }
   await writeProjectFile(dir, join(dir, direction.designMd), text);

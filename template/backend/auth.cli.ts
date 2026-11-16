@@ -2,7 +2,7 @@
 // installed modules contribute, so the generated tables match what the backend runs.
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
-import { discoverModules, mergeAuthOptions } from "./src/app.ts";
+import { discoverModules, mergeAuthOptions } from "./src/shared/http/modules.ts";
 import { loadConfig } from "./src/shared/config/config.ts";
 import { createAuth } from "./src/shared/auth/auth.ts";
 import { silentLogger } from "./src/shared/logging/logger.ts";

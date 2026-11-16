@@ -1,4 +1,4 @@
-// Generated from design/tokens.json by scripts/gen-tokens.mjs. Do not edit; run `deno task tokens`.
+// Generated from design/tokens.json by scripts/tokens/mobile-rn.ts. Do not edit; run `deno task sync`.
 export const tokens = {
   "light": {
     "primary": "#2a4bd7",

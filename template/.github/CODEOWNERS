@@ -1,0 +1,17 @@
+# Who must review a change. Replace the placeholders with real GitHub users or teams (a wrong name makes GitHub ignore the
+# rule and show an error), then turn on "Require review from Code Owners" in branch protection (deno task protect-branch).
+# The last matching line wins, so the sensitive paths below come after the default.
+
+# Default owners for everything
+# *                         @your-org/maintainers
+
+# Delivery pipeline and supply chain: changes here can leak secrets or ship unreviewed code
+# /.github/                 @your-org/security
+# /.gitlab-ci.yml           @your-org/security
+# /backend/Dockerfile       @your-org/security
+# /scripts/ci/              @your-org/security
+# /SECURITY.md              @your-org/security
+
+# API contract and data model: changes ripple into every app
+# /contracts/               @your-org/maintainers
+# /backend/drizzle/         @your-org/maintainers

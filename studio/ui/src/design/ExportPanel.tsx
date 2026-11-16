@@ -4,13 +4,8 @@ import { useEffect, useState } from "react";
 import { Button, cn, Input } from "../kit.tsx";
 import { designApi, type ExportResult, type PlanView, type StudioConfig } from "./designApi.ts";
 
-const KIND: Record<string, string> = {
-  "web-spa": "React + shadcn/ui kit",
-  "web-site": "React + shadcn/ui kit",
-  "mobile-rn": "React Native (Reusables, NativeWind)",
-  "mobile-flutter": "Flutter (Forui)",
-};
-const pascal = (s: string) => s.split(/[^a-z0-9]+/i).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase() + w.slice(1)).join("");
+const pascal = (s: string) =>
+  s.split(/[^a-z0-9]+/i).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase() + w.slice(1)).join("");
 
 export function ExportPanel({ config, slug, file, onPlan, applied }: {
   config: StudioConfig;
@@ -87,7 +82,8 @@ export function ExportPanel({ config, slug, file, onPlan, applied }: {
           {config.apps.map((a, i) => <option key={`${a.stack}-${a.dir}`} value={i}>{a.name} ({a.dir})</option>)}
         </select>
         <p className="text-ui-xs text-foreground-subtle">
-          {KIND[target?.stack ?? ""] ?? target?.stack}. The translator uses the stack's UI kit and tokens only.
+          {target?.exportLabel ?? `${target?.stack} (no export target yet)`}. The translator uses the stack's UI kit and
+          tokens only.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -117,10 +113,20 @@ export function ExportPanel({ config, slug, file, onPlan, applied }: {
         ? (
           <div className="flex flex-col gap-2 rounded-lg border border-destructive/50 p-3" role="alert">
             <p className="text-ui-sm font-medium text-destructive">Export is blocked by design checks</p>
-            <ul className="flex flex-col gap-1 text-ui-xs">{result.blocked.map((b) => <li key={b.id}>{b.message}</li>)}</ul>
+            <ul className="flex flex-col gap-1 text-ui-xs">
+              {result.blocked.map((b) => <li key={b.id}>{b.message}</li>)}
+            </ul>
             {hardBlock
-              ? <p className="text-ui-xs text-foreground-subtle">Placeholder copy cannot be exported. Fix it in the Checks tab.</p>
-              : <Button size="sm" variant="outline" disabled={busy} onClick={() => void prepare(true)}>Export anyway</Button>}
+              ? (
+                <p className="text-ui-xs text-foreground-subtle">
+                  Placeholder copy cannot be exported. Fix it in the Checks tab.
+                </p>
+              )
+              : (
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => void prepare(true)}>
+                  Export anyway
+                </Button>
+              )}
           </div>
         )
         : null}
@@ -138,7 +144,8 @@ export function ExportPanel({ config, slug, file, onPlan, applied }: {
         ? (
           <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
             <p className="flex items-center gap-2 text-ui-sm font-medium">
-              <CircleCheck className="size-4 text-ok" aria-hidden />Wrote {written.length} {written.length === 1 ? "file" : "files"}
+              <CircleCheck className="size-4 text-ok" aria-hidden />Wrote {written.length}{" "}
+              {written.length === 1 ? "file" : "files"}
             </p>
             <ul className="font-mono text-ui-xs text-foreground-subtle">
               {written.map((w) => <li key={w} className="break-all">{w}</li>)}
@@ -149,8 +156,15 @@ export function ExportPanel({ config, slug, file, onPlan, applied }: {
             {check && check !== "running"
               ? (
                 <div className="flex flex-col gap-1.5">
-                  <p className={cn("flex items-center gap-2 text-ui-sm font-medium", check.ok ? "text-ok" : "text-destructive")}>
-                    {check.ok ? <CircleCheck className="size-4" aria-hidden /> : <CircleX className="size-4" aria-hidden />}
+                  <p
+                    className={cn(
+                      "flex items-center gap-2 text-ui-sm font-medium",
+                      check.ok ? "text-ok" : "text-destructive",
+                    )}
+                  >
+                    {check.ok
+                      ? <CircleCheck className="size-4" aria-hidden />
+                      : <CircleX className="size-4" aria-hidden />}
                     {check.ok ? "Checks passed" : "Checks failed"}
                   </p>
                   <pre className="m-0 max-h-56 overflow-auto rounded-md bg-background-alt p-2 font-mono text-[11px] leading-4">{check.output || "(no output)"}</pre>

@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert@1";
-import { findNpmCommands, findUnpinned, pinnedVersions, FORBIDDEN_FILES } from "./lint-deno-only.ts";
+import { findNpmCommands, findUnpinned, FORBIDDEN_FILES, pinnedVersions } from "./lint-deno-only.ts";
 
 const hit = (s: string) => findNpmCommands(s).length;
 
@@ -8,12 +8,14 @@ Deno.test("flags npm-family commands", () => {
   assertEquals(hit("  npx create-vite"), 1); // deno-only:allow
   assertEquals(hit("RUN pnpm install --frozen-lockfile"), 1); // deno-only:allow
   assertEquals(hit("use `yarn add left-pad` to"), 1); // deno-only:allow
+  assertEquals(hit("run it with `node scripts/git-setup.mjs --name x`"), 1); // deno-only:allow
 });
 
 Deno.test("allows Deno usage and prose", () => {
   assertEquals(hit("deno run -A npm:openapi-typescript@7.13.0 a b"), 0);
   assertEquals(hit('import x from "npm:hono@4"'), 0);
   assertEquals(hit("The npm registry hosts packages"), 0);
+  assertEquals(hit("Node.js is not used here"), 0);
   assertEquals(hit("npm ci <!-- deno-only:allow -->"), 0);
 });
 
@@ -24,14 +26,25 @@ Deno.test("flags lockfiles", () => {
 
 Deno.test("framework versions must be exact", () => {
   const pkg = (deps: Record<string, string>) => JSON.stringify({ dependencies: deps });
-  assertEquals(findUnpinned(pkg({ next: "^15.0.0", react: "19.2.1", hono: "~4.1.0", clsx: "^2.0.0" })), ["next@^15.0.0", "hono@~4.1.0"]);
+  assertEquals(findUnpinned(pkg({ next: "^15.0.0", react: "19.2.1", hono: "~4.1.0", clsx: "^2.0.0" })), [
+    "next@^15.0.0",
+    "hono@~4.1.0",
+  ]);
   assertEquals(findUnpinned(pkg({ astro: "5.1.2", vue: "3.5.1", "better-auth": "workspace:*" })), []);
   assertEquals(findUnpinned("not json"), []);
 });
 
 Deno.test("pinned versions are read from package.json and deno.json imports", () => {
-  const a = pinnedVersions("apps/web/package.json", JSON.stringify({ dependencies: { "better-auth": "1.7.25", clsx: "2.0.0" } }));
-  const b = pinnedVersions("backend/deno.json", JSON.stringify({ imports: { "better-auth": "npm:better-auth@1.7.18", "better-auth/": "npm:/better-auth@1.7.18/" } }));
+  const a = pinnedVersions(
+    "apps/web/package.json",
+    JSON.stringify({ dependencies: { "better-auth": "1.7.25", clsx: "2.0.0" } }),
+  );
+  const b = pinnedVersions(
+    "backend/deno.json",
+    JSON.stringify({
+      imports: { "better-auth": "npm:better-auth@1.7.18", "better-auth/": "npm:/better-auth@1.7.18/" },
+    }),
+  );
   assertEquals([...(a.get("better-auth") ?? [])], ["1.7.25"]);
   assertEquals([...(b.get("better-auth") ?? [])], ["1.7.18"]);
   assertEquals(a.has("clsx"), false);

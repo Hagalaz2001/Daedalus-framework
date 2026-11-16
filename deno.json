@@ -1,33 +1,58 @@
 {
+  "version": "2.0.0",
   "tasks": {
     "website:dev": "deno task --cwd website dev",
     "website:build": "deno task --cwd website build",
     "showcase": "deno task --cwd website showcase",
     "new": "deno run -A new-project.ts",
-    "test": "deno test -A lib/ new-project_test.ts mcp_test.ts template/scripts/ packs/ modules/modules_test.ts website/scripts/",
+    "test": "deno test -A lib/ new-project_test.ts mcp_test.ts template/scripts/ tools/ packs/ modules/modules_test.ts website/scripts/",
+    "lint": "deno lint && deno fmt --check",
+    "typecheck": "deno check cli.ts mcp.ts new-project.ts lib/ tools/ modules/modules_test.ts modules/verify.ts dbs/verify.ts packs/ template/scripts/ && deno task --cwd studio typecheck",
+    "verify:modules": "deno run -A modules/verify.ts",
+    "verify:dbs": "deno run -A dbs/verify.ts mongodb",
     "oss:check": "deno run -A tools/oss-check.ts",
-    "check": "deno task test && deno task oss:check && deno audit",
+    "check": "deno task lint && deno task typecheck && deno task test && deno task oss:check && deno audit",
     "doctor": "deno task --cwd studio doctor"
   },
   "fmt": {
     "lineWidth": 120,
     "exclude": [
+      "**/*.md",
       "*.mjs",
+      "**/node_modules",
+      "studio/shared/design/vendor",
       "modules/*/files/**/ui-templates",
       "packs/infra/files/infra/helm",
-      "setup",
       "stacks",
-      "template"
+      "template/backend",
+      "template/packages",
+      "template/.agents",
+      "template/.claude",
+      "website",
+      "docs",
+      "tools/deno-patched",
+      "tools/ci-report.ts",
+      ".github",
+      "new"
     ]
   },
   "lint": {
+    "rules": {
+      "exclude": ["no-import-prefix", "require-await"]
+    },
     "exclude": [
       "*.mjs",
+      "**/node_modules",
+      "studio/shared/design/vendor",
       "modules/*/files/**/ui-templates",
       "packs/infra/files/infra/helm",
-      "setup",
       "stacks",
-      "template"
+      "template/backend",
+      "template/packages",
+      "template/.agents",
+      "template/.claude",
+      "website",
+      "tools/deno-patched"
     ]
   }
 }

@@ -20,7 +20,7 @@ export interface StudioConfig {
   hasDesignMd: boolean;
   tokens: Tokens | null;
   presets: { id: string; name: string; description: string; tokens: Tokens }[];
-  apps: { stack: string; kind: string; dir: string; name: string }[];
+  apps: { stack: string; kind: string; dir: string; name: string; exportLabel: string | null }[];
   kit: boolean;
 }
 export type DiffLine = { kind: "same" | "add" | "del"; text: string };
@@ -52,7 +52,11 @@ export type DesignListWithJobs = DesignList & {
 };
 
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
   const data = (await res.json().catch(() => null)) as (T & { error?: string }) | null;
   if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`);
   return data as T;
@@ -123,27 +127,42 @@ export const designApi = {
     let bin = "";
     if (reference) { for (const b of reference.bytes) bin += String.fromCharCode(b); }
     return post<DesignBeginResult>("/api/design", {
-      command: { kind: "begin", ...rest, ...(reference ? { reference: { mime: reference.mime, base64: btoa(bin) } } : {}) },
+      command: {
+        kind: "begin",
+        ...rest,
+        ...(reference ? { reference: { mime: reference.mime, base64: btoa(bin) } } : {}),
+      },
     });
   },
   stitchGenerate: (input: { name: string; brief: string; target: string; count: number }) =>
     post<{ slug: string }>("/api/design", { command: { kind: "stitch-generate", ...input } }),
-  inlineRemote: (slug: string, file: string) => post<void>("/api/design", { command: { kind: "inline-remote", slug, file } }),
+  inlineRemote: (slug: string, file: string) =>
+    post<void>("/api/design", { command: { kind: "inline-remote", slug, file } }),
   importStitch: (folder: string) =>
     post<{ slug: string; importedMd: string | null }>("/api/design", { command: { kind: "import-stitch", folder } }),
   directions: {
     list: () => post<DirectionsView>("/api/design", { command: { kind: "directions-list" } }),
-    generate: (input: DirectionsInput) => post<DirectionSet>("/api/design", { command: { kind: "directions-begin", ...input } }),
+    generate: (input: DirectionsInput) =>
+      post<DirectionSet>("/api/design", { command: { kind: "directions-begin", ...input } }),
     lock: (directionId: string, notes: string) =>
       post<DirectionSelection>("/api/design", { command: { kind: "directions-select", directionId, notes } }),
     unlock: () => post<void>("/api/design", { command: { kind: "directions-unlock" } }),
-    read: (id: string, screen: string) => post<string>("/api/design", { command: { kind: "directions-read", id, screen } }),
+    read: (id: string, screen: string) =>
+      post<string>("/api/design", { command: { kind: "directions-read", id, screen } }),
     readMd: (id: string) => post<string | null>("/api/design", { command: { kind: "directions-md", id } }),
   },
   plan: (files: { path: string; content: string; binary?: boolean }[]) => post<PlanView>("/api/plan", { files }),
   apply: (planId: string) => post<{ written: string[] }>("/api/apply", { planId }),
   prepareExport: (
-    req: { slug: string; file: string; app: number; feature: string; screen: string; screenshots: boolean; force: boolean },
+    req: {
+      slug: string;
+      file: string;
+      app: number;
+      feature: string;
+      screen: string;
+      screenshots: boolean;
+      force: boolean;
+    },
   ) => post<ExportResult>("/api/export/prepare", req),
   providers: async (): Promise<ProviderState> => (await fetch("/api/providers")).json(),
   selectProvider: (id: string) => post<ProviderState>("/api/provider", { id }),

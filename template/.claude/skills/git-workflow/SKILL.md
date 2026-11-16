@@ -14,7 +14,7 @@ description: Version control for this project - commits, branches, merge/pull re
 - **Never push, force-push, delete branches or tags, or rewrite pushed history without the
   maintainer's explicit go-ahead** for that action. Committing locally is fine.
 - **Secrets:** the pre-commit hook (`.githooks/pre-commit`, enabled by git-setup) runs
-  `scripts/secret-scan.mjs`. If it refuses, move the value to `.env` and commit the name to
+  `scripts/secret-scan.ts`. If it refuses, move the value to `.env` and commit the name to
   `.env.example`. Never bypass hooks (`--no-verify`).
 - Run `deno task check` before every commit that changes code. Read `git status` before `git add -A`.
 
@@ -55,6 +55,7 @@ Semantic versioning: breaking API change → major, new feature → minor, fix �
 
 ## CI
 
-`.github/workflows/check.yml` (GitHub) and `.gitlab-ci.yml` (GitLab) run `secret-scan --all` and
-`deno task check` on every push to `main` and every MR/PR. A red pipeline blocks merging; fix the cause,
-don't disable the job.
+`.github/workflows/ci.yml` (GitHub) and `.gitlab-ci.yml` (GitLab) run `deno task secrets`, `deno task check`, a
+secret scan, dependency and licence review, an SBOM and a container scan on every push to `main` and every MR/PR.
+The `required` job is what branch protection waits for. A red pipeline blocks merging; fix the cause, don't
+disable the job. Releases, deploy templates and what each check protects against: `docs/DEVSECOPS.md`.

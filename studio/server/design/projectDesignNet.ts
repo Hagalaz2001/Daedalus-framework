@@ -27,7 +27,7 @@ const realTransport: Transport = (url, lookup) =>
       agent: false,
       timeout: 60_000,
       lookup,
-      headers: { "user-agent": "dev-blueprint-studio/1", accept: "*/*" },
+      headers: { "user-agent": "daedalus-studio/1", accept: "*/*" },
     }, (res) => {
       const headers: Record<string, string | undefined> = {};
       for (const [k, v] of Object.entries(res.headers)) headers[k] = Array.isArray(v) ? v[0] : v;
@@ -75,7 +75,9 @@ async function download(startUrl: string, options: DownloadOptions, track: (hop:
   for (let hop = 0; hop <= 3; hop++) {
     if (url.protocol !== "https:") throw new Error("Only https downloads are allowed.");
     if (url.username || url.password) throw new Error("Download URLs with credentials are refused.");
-    if (!options.hostAllowed(url.hostname.toLowerCase())) throw new Error(`Downloads from ${url.hostname} are not allowed.`);
+    if (!options.hostAllowed(url.hostname.toLowerCase())) {
+      throw new Error(`Downloads from ${url.hostname} are not allowed.`);
+    }
     const lookup = await vetHost(url.hostname, resolver);
     const res = await transport(url, lookup);
     track(res);
@@ -116,4 +118,6 @@ async function download(startUrl: string, options: DownloadOptions, track: (hop:
 
 /** Hosts Stitch results (HTML, screenshots) are served from. */
 export const stitchHostAllowed = (host: string): boolean =>
-  [/(^|\.)googleusercontent\.com$/, /(^|\.)googleapis\.com$/, /(^|\.)gstatic\.com$/, /(^|\.)google\.com$/].some((re) => re.test(host));
+  [/(^|\.)googleusercontent\.com$/, /(^|\.)googleapis\.com$/, /(^|\.)gstatic\.com$/, /(^|\.)google\.com$/].some((re) =>
+    re.test(host)
+  );

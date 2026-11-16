@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { readDesign } from "./design/projectDesignStore.ts";
 import { type ProjectContext, tokenMap } from "./context.ts";
 import { type CodeIssue, lintGeneratedCode } from "./codeLint.ts";
-import { type CodeKind, exportPaths, KIND_OF_STACK, type PlannedFile, withBarrelExport } from "./export.ts";
+import { type CodeKind, exportPaths, kindOfStack, type PlannedFile, withBarrelExport } from "./export.ts";
 import { CODE_TOOL, exportPrompt, systemBlocks } from "./prompts.ts";
 import type { Provider } from "./providers/types.ts";
 import { screenshotSet } from "./screenshots.ts";
@@ -42,11 +42,18 @@ export interface ExportPrepared {
   notes: string[];
 }
 
-export const kindOfApp = (ctx: ProjectContext, index: number): { kind: CodeKind; app: ProjectContext["apps"][number] } => {
+export const kindOfApp = (
+  ctx: ProjectContext,
+  index: number,
+): { kind: CodeKind; app: ProjectContext["apps"][number] } => {
   const app = ctx.apps[index];
   if (!app) throw new Error("This project has no app to export into. Generate it with a web or mobile stack first.");
-  const kind = KIND_OF_STACK[app.stack];
-  if (!kind) throw new Error(`The studio cannot export to the ${app.stack} stack yet.`);
+  const kind = kindOfStack(app.stack);
+  if (!kind) {
+    throw new Error(
+      `The studio cannot export to the ${app.stack} stack yet: it exports React, React Native and Flutter screens (stacks with an "export" block in stack.json).`,
+    );
+  }
   return { kind, app };
 };
 

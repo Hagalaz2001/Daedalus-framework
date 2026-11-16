@@ -15,15 +15,24 @@ export function backendSteps(hasBackend: boolean, denoJson: string | null, packa
   const tasks = denoJson ? (JSON.parse(denoJson).tasks ?? {}) as Record<string, string> : {};
   if (tasks.check) return [{ cwd: "backend", cmd: "deno task check" }];
   const scripts = packageJson ? (JSON.parse(packageJson).scripts ?? {}) as Record<string, string> : {};
-  const steps = ["typecheck", "lint", "test", "build"].filter((s) => scripts[s]).map((s) => ({ cwd: "backend", cmd: `deno task ${s}` }));
-  if (!steps.length) throw new Error("The project has a backend but backend/deno.json defines no `check` task: it would be skipped silently");
+  const steps = ["typecheck", "lint", "test", "build"].filter((s) => scripts[s]).map((s) => ({
+    cwd: "backend",
+    cmd: `deno task ${s}`,
+  }));
+  if (!steps.length) {
+    throw new Error(
+      "The project has a backend but backend/deno.json defines no `check` task: it would be skipped silently",
+    );
+  }
   return steps;
 }
 
 /** Every app must declare at least one check command. */
 export function appSteps(apps: PlanApp[]): Step[] {
   return apps.flatMap((a) => {
-    if (!a.check.length) throw new Error(`App ${a.dir} declares no check commands in .blueprint.json: it would be skipped silently`);
+    if (!a.check.length) {
+      throw new Error(`App ${a.dir} declares no check commands in .blueprint.json: it would be skipped silently`);
+    }
     return a.check.map((c) => ({ cwd: c.cwd, cmd: c.run }));
   });
 }

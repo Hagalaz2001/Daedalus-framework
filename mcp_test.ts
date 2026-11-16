@@ -15,13 +15,31 @@ async function connect() {
 // deno-lint-ignore no-explicit-any
 const call = async (client: Client, name: string, args: Record<string, unknown> = {}): Promise<any> => {
   const r = await client.callTool({ name, arguments: args });
-  return { isError: r.isError === true, data: r.structuredContent ?? JSON.parse(String((r.content as { text: string }[])[0].text)) };
+  return {
+    isError: r.isError === true,
+    data: r.structuredContent ?? JSON.parse(String((r.content as { text: string }[])[0].text)),
+  };
 };
 
 Deno.test("mcp: exposes the expected tools and nothing outward-facing", async () => {
   const { client, close } = await connect();
   const names = (await client.listTools()).tools.map((t: { name: string }) => t.name);
-  for (const n of ["list_stacks", "list_modules", "list_packs", "list_presets", "describe", "new_project", "add_app", "add_module", "add_pack", "sync", "check", "docs_search"]) {
+  for (
+    const n of [
+      "list_stacks",
+      "list_modules",
+      "list_packs",
+      "list_presets",
+      "describe",
+      "new_project",
+      "add_app",
+      "add_module",
+      "add_pack",
+      "sync",
+      "check",
+      "docs_search",
+    ]
+  ) {
     assert(names.includes(n), `missing tool ${n}`);
   }
   assertEquals(names.filter((n: string) => /deploy|push|publish|delete|remove|commit/.test(n)), []);

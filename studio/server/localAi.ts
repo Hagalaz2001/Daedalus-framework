@@ -82,7 +82,9 @@ export function createLocalAi(deps: LocalAiDeps) {
     deps.emit?.(p);
   };
   const getHardware = async () => {
-    if (!hardware || Date.now() - hardware.at > HARDWARE_CACHE_MS) hardware = { at: Date.now(), value: await collect() };
+    if (!hardware || Date.now() - hardware.at > HARDWARE_CACHE_MS) {
+      hardware = { at: Date.now(), value: await collect() };
+    }
     return hardware.value;
   };
 
@@ -127,7 +129,9 @@ export function createLocalAi(deps: LocalAiDeps) {
     const model = modelName ? localModels().find((m) => m.name === modelName) : assess(hw).model;
     if (!model) {
       throw new Error(
-        modelName ? `Unknown model ${modelName}.` : "This computer has too little memory for a local model (see docs/LOCAL-AI.md).",
+        modelName
+          ? `Unknown model ${modelName}.`
+          : "This computer has too little memory for a local model (see docs/LOCAL-AI.md).",
       );
     }
     const health = await client.health();
@@ -178,7 +182,11 @@ export function createLocalAi(deps: LocalAiDeps) {
         setProgress({ ...base, stage: "done", percent: 100 });
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") setProgress({ ...base, stage: "cancelled" });
-        else setProgress({ ...base, stage: "failed", error: (e instanceof Error ? e.message : String(e)).slice(0, 400) });
+        else {setProgress({
+            ...base,
+            stage: "failed",
+            error: (e instanceof Error ? e.message : String(e)).slice(0, 400),
+          });}
       } finally {
         abort = null;
       }

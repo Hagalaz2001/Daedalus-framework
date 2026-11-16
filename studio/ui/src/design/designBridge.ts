@@ -22,7 +22,8 @@ export function parseBridgeMessage(data: unknown): BridgeMessage | null {
     case "ds-nav":
       return typeof m.route === "string" && ROUTE.test(m.route) ? { t: "nav", route: m.route } : null;
     case "ds-pick":
-      return typeof m.selector === "string" && SELECTOR.test(m.selector) && typeof m.tag === "string" && TAG.test(m.tag) &&
+      return typeof m.selector === "string" && SELECTOR.test(m.selector) && typeof m.tag === "string" &&
+          TAG.test(m.tag) &&
           typeof m.label === "string"
         ? { t: "pick", selector: m.selector, tag: m.tag, label: m.label.slice(0, 60) }
         : null;
@@ -95,7 +96,9 @@ export function previewSrcDoc(html: string, platform?: string, theme?: "light" |
   const csp = STATIC_CSP;
   const cls = theme === "dark" ? ' class="dark"' : "";
   const tag = platform && /^[a-z]{2,10}$/.test(platform) ? `<html${cls} data-platform="${platform}">` : `<html${cls}>`;
-  return `<!DOCTYPE html>${tag}<head><meta http-equiv="Content-Security-Policy" content="${csp}">${html.slice(CANONICAL_HEAD.length)}`;
+  return `<!DOCTYPE html>${tag}<head><meta http-equiv="Content-Security-Policy" content="${csp}">${
+    html.slice(CANONICAL_HEAD.length)
+  }`;
 }
 
 /** Same for a page main has marked as allowed to run its inline scripts (an embedded Stitch page): no nonce, still no network. */
@@ -103,8 +106,11 @@ export function trustedScriptSrcDoc(html: string): string {
   if (!html.startsWith(CANONICAL_HEAD)) return BLOCKED_PAGE;
   const csp =
     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; frame-src 'none'; base-uri 'none'";
-  return `${CANONICAL_HEAD}<meta http-equiv="Content-Security-Policy" content="${csp}">${html.slice(CANONICAL_HEAD.length)}`;
+  return `${CANONICAL_HEAD}<meta http-equiv="Content-Security-Policy" content="${csp}">${
+    html.slice(CANONICAL_HEAD.length)
+  }`;
 }
 
 /** "Change [#main > p:nth-of-type(2)] ..." -> the selector, so a pending edit can mark its target. */
-export const selectorOfInstruction = (instruction: string): string | null => /^Change \[([^\]]{1,400})\]/.exec(instruction)?.[1] ?? null;
+export const selectorOfInstruction = (instruction: string): string | null =>
+  /^Change \[([^\]]{1,400})\]/.exec(instruction)?.[1] ?? null;

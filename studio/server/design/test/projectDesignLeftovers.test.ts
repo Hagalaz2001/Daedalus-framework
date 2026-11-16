@@ -30,7 +30,13 @@ describe("route map badge kind", () => {
   it("composeScreen never interpolates an unknown kind even from a hand-built map", () => {
     const bad = {
       ...map(undefined),
-      routes: [{ id: "home", path: "/", title: "H", slot: "primary", nav: { label: "H", order: 1, badge: { kind: '"><b>' } } }],
+      routes: [{
+        id: "home",
+        path: "/",
+        title: "H",
+        slot: "primary",
+        nav: { label: "H", order: 1, badge: { kind: '"><b>' } },
+      }],
     } as never;
     const out = composeScreen(SHELL, "<p>x</p>", bad, "home");
     assert.ok(!out.includes("<b>") && !out.includes("nav-badge"));
@@ -43,7 +49,14 @@ describe("composed pages are cached by shell, body and routes", () => {
     mkdirSync(join(dir, "design", "shell"), { recursive: true });
     writeFileSync(join(dir, "design", "shell", "app.html"), SHELL);
     writeFileSync(join(dir, "design", "shell", "app.routes.json"), JSON.stringify(map(undefined)));
-    const { slug } = await beginStep(dir, { kind: "begin", step: "generate", name: "Home", brief: "Home", target: "web-mobile", count: 1 });
+    const { slug } = await beginStep(dir, {
+      kind: "begin",
+      step: "generate",
+      name: "Home",
+      brief: "Home",
+      target: "web-mobile",
+      count: 1,
+    });
     writeFileSync(join(screenDir(dir, slug), "v1.html"), "<!-- shell: app route: home -->\n<section>Hi</section>");
     assert.equal((await listDesigns(dir)).screens[0]!.files[0]!.ok, true);
     assert.equal((await listDesigns(dir)).screens[0]!.files[0]!.ok, true);

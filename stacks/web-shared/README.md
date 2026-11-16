@@ -19,7 +19,7 @@ Accessibility: visible focus ring, keyboard support from Radix, 44 px minimum ta
 
 ## Theming
 
-`design/tokens.json` is the single source. `packages/ui/scripts/tokens.mjs` (the `tokens` step in each stack's
+`design/tokens.json` is the single source. `scripts/tokens/web.ts` (shared token core in `scripts/tokens/lib.ts`; the `tokens` step in each stack's
 `stack.json`, run by `deno task sync`) writes `packages/ui/src/styles/tokens.css`: a Tailwind `@theme` block (colours,
 radii, fonts), a dark-mode block from `colorDark`, and the font imports. Presets live in `design/presets/` (`clean`,
 `editorial`, `playful`); copy one over `design/tokens.json` or use the generator's `--ui` flag.
@@ -52,5 +52,4 @@ SkeletonGroup, EmptyState, ErrorState, PageHeader, AppShell, ThemeToggle and `us
 packages/ui-vue test` (Vitest, Testing Library DOM, axe); `@app/ui-vue/testing` exports a small `render`, `screen` and
 `expectNoA11yViolations` for app tests. Its type check runs vue-tsc against TypeScript 5.9 (`scripts/typecheck.mjs`).
 
-`packages/ui-vue/scripts/tokens.mjs` is a copy of `packages/ui/scripts/tokens.mjs` so Vue-only projects have the tokens
-step; the script writes `tokens.css` into every kit present. Keep the two files identical.
+The same `scripts/tokens/web.ts` writes `tokens.css` into every kit present, so Vue-only and React projects share one script.

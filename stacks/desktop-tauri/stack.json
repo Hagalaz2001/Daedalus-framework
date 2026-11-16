@@ -1,6 +1,7 @@
 {
   "id": "desktop-tauri",
   "kind": "desktop",
+  "flag": "tauri",
   "title": "Desktop app (Tauri v2)",
   "description": "Rust shell (Tauri v2) around the shared React UI kit: React 19 + Vite + TypeScript + Tailwind v4 + TanStack Query, bearer-token sign-in against the Hono backend, token in the OS credential store, Rust-side HTTP, NSIS installer. No Node at runtime, no Electron.",
   "label": "Tauri v2 + React (Windows first; macOS and Linux build with the same sources)",
@@ -8,7 +9,7 @@
   "appSource": "app",
   "workspaceMember": true,
   "packages": ["packages/api_ts", "shared:web-shared/packages/ui"],
-  "tokens": "deno run -A packages/ui/scripts/tokens.mjs",
+  "tokens": "deno run -A scripts/tokens/web.ts",
   "placeholders": {
     "{displayName}": ["src/shared/lib/config.ts", "index.html", "src-tauri/tauri.conf.json"],
     "{bundleId}": ["src-tauri/tauri.conf.json", "src-tauri/src/lib.rs"],

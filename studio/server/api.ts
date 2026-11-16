@@ -5,7 +5,7 @@ import { extname, join, normalize } from "node:path";
 import { type ProjectContext, readContext } from "./context.ts";
 import { createDesignHandler } from "./design/projectDesignHandler.ts";
 import { guardedAssetDownload, loadStitchSdk } from "./design/projectDesignStitch.ts";
-import { createPlans, type PlannedFile, runCheck } from "./export.ts";
+import { createPlans, exportInfoOf, type PlannedFile, runCheck } from "./export.ts";
 import { type ExportRequest, prepareExport } from "./exportFlow.ts";
 import { createJobs, type StudioEvent } from "./jobs.ts";
 import type { Hardware } from "../shared/localAi.ts";
@@ -68,7 +68,13 @@ export function createApi(opts: ApiOptions) {
       selected: provider.id,
       active: provider.id,
       banner: null,
-      options: [{ id: provider.id, label: provider.label, available: true, detail: "Fixed by the host.", note: provider.note ?? null }],
+      options: [{
+        id: provider.id,
+        label: provider.label,
+        available: true,
+        detail: "Fixed by the host.",
+        note: provider.note ?? null,
+      }],
     };
   const jobs = createJobs({ ctx: freshCtx, provider, bus });
   const handler = createDesignHandler({
@@ -83,7 +89,10 @@ export function createApi(opts: ApiOptions) {
   const plans = createPlans(freshCtx, root);
 
   const json = (value: unknown, status = 200) =>
-    new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+    new Response(JSON.stringify(value), {
+      status,
+      headers: { "content-type": "application/json", "cache-control": "no-store" },
+    });
   const fail = (e: unknown, status = 400) => json({ error: e instanceof Error ? e.message : String(e) }, status);
 
   async function route(req: Request): Promise<Response> {
@@ -115,7 +124,7 @@ export function createApi(opts: ApiOptions) {
         hasDesignMd: c.designMd !== null,
         tokens: c.tokens,
         presets: c.presets.map((p) => ({ id: p.id, name: p.name, description: p.description, tokens: p.tokens })),
-        apps: c.apps,
+        apps: c.apps.map((a) => ({ ...a, exportLabel: exportInfoOf(a.stack)?.label ?? null })),
         kit: c.kitDocs !== null,
       });
     }
@@ -194,9 +203,13 @@ export function createApi(opts: ApiOptions) {
   return {
     async handle(req: Request, port: number): Promise<Response> {
       const host = req.headers.get("host") ?? "";
-      if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) return new Response("Forbidden host", { status: 403 });
+      if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) {
+        return new Response("Forbidden host", { status: 403 });
+      }
       const origin = req.headers.get("origin");
-      if (req.method === "POST" && origin !== null && origin !== `http://${host}`) return new Response("Forbidden origin", { status: 403 });
+      if (req.method === "POST" && origin !== null && origin !== `http://${host}`) {
+        return new Response("Forbidden origin", { status: 403 });
+      }
       return new URL(req.url).pathname.startsWith("/api/") ? route(req) : serveUi(req);
     },
     jobs,

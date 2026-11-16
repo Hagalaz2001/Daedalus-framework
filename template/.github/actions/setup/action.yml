@@ -1,0 +1,29 @@
+# Shared setup for every job that runs project commands: Deno (exact version), toolchains only for the stacks present,
+# then a frozen install. Call it after actions/checkout: `uses: ./.github/actions/setup`.
+name: setup
+description: Install Deno, the Flutter or Rust toolchain when the project has such an app, and the locked dependencies
+inputs:
+  deno-version:
+    description: Exact Deno version (keep in line with backend/Dockerfile)
+    default: "2.9.8"
+runs:
+  using: composite
+  steps:
+    - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+      with:
+        deno-version: ${{ inputs.deno-version }}
+        cache: true
+    - name: Flutter (only when the project has a Flutter app)
+      if: hashFiles('**/pubspec.yaml') != ''
+      uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+      with:
+        channel: stable
+        cache: true
+    - name: Rust (only when the project has a Rust app)
+      if: hashFiles('**/Cargo.toml') != ''
+      shell: bash
+      # Tauri and GPUI apps also need system libraries on Linux: see the stack's README.
+      run: rustup toolchain install stable --profile minimal --component clippy,rustfmt
+    - name: Install locked dependencies
+      shell: bash
+      run: deno install --frozen

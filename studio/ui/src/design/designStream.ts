@@ -5,7 +5,9 @@
 // renderer. The result is RAW: the caller passes it through the DOM sanitiser before anything shows.
 
 export type StreamStage = "tokens" | "frame" | "content" | "done";
-export type StreamStatus = { kind: "tokens" } | { kind: "frame" } | { kind: "section"; name: string } | { kind: "content" } | {
+export type StreamStatus = { kind: "tokens" } | { kind: "frame" } | { kind: "section"; name: string } | {
+  kind: "content";
+} | {
   kind: "done";
 };
 
@@ -19,7 +21,21 @@ export interface StreamFrame {
   blocks: number;
 }
 
-const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
+const VOID = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "source",
+  "track",
+  "wbr",
+]);
 const SHELL = new Set(["header", "nav", "aside"]);
 const RAW_TEXT = new Set(["script", "style", "textarea", "title"]);
 const MAX_PARTIAL_CHARS = 2_000_000;

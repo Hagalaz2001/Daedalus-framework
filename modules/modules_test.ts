@@ -3,6 +3,7 @@ import { assert, assertEquals } from "jsr:@std/assert@1.0.19";
 import { parse } from "jsr:@std/yaml@1.3.0";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { fromFileUrl } from "jsr:@std/path@1";
 import { listModules } from "./verify.ts";
 
 function* walk(dir: string): Generator<string> {
@@ -13,7 +14,7 @@ function* walk(dir: string): Generator<string> {
   }
 }
 
-const here = new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+const here = fromFileUrl(new URL(".", import.meta.url));
 const read = (...p: string[]) => JSON.parse(Deno.readTextFileSync(join(here, ...p)));
 
 for (const name of listModules()) {

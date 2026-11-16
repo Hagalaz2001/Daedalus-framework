@@ -25,7 +25,8 @@ const GENERIC_FONTS = new Set([
   "-apple-system",
   "blinkmacsystemfont",
 ]);
-const SPACING_PROPS = /^(padding|margin|gap|row-gap|column-gap)(-(top|right|bottom|left|inline|block)(-(start|end))?)?$/;
+const SPACING_PROPS =
+  /^(padding|margin|gap|row-gap|column-gap)(-(top|right|bottom|left|inline|block)(-(start|end))?)?$/;
 const toPx = (token: string): number | null => {
   const m = /^(-?[\d.]+)(px|rem|em)?$/.exec(token);
   if (!m) return null;
@@ -108,7 +109,8 @@ export function shellDrift(before: string, after: string): string[] {
   });
 }
 
-const NEGATIVE = /\b(?:no|without|avoid|don'?t use)\s+(?:an?\s+|the\s+)?(sidebar|footer|header|navbar|nav|hero|gradient|emoji|modal)s?\b/gi;
+const NEGATIVE =
+  /\b(?:no|without|avoid|don'?t use)\s+(?:an?\s+|the\s+)?(sidebar|footer|header|navbar|nav|hero|gradient|emoji|modal)s?\b/gi;
 const KEEP = /\bkeep\s+(?:the\s+)?(sidebar|footer|header|navbar|nav)\b/gi;
 const PRESENT: Record<string, RegExp> = {
   sidebar: /<aside\b|class\s*=\s*"[^"]*sidebar/i,
@@ -147,9 +149,9 @@ function tokenDrift(tokens: ReadonlyMap<string, string>, project: Record<string,
   const names = Object.keys(project);
   const present = names.filter((n) => tokens.has(n));
   if (present.length === 0) return ["none of the project tokens are declared"];
-  return present.filter((n) => !/^--(font|space|radius)-/.test(n) && norm(tokens.get(n)!) !== norm(project[n]!)).map((n) =>
-    `${n} is ${tokens.get(n)}, the project says ${project[n]}`
-  );
+  return present.filter((n) => !/^--(font|space|radius)-/.test(n) && norm(tokens.get(n)!) !== norm(project[n]!)).map((
+    n,
+  ) => `${n} is ${tokens.get(n)}, the project says ${project[n]}`);
 }
 
 export function lintDesign(
@@ -190,7 +192,9 @@ export function lintDesign(
   if (offToken.length >= 3) {
     add(
       "off-token-colors",
-      `${offToken.length} colours are written inline instead of coming from tokens (${offToken.slice(0, 3).join(", ")}).`,
+      `${offToken.length} colours are written inline instead of coming from tokens (${
+        offToken.slice(0, 3).join(", ")
+      }).`,
       "Replace hard-coded colours with the colour tokens from :root; add a token if a colour is genuinely needed.",
     );
   }
@@ -212,10 +216,18 @@ export function lintDesign(
   }
   const text = textOf(html);
   if (/\p{Extended_Pictographic}/u.test(text)) {
-    add("emoji-icons", "Emoji are used as icons.", "Replace emoji with inline SVG icons drawn in the same stroke width.");
+    add(
+      "emoji-icons",
+      "Emoji are used as icons.",
+      "Replace emoji with inline SVG icons drawn in the same stroke width.",
+    );
   }
   if (/lorem ipsum|dolor sit amet/i.test(text)) {
-    add("lorem-ipsum", "Lorem ipsum placeholder text.", "Write real, specific copy for this product in place of the placeholder text.");
+    add(
+      "lorem-ipsum",
+      "Lorem ipsum placeholder text.",
+      "Write real, specific copy for this product in place of the placeholder text.",
+    );
   }
   if (
     /<img\b(?![^>]*\bsrc\s*=\s*"data:)[^>]*>/i.test(html) ||
@@ -259,7 +271,9 @@ export function lintDesign(
       "Snap every padding, margin and gap to the 4px spacing scale (4, 8, 12, 16, 24, 32...).",
     );
   }
-  for (const message of briefConstraints(context.brief ?? "", html)) add("brief-constraint", message, `Respect the brief: ${message}`);
+  for (const message of briefConstraints(context.brief ?? "", html)) {
+    add("brief-constraint", message, `Respect the brief: ${message}`);
+  }
   if (context.parent) {
     const drift = shellDrift(context.parent, html);
     if (drift.length) {
@@ -275,4 +289,6 @@ export function lintDesign(
 
 /** The refine instruction behind the one-click "Fix these". */
 export const fixPrompt = (warnings: readonly LintWarning[]) =>
-  `Fix these design problems and change nothing else:\n${warnings.map((w, i) => `${i + 1}. ${w.message} ${w.fix}`).join("\n")}`;
+  `Fix these design problems and change nothing else:\n${
+    warnings.map((w, i) => `${i + 1}. ${w.message} ${w.fix}`).join("\n")
+  }`;

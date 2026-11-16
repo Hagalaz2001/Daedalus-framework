@@ -47,7 +47,9 @@ export function loadEnv(files: string[], env: Record<string, string | undefined>
 /** Fails early, with a readable message, for a pinned provider that cannot work. */
 export function validateEnv(env: StudioEnv): void {
   const known = ["auto", "anthropic", "lemonade", "ollama", "fake"];
-  if (!known.includes(env.provider)) throw new Error(`Unknown STUDIO_PROVIDER "${env.provider}". Use ${known.join(", ")}.`);
+  if (!known.includes(env.provider)) {
+    throw new Error(`Unknown STUDIO_PROVIDER "${env.provider}". Use ${known.join(", ")}.`);
+  }
   if (env.provider === "anthropic" && !env.anthropicKey) {
     throw new Error("Set ANTHROPIC_API_KEY in studio/.env (see .env.example), or use STUDIO_PROVIDER=auto.");
   }

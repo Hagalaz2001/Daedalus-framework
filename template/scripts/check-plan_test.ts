@@ -2,7 +2,10 @@ import { assertEquals, assertThrows } from "jsr:@std/assert@1";
 import { appSteps, backendSteps } from "./check-plan.ts";
 
 Deno.test("backend with a deno.json check task runs it", () => {
-  assertEquals(backendSteps(true, JSON.stringify({ tasks: { check: "x" } }), null), [{ cwd: "backend", cmd: "deno task check" }]);
+  assertEquals(backendSteps(true, JSON.stringify({ tasks: { check: "x" } }), null), [{
+    cwd: "backend",
+    cmd: "deno task check",
+  }]);
 });
 
 Deno.test("backend falls back to package.json scripts", () => {

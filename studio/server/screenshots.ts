@@ -21,15 +21,24 @@ export async function screenshotSet(
     const path = env.STUDIO_BROWSER_PATH;
     browser = await chromium.launch(path ? { executablePath: path } : { channel: env.STUDIO_BROWSER ?? "chrome" });
   } catch {
-    return { files: [], skipped: "No browser found for screenshots. Install Chrome or Edge, or set STUDIO_BROWSER / STUDIO_BROWSER_PATH." };
+    return {
+      files: [],
+      skipped: "No browser found for screenshots. Install Chrome or Edge, or set STUDIO_BROWSER / STUDIO_BROWSER_PATH.",
+    };
   }
   try {
     const files: PlannedFile[] = [];
     for (const size of SHOT_SIZES) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, deviceScaleFactor: 1 });
+      const context = await browser.newContext({
+        viewport: { width: size.width, height: size.height },
+        deviceScaleFactor: 1,
+      });
       const page = await context.newPage();
       // Designs carry no scripts and load nothing remote; block the network anyway.
-      await page.route("**/*", (route) => (route.request().url().startsWith("data:") ? route.continue() : route.abort()));
+      await page.route(
+        "**/*",
+        (route) => (route.request().url().startsWith("data:") ? route.continue() : route.abort()),
+      );
       await page.setContent(html, { waitUntil: "load" });
       for (const theme of ["light", "dark"] as const) {
         await page.evaluate((t) => document.documentElement.classList.toggle("dark", t === "dark"), theme);

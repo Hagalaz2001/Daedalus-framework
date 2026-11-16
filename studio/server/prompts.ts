@@ -1,6 +1,13 @@
 // Prompt building. Pure functions: project context in, {system, user, tool} out. Stable material (rules, DESIGN.md,
 // tokens, kit docs) goes into cached system blocks; everything that changes per request goes into the user message.
-import { dataRule, HOUSE_RULES, KIT_VOCABULARY, makeFenceToken, TARGET_RULES, untrusted } from "../shared/design/designPrompts.ts";
+import {
+  dataRule,
+  HOUSE_RULES,
+  KIT_VOCABULARY,
+  makeFenceToken,
+  TARGET_RULES,
+  untrusted,
+} from "../shared/design/designPrompts.ts";
 import type { DesignManifest, DesignStep, DesignTarget } from "../shared/design/index.ts";
 import type { DirectionSet } from "../shared/design/index.ts";
 import { type ProjectContext, tokensCss } from "./context.ts";
@@ -98,7 +105,9 @@ export function systemBlocks(ctx: ProjectContext): SystemBlock[] {
 const ref = (
   m: Pick<DesignManifest, "reference">,
   slug: string,
-) => (m.reference ? `\nA reference image is attached (design/${slug}/${m.reference}). Use it for mood and layout, not for copying.` : "");
+) => (m.reference
+  ? `\nA reference image is attached (design/${slug}/${m.reference}). Use it for mood and layout, not for copying.`
+  : "");
 
 const APPROACHES = [
   "conventional and dense: a clear app shell, many things visible at once",
@@ -168,7 +177,9 @@ export function screensPrompt(
     }) already exists. Write each screen as a BODY only: its first line must be <!-- shell: ${shell.id} route: ROUTE --> with ROUTE the file name without "s-" and ".html", then its own <style> additions and markup. Do not repeat the header or navigation.`
     : "Copy the :root tokens and the app shell from the current design unchanged, then build each screen's content inside that shell.";
   return [
-    `Design the related screens ${step.instruction} for the product below. Brief:\n${untrusted("BRIEF", manifest.brief, token)}`,
+    `Design the related screens ${step.instruction} for the product below. Brief:\n${
+      untrusted("BRIEF", manifest.brief, token)
+    }`,
     dataRule(token),
     `Current design (data):\n${untrusted("DESIGN", parentHtml, token)}`,
     `Return exactly these files: ${step.files.join(", ")}. ${how}`,
@@ -176,7 +187,13 @@ export function screensPrompt(
   ].join("\n\n");
 }
 
-export function directionPrompt(set: DirectionSet, directionId: string, designMd: string, only?: string, token = makeFenceToken()): string {
+export function directionPrompt(
+  set: DirectionSet,
+  directionId: string,
+  designMd: string,
+  only?: string,
+  token = makeFenceToken(),
+): string {
   const d = set.directions.find((x) => x.id === directionId);
   if (!d) throw new Error("Unknown direction.");
   const flutter = set.stack === "react-flutter";
@@ -209,7 +226,8 @@ const KIT_NAME: Record<StackTarget["kind"], string> = {
     "the project's shadcn/ui-based kit (import from '@app/ui'; Tailwind v4 utility classes read the token colours: bg-surface, text-text, text-text-muted, border-border, bg-primary, rounded-md)",
   "react-native":
     "React Native Reusables with NativeWind (import components from the app's shared/ui; token colours are Tailwind classes such as bg-surface, text-text)",
-  flutter: "Forui (package:forui) widgets, themed from the project's tokens through the app theme; use Theme tokens, never literal colours",
+  flutter:
+    "Forui (package:forui) widgets, themed from the project's tokens through the app theme; use Theme tokens, never literal colours",
 };
 
 /** Translator prompt: one approved HTML design in, one screen source file out, text lifted into a `copy` prop. */

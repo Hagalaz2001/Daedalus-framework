@@ -50,7 +50,12 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
   const working = live && ["registering", "downloading", "loading", "checking"].includes(live.stage);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40" role="dialog" aria-modal="true" aria-label="AI model">
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-label="AI model"
+    >
       <div className="flex h-full w-full max-w-[460px] flex-col border-l border-border bg-panel shadow-[var(--shadow)]">
         <header className="flex items-center gap-3 border-b border-border px-5 py-3">
           <h2 className="text-ui-base font-semibold">AI model</h2>
@@ -77,7 +82,9 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
               <span className="text-ui-sm">
                 <b>Automatic</b>
                 <br />
-                <span className="text-foreground-subtle">Your API key, then Local AI, then Ollama, then demo designs.</span>
+                <span className="text-foreground-subtle">
+                  Your API key, then Local AI, then Ollama, then demo designs.
+                </span>
               </span>
             </label>
             {state.options.map((o) => (
@@ -100,7 +107,11 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
                 <span className="min-w-0 text-ui-sm">
                   <b>{o.label}</b>
                   {state.active === o.id
-                    ? <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-ui-xs text-[var(--brand-fg)]">in use</span>
+                    ? (
+                      <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-ui-xs text-[var(--brand-fg)]">
+                        in use
+                      </span>
+                    )
                     : null}
                   <br />
                   <span className="text-foreground-subtle">{o.detail}</span>
@@ -124,23 +135,30 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
             {status
               ? (
                 <>
-                  <p className={cn("text-ui-sm font-medium", TIER[status.assessment.tier].tone)}>{TIER[status.assessment.tier].label}</p>
+                  <p className={cn("text-ui-sm font-medium", TIER[status.assessment.tier].tone)}>
+                    {TIER[status.assessment.tier].label}
+                  </p>
                   <ul className="flex flex-col gap-1">
                     {status.assessment.checks.map((c) => (
                       <li key={c.text} className="flex items-start gap-2 text-ui-xs">
-                        {c.level === "ok" ? <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-ok" aria-hidden /> : (
-                          <CircleAlert
-                            className={cn("mt-0.5 size-3.5 shrink-0", c.level === "fail" ? "text-destructive" : "text-warn")}
-                            aria-hidden
-                          />
-                        )}
+                        {c.level === "ok"
+                          ? <CircleCheck className="mt-0.5 size-3.5 shrink-0 text-ok" aria-hidden />
+                          : (
+                            <CircleAlert
+                              className={cn(
+                                "mt-0.5 size-3.5 shrink-0",
+                                c.level === "fail" ? "text-destructive" : "text-warn",
+                              )}
+                              aria-hidden
+                            />
+                          )}
                         <span>{c.text}</span>
                       </li>
                     ))}
                   </ul>
                   <p className="text-ui-xs text-foreground-subtle">
-                    Local models are slower and weaker than cloud models at design work, and nothing leaves this computer. Judge a result by
-                    the Checks tab and by looking at it.
+                    Local models are slower and weaker than cloud models at design work, and nothing leaves this
+                    computer. Judge a result by the Checks tab and by looking at it.
                   </p>
 
                   {!status.reachable
@@ -160,7 +178,12 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
                         >
                           Get Lemonade <ExternalLink className="size-3.5" aria-hidden />
                         </a>
-                        <Button size="sm" variant="outline" className="self-start" onClick={() => void run(async () => undefined)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="self-start"
+                          onClick={() => void run(async () => undefined)}
+                        >
                           Check again
                         </Button>
                       </div>
@@ -170,7 +193,10 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
                         {status.catalogue.map((m) => (
                           <li
                             key={m.name}
-                            className={cn("flex items-center gap-3 rounded-lg border border-border p-3", m.recommended && "border-brand")}
+                            className={cn(
+                              "flex items-center gap-3 rounded-lg border border-border p-3",
+                              m.recommended && "border-brand",
+                            )}
                           >
                             <span className="min-w-0 flex-1 text-ui-sm">
                               <b>{m.label}</b>
@@ -206,14 +232,22 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
                         {live.stage === "downloading"
                           ? (
                             <div className="h-1.5 overflow-hidden rounded-full bg-border">
-                              <div className="h-full bg-brand transition-all" style={{ width: `${live.percent ?? 0}%` }} />
+                              <div
+                                className="h-full bg-brand transition-all"
+                                style={{ width: `${live.percent ?? 0}%` }}
+                              />
                             </div>
                           )
                           : null}
                         {live.error ? <p className="text-ui-xs text-destructive" role="alert">{live.error}</p> : null}
                         {working
                           ? (
-                            <Button size="sm" variant="outline" className="self-start" onClick={() => void run(() => api.localAi.cancel())}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="self-start"
+                              onClick={() => void run(() => api.localAi.cancel())}
+                            >
                               Cancel (keeps what was downloaded)
                             </Button>
                           )
@@ -223,7 +257,12 @@ export function ModelPanel({ state, progress, onChange, onClose }: {
                     : null}
                   {status.loaded.length
                     ? (
-                      <Button size="sm" variant="ghost" className="self-start" onClick={() => void run(() => api.localAi.unload())}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="self-start"
+                        onClick={() => void run(() => api.localAi.unload())}
+                      >
                         Unload to free memory
                       </Button>
                     )

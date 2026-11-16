@@ -54,7 +54,12 @@ export function DirectionFrame({ html, platform, title, status }: {
           </div>
         )}
       {phone
-        ? <span className="pointer-events-none absolute left-1/2 top-1 h-1 w-8 -translate-x-1/2 rounded-full bg-black/40" aria-hidden />
+        ? (
+          <span
+            className="pointer-events-none absolute left-1/2 top-1 h-1 w-8 -translate-x-1/2 rounded-full bg-black/40"
+            aria-hidden
+          />
+        )
         : null}
     </div>
   );

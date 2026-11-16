@@ -17,7 +17,9 @@ Read `docs/RESPONSIBLE-AI.md`. A human owns every change; never deploy, move mon
 
 - **One contract, generated clients.** `contracts/openapi.yaml` is the API. `deno task sync` generates the TypeScript
   client (`packages/api_ts`) and each stack's own client (Dart for Flutter). Never hand-edit generated files and never
-  write `fetch` calls to the backend by hand.
+  write `fetch` calls to the backend by hand. The one exception is the marketing sites' contact form, which posts to a
+  form-service webhook (`CONTACT_WEBHOOK_URL` / `PUBLIC_CONTACT_ENDPOINT`) because the contract has no contact operation;
+  add the operation to the contract when your backend should own it.
 - **One set of design tokens.** `design/tokens.json` is the visual system. `deno task sync` writes every app's theme
   file. No hard-coded colours, spacing or radii in UI code.
 - **Native per platform, shared data.** Web is React + TypeScript, mobile is Flutter or React Native, desktop is Rust
@@ -52,6 +54,7 @@ Details and the folder tree of each stack: `docs/ARCHITECTURE.md`. Stack convent
 | Draft design directions and screens from the UI kit | `deno task studio` |
 | Run | `deno task dev:backend` plus the `dev:*` tasks listed in `deno.json` |
 | Scan the repo for secrets | `deno task secrets` |
+| Install the pre-commit hook and local security tooling | `deno task setup` (details: `docs/DEVSECOPS.md`) |
 | Version control setup (identity, hooks, remote) | `deno task git:setup --name ... --email ... [--remote ...]` |
 | Timeline (Gantt) from PLAN.md | `deno task timeline` |
 | Backend container | `docker build -f backend/Dockerfile -t <name> .` (deploying: the `deploy` skill) |
@@ -103,6 +106,7 @@ The product must not read as generic AI output.
   plainly, with output.
 - Reuse before building: maintained packages and official samples first (`docs/CATALOG.md`).
 - Finish before adding: ship and verify what exists before proposing new features.
+- Security pipeline, hooks, dependency and container policy: `docs/DEVSECOPS.md`.
 - Secrets never enter git or chat. `.env` is ignored; commit `.env.example` with names only.
 - Ask before anything outward-facing or hard to undo: deploys, store uploads, pushing, deleting data, sending
   messages, paid API spend.

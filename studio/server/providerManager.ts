@@ -38,18 +38,26 @@ export function createProviderManager(
 ) {
   const { env, localAi } = deps;
   const doFetch = deps.fetchImpl ?? fetch;
-  let selected: ProviderId | "auto" = (AUTO_ORDER as string[]).includes(env.provider) ? (env.provider as ProviderId) : "auto";
+  let selected: ProviderId | "auto" = (AUTO_ORDER as string[]).includes(env.provider)
+    ? (env.provider as ProviderId)
+    : "auto";
   let cache: { at: number; state: ProviderState } | null = null;
 
   const anthropic = env.anthropicKey ? createAnthropicProvider(env.anthropicKey, env.anthropicModel) : null;
-  const lemonade = createLemonadeProvider({ client: localAi.client, model: () => localAi.activeModel(), fetchImpl: deps.fetchImpl });
+  const lemonade = createLemonadeProvider({
+    client: localAi.client,
+    model: () => localAi.activeModel(),
+    fetchImpl: deps.fetchImpl,
+  });
   const ollama = createOllamaProvider(env.ollamaHost, env.ollamaModel, deps.fetchImpl);
   const fake = createFakeProvider();
   const byId: Record<ProviderId, Provider | null> = { anthropic, lemonade, ollama, fake };
 
   const ollamaTags = deps.ollamaModels ?? (async () => {
     try {
-      const res = await doFetch(`${env.ollamaHost.replace(/\/$/, "")}/api/tags`, { signal: AbortSignal.timeout(2_000) });
+      const res = await doFetch(`${env.ollamaHost.replace(/\/$/, "")}/api/tags`, {
+        signal: AbortSignal.timeout(2_000),
+      });
       if (!res.ok) return null;
       const body = (await res.json()) as { models?: { name: string }[] };
       return (body.models ?? []).map((m) => m.name);
@@ -111,7 +119,12 @@ export function createProviderManager(
     ];
     const ok = (id: ProviderId) => options.find((o) => o.id === id)!.available;
     const active: ProviderId = selected === "auto" ? (AUTO_ORDER.find(ok) ?? "fake") : selected;
-    const state: ProviderState = { selected, active, banner: active === "fake" && selected === "auto" ? "no-ai" : null, options };
+    const state: ProviderState = {
+      selected,
+      active,
+      banner: active === "fake" && selected === "auto" ? "no-ai" : null,
+      options,
+    };
     cache = { at: Date.now(), state };
     return state;
   }

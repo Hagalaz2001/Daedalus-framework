@@ -48,7 +48,12 @@ const isBuilt = () => {
 // First run: build the UI once (a few seconds). Later runs reuse ui/dist; `deno task build` rebuilds it.
 if (!isBuilt()) {
   console.log("Building the studio UI (first run)...");
-  const build = await new Deno.Command(Deno.execPath(), { args: ["task", "build"], cwd: studioDir, stdout: "inherit", stderr: "inherit" })
+  const build = await new Deno.Command(Deno.execPath(), {
+    args: ["task", "build"],
+    cwd: studioDir,
+    stdout: "inherit",
+    stderr: "inherit",
+  })
     .output();
   if (!build.success) console.error("The UI build failed; the API still runs.");
 }
@@ -61,7 +66,9 @@ Deno.serve({
   onListen: ({ port }) => {
     console.log(`Daedalus Studio  http://127.0.0.1:${port}`);
     console.log(`  project   ${root}`);
-    console.log(`  provider  ${env.provider}${env.provider === "auto" ? " (your key, then local AI, then demo fixtures)" : ""}`);
+    console.log(
+      `  provider  ${env.provider}${env.provider === "auto" ? " (your key, then local AI, then demo fixtures)" : ""}`,
+    );
     if (!built) console.log("  UI is not built yet: run `deno task studio:build` first.");
   },
 }, (req) => api.handle(req, env.port));

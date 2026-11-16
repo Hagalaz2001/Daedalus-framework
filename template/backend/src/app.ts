@@ -1,5 +1,4 @@
 import { Scalar } from "@scalar/hono-api-reference";
-import type { BetterAuthOptions } from "better-auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -11,29 +10,12 @@ import type { Db } from "./shared/db/client.ts";
 import { onError, onNotFound } from "./shared/errors/handlers.ts";
 import { idempotency } from "./shared/http/idempotency.ts";
 import { rateLimit } from "./shared/http/rate-limit.ts";
+import { discoverModules, mergeAuthOptions } from "./shared/http/modules.ts";
 import type { AppEnv, Deps, Module } from "./shared/http/types.ts";
 import { type Logger, requestLogger } from "./shared/logging/logger.ts";
 import { Contract, contractMiddleware } from "./shared/validation/contract.ts";
 
-/** Every `src/modules/<name>/mod.ts`: copying a module folder in is all it takes to enable it. */
-export async function discoverModules(): Promise<Module[]> {
-  const root = new URL("./modules/", import.meta.url);
-  const names: string[] = [];
-  for await (const entry of Deno.readDir(root)) if (entry.isDirectory) names.push(entry.name);
-  const mods = await Promise.all(
-    names.sort().map(async (n) => (await import(new URL(`${n}/mod.ts`, root).href)).default as Module),
-  );
-  return mods;
-}
-
-export function mergeAuthOptions(parts: Partial<BetterAuthOptions>[]): Partial<BetterAuthOptions> {
-  return parts.reduce<Partial<BetterAuthOptions>>((all, p) => ({
-    ...all,
-    ...p,
-    plugins: [...(all.plugins ?? []), ...(p.plugins ?? [])],
-    emailAndPassword: { enabled: true, ...all.emailAndPassword, ...p.emailAndPassword },
-  }), {});
-}
+export { discoverModules, mergeAuthOptions };
 
 const apiHeaders = secureHeaders({
   contentSecurityPolicy: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
@@ -76,7 +58,7 @@ export async function createApp(
   app.use("*", rateLimit({ limit: config.rateLimitPerMinute, trustProxy: config.trustProxy }));
 
   // Sign up/in/out, sessions, organizations, invitations: Better Auth. Stricter limit against password guessing.
-  app.use("/api/auth/*", rateLimit({ limit: 30, trustProxy: config.trustProxy }));
+  app.use("/api/auth/*", rateLimit({ limit: config.authRateLimitPerMinute, trustProxy: config.trustProxy }));
   app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
   app.get("/openapi.json", (c) => c.json(contract.doc));

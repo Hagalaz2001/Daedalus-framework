@@ -51,7 +51,9 @@ export function readContext(root: string): ProjectContext {
   try {
     for (const e of Deno.readDirSync(join(root, "design", "presets"))) {
       if (!e.name.endsWith(".json")) continue;
-      const p = json<Tokens & { meta?: { id?: string; name?: string; description?: string } }>(join(root, "design", "presets", e.name));
+      const p = json<Tokens & { meta?: { id?: string; name?: string; description?: string } }>(
+        join(root, "design", "presets", e.name),
+      );
       if (p?.color) {
         presets.push({
           id: p.meta?.id ?? e.name.replace(/\.json$/, ""),

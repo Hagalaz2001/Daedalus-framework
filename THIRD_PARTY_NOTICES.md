@@ -51,6 +51,23 @@ Downloaded into the generated project by build files of the `systems` and `game`
 - Optional tools the packs can call when installed, not bundled: gitleaks (MIT), syft (Apache-2.0), nasm (BSD-2-Clause).
 - The SAST rules in the `ai-kit` pack are written for Daedalus; rules from the Semgrep registry are not redistributed.
 
+## CI and security tools run by the generated pipeline
+
+Invoked from GitHub Actions or GitLab CI, pinned by commit SHA or exact version, never copied into this repository or a
+generated project (see `template/docs/DEVSECOPS.md`).
+
+| Name | Licence | Used for |
+|---|---|---|
+| gitleaks | MIT | secret scanning |
+| Trivy (and aquasecurity/trivy-action) | Apache-2.0 | container, Dockerfile and filesystem scan |
+| syft (and anchore/sbom-action) | Apache-2.0 | SBOM |
+| cosign, sigstore/cosign-installer | Apache-2.0 | keyless image signing |
+| github/codeql-action | MIT (the CodeQL CLI it downloads: GitHub CodeQL terms, free for public repositories) | code scanning |
+| actions/dependency-review-action, actions/attest-build-provenance, actions/checkout, actions/upload-artifact, actions/download-artifact | MIT | CI plumbing |
+| docker/setup-buildx-action, docker/build-push-action, docker/login-action | Apache-2.0 | image build and push |
+| denoland/setup-deno, subosito/flutter-action | MIT | toolchain setup |
+| actionlint | MIT | optional local workflow validation |
+
 ## Not bundled
 
 Third-party AI design skills are not part of this repository. `template/skills-lock.json` lists the sources a team

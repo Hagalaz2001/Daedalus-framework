@@ -44,7 +44,10 @@ export function makeProject(
   Deno.mkdirSync(join(root, "design"), { recursive: true });
   Deno.writeTextFileSync(join(root, "design", "tokens.json"), JSON.stringify(TOKENS, null, 2));
   Deno.writeTextFileSync(join(root, "DESIGN.md"), "# Design\n\nCalm and plain.\n");
-  Deno.writeTextFileSync(join(root, ".blueprint.json"), JSON.stringify({ version: 2, name: "Acme Shop", backend: false, apps }));
+  Deno.writeTextFileSync(
+    join(root, ".blueprint.json"),
+    JSON.stringify({ version: 2, name: "Acme Shop", backend: false, apps }),
+  );
   return root;
 }
 

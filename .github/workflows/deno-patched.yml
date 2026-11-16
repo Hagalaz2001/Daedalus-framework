@@ -1,0 +1,92 @@
+# TEMPORARY: builds Deno with the child_process IPC fix (denoland/deno#37040, PR #37080) and publishes it as a release.
+# Trigger: push a tag like deno-patched-v2.9.8-1. Delete this workflow when upstream ships the fix (tools/deno-patched/README.md).
+name: deno-patched
+on:
+  push:
+    tags: ["deno-patched-v*-*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-2022, target: x86_64-pc-windows-msvc }
+          - { name: macos-arm64, os: macos-14, target: aarch64-apple-darwin }
+          - { name: macos-x64, os: macos-15-intel, target: x86_64-apple-darwin }
+          - { name: linux-x64, os: ubuntu-22.04, target: x86_64-unknown-linux-gnu }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Read the Deno version from the tag
+        id: v
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"                       # deno-patched-v2.9.8-1
+          ver="${tag#deno-patched-v}"; ver="${ver%-*}"   # 2.9.8
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+      - name: Clone Deno and apply the patch
+        shell: bash
+        env:
+          DENO_VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          git clone --depth 1 --branch "v${DENO_VERSION}" https://github.com/denoland/deno.git deno-src
+          git -C deno-src apply --check "$GITHUB_WORKSPACE/tools/deno-patched/deno-2.9.8-ipc-close.patch"
+          git -C deno-src apply "$GITHUB_WORKSPACE/tools/deno-patched/deno-2.9.8-ipc-close.patch"
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable branch head
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install the exact toolchain Deno pins
+        shell: bash
+        run: cd deno-src && rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: deno-src
+      - name: Install protoc
+        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        shell: bash
+        run: cd deno-src && cargo build --release --target ${{ matrix.target }} -p deno
+      - name: Package and checksum
+        shell: bash
+        run: |
+          mkdir -p out && cd out
+          exe=deno; [ "${{ matrix.os }}" = "windows-2022" ] && exe=deno.exe
+          cp "../deno-src/target/${{ matrix.target }}/release/$exe" .
+          zip="deno-${{ matrix.target }}.zip"
+          if [ "$exe" = deno.exe ]; then 7z a "$zip" "$exe" >/dev/null; else zip "$zip" "$exe"; fi
+          # Smoke test: the patched binary must run and report the base version.
+          ./"$exe" --version
+          if command -v sha256sum >/dev/null; then sha256sum "$zip" > "$zip.sha256"; else shasum -a 256 "$zip" > "$zip.sha256"; fi
+          cat "$zip.sha256"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: deno-${{ matrix.target }}
+          path: out/deno-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write # create the release
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Combine checksums
+        run: cd dist && cat *.sha256 > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
+            --title "Patched Deno ($GITHUB_REF_NAME)" \
+            --notes "Unofficial Deno build with the child_process IPC fix (denoland/deno#37040, PR #37080). Temporary: see tools/deno-patched/README.md. After downloading, copy the SHA-256 values from SHA256SUMS.txt into ASSETS in template/scripts/native-deno.ts."

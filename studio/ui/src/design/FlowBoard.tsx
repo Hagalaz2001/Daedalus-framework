@@ -59,7 +59,10 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetch("/api/flow").then((r) => r.json()).then((f: { arrows: Arrow[] }) => setArrows(f.arrows ?? []), () => undefined);
+    void fetch("/api/flow").then((r) => r.json()).then(
+      (f: { arrows: Arrow[] }) => setArrows(f.arrows ?? []),
+      () => undefined,
+    );
   }, []);
 
   const key = screens.map((s) => `${s.slug}:${representative(s)}`).join("|");
@@ -75,7 +78,10 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
         body: JSON.stringify({ command: { kind: "read", slug: s.slug, file } }),
       })
         .then((r) => r.json())
-        .then((text: string) => live && typeof text === "string" && setHtml((p) => ({ ...p, [k]: text })), () => undefined);
+        .then(
+          (text: string) => live && typeof text === "string" && setHtml((p) => ({ ...p, [k]: text })),
+          () => undefined,
+        );
     }
     return () => {
       live = false;
@@ -108,7 +114,12 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
   const COLS = Math.max(1, Math.min(5, Math.floor((boxW - 80 + GAP) / (cw + GAP))));
   const pos = useMemo(
     () =>
-      new Map(ordered.map((s, i) => [s.slug, { x: 40 + (i % COLS) * (cw + GAP), y: 40 + Math.floor(i / COLS) * (ch + CAPTION + GAP) }])),
+      new Map(
+        ordered.map((
+          s,
+          i,
+        ) => [s.slug, { x: 40 + (i % COLS) * (cw + GAP), y: 40 + Math.floor(i / COLS) * (ch + CAPTION + GAP) }]),
+      ),
     [ordered, cw, ch, COLS],
   );
   const width = 80 + Math.min(COLS, ordered.length) * (cw + GAP);
@@ -117,7 +128,9 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
   const click = (slug: string) => {
     if (!connect) return onOpen(slug);
     if (!from) return setFrom(slug);
-    if (from !== slug && !arrows.some((a) => a.from === from && a.to === slug)) void save([...arrows, { from, to: slug }]);
+    if (from !== slug && !arrows.some((a) => a.from === from && a.to === slug)) {
+      void save([...arrows, { from, to: slug }]);
+    }
     setFrom(null);
   };
 
@@ -130,12 +143,22 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
     const y1 = p.y + CAPTION + ch / 2;
     const x2 = q.x > p.x ? q.x : q.x + cw;
     const y2 = q.y + CAPTION + ch / 2;
-    if (sameRow) return { d: `M${x1} ${y1} C${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`, mx: (x1 + x2) / 2, my: y1 };
+    if (sameRow) {
+      return {
+        d: `M${x1} ${y1} C${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}`,
+        mx: (x1 + x2) / 2,
+        my: y1,
+      };
+    }
     const bx = p.x + cw / 2;
     const by = p.y + CAPTION + ch;
     const tx = q.x + cw / 2;
     const ty = q.y + CAPTION;
-    return { d: `M${bx} ${by} C${bx} ${by + GAP / 2}, ${tx} ${ty - GAP / 2}, ${tx} ${ty}`, mx: (bx + tx) / 2, my: (by + ty) / 2 };
+    return {
+      d: `M${bx} ${by} C${bx} ${by + GAP / 2}, ${tx} ${ty - GAP / 2}, ${tx} ${ty}`,
+      mx: (bx + tx) / 2,
+      my: (by + ty) / 2,
+    };
   };
 
   return (
@@ -160,15 +183,15 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
         {error ? <span className="text-ui-xs text-destructive" role="alert">{error}</span> : null}
         <ul className="ml-auto flex flex-wrap gap-1.5">
           {arrows.map((a) => (
-            <li key={`${a.from}>${a.to}`} className="flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-ui-xs">
+            <li
+              key={`${a.from}>${a.to}`}
+              className="flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-ui-xs"
+            >
               {a.from} to {a.to}
               <button
                 type="button"
                 aria-label={`Remove arrow ${a.from} to ${a.to}`}
-                onClick={() =>
-                  void save(arrows.filter((x) =>
-                    x !== a
-                  ))}
+                onClick={() => void save(arrows.filter((x) => x !== a))}
               >
                 <X className="size-3" />
               </button>
@@ -180,7 +203,15 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
         <div className="relative" style={{ width, height }}>
           <svg className="pointer-events-none absolute inset-0" width={width} height={height} aria-hidden>
             <defs>
-              <marker id="arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker
+                id="arrow-head"
+                viewBox="0 0 10 10"
+                refX="8"
+                refY="5"
+                markerWidth="7"
+                markerHeight="7"
+                orient="auto-start-reverse"
+              >
                 <path d="M0 0 10 5 0 10z" fill="var(--brand)" />
               </marker>
             </defs>
@@ -191,7 +222,11 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
                 <g key={`${a.from}>${a.to}`}>
                   <path d={g.d} fill="none" stroke="var(--brand)" strokeWidth="2" markerEnd="url(#arrow-head)" />
                   {a.label
-                    ? <text x={g.mx} y={g.my - 10} textAnchor="middle" fontSize="12" fontWeight="500" fill="var(--fg)">{a.label}</text>
+                    ? (
+                      <text x={g.mx} y={g.my - 10} textAnchor="middle" fontSize="12" fontWeight="500" fill="var(--fg)">
+                        {a.label}
+                      </text>
+                    )
                     : null}
                 </g>
               );
@@ -206,12 +241,18 @@ export function FlowBoard({ screens, frame, theme, onOpen }: {
                 <button
                   type="button"
                   onClick={() => click(s.slug)}
-                  className={cn("mb-2 block w-full truncate text-left text-ui-sm font-medium", from === s.slug && "text-brand")}
+                  className={cn(
+                    "mb-2 block w-full truncate text-left text-ui-sm font-medium",
+                    from === s.slug && "text-brand",
+                  )}
                 >
                   {s.slug}
                 </button>
                 <div
-                  className={cn("overflow-hidden border bg-white", from === s.slug ? "border-brand ring-2 ring-brand/40" : "border-border")}
+                  className={cn(
+                    "overflow-hidden border bg-white",
+                    from === s.slug ? "border-brand ring-2 ring-brand/40" : "border-border",
+                  )}
                   style={{ width: cw, height: ch, borderRadius: frame.radius * zoom }}
                 >
                   {page

@@ -3,7 +3,13 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
-import { parseDirectionSelection, parseDirectionSet, parseRouteMap, planDirections, routeMapFor } from "../../../shared/design/index.ts";
+import {
+  parseDirectionSelection,
+  parseDirectionSet,
+  parseRouteMap,
+  planDirections,
+  routeMapFor,
+} from "../../../shared/design/index.ts";
 import { createDesignHandler } from "../projectDesignHandler.ts";
 import {
   beginDirections,
@@ -32,7 +38,12 @@ describe("design directions", () => {
     assert.deepEqual(set.directions[0]!.screens.map((s) => s.id), ["home", "list", "detail", "create", "settings"]);
     const view = await listDirections(dir);
     assert.equal(view.routeMap?.routes.length, 5);
-    assert.deepEqual(view.routeMap?.routes.filter((r) => r.slot === "primary").map((r) => r.id), ["home", "list", "detail", "create"]);
+    assert.deepEqual(view.routeMap?.routes.filter((r) => r.slot === "primary").map((r) => r.id), [
+      "home",
+      "list",
+      "detail",
+      "create",
+    ]);
     assert.deepEqual(view.files, { d1: [], d2: [], d3: [] });
     assert.equal(
       parseDirectionSet(JSON.parse(readFileSync(join(dir, "design/directions/directions.json"), "utf8")))?.stack,
@@ -49,8 +60,14 @@ describe("design directions", () => {
     await assert.rejects(beginDirections(dir, { ...base, count: 6 }), /3 to 5/);
     await assert.rejects(beginDirections(dir, { ...base, screens: ["One", "Two"] }), /3 to 6/);
     await assert.rejects(beginDirections(dir, { brief: "", stack: "react-native" }), /brief/);
-    await assert.rejects(beginDirections(dir, { brief: "b", stack: "swift" as never }), /react-flutter or react-native/);
-    assert.equal(planDirections({ ...base, count: 5, screens: ["A b", "A-b", "C", "D"] }, "t").directions[0]!.screens.length, 3); // duplicates collapse
+    await assert.rejects(
+      beginDirections(dir, { brief: "b", stack: "swift" as never }),
+      /react-flutter or react-native/,
+    );
+    assert.equal(
+      planDirections({ ...base, count: 5, screens: ["A b", "A-b", "C", "D"] }, "t").directions[0]!.screens.length,
+      3,
+    ); // duplicates collapse
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -112,18 +129,26 @@ describe("design directions", () => {
       },
       onBegun: (e) => seen.push(e),
     });
-    const set = (await handle({ kind: "directions-begin", brief: "Clinic app", stack: "react-flutter", count: 3 })) as Awaited<
-      ReturnType<typeof beginDirections>
-    >;
+    const set =
+      (await handle({ kind: "directions-begin", brief: "Clinic app", stack: "react-flutter", count: 3 })) as Awaited<
+        ReturnType<typeof beginDirections>
+      >;
     assert.deepEqual(seen, [{ kind: "directions" }]);
     await fillDirection(dir, "d1", set.directions[0]!.screens);
     const view = (await handle({ kind: "directions-list" })) as Awaited<ReturnType<typeof listDirections>>;
     assert.equal(view.designMd.d1, true);
     assert.match(String(await handle({ kind: "directions-md", id: "d1" })), /^---/);
     await handle({ kind: "directions-select", directionId: "d1", notes: "ok" });
-    assert.equal(((await handle({ kind: "directions-list" })) as Awaited<ReturnType<typeof listDirections>>).selection?.directionId, "d1");
+    assert.equal(
+      ((await handle({ kind: "directions-list" })) as Awaited<ReturnType<typeof listDirections>>).selection
+        ?.directionId,
+      "d1",
+    );
     await handle({ kind: "directions-unlock" });
-    assert.equal(((await handle({ kind: "directions-list" })) as Awaited<ReturnType<typeof listDirections>>).selection, null);
+    assert.equal(
+      ((await handle({ kind: "directions-list" })) as Awaited<ReturnType<typeof listDirections>>).selection,
+      null,
+    );
     rmSync(dir, { recursive: true, force: true });
   });
 

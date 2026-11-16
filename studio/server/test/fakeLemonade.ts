@@ -30,7 +30,8 @@ export interface FakeLemonade {
   close(): Promise<void>;
 }
 
-const RESERVED = (p: number) => [13305, 11434, 9333, 1420, 9344, 3417, 5197, 9491, 9509, 9519].includes(p) || (p >= 41800 && p <= 41999);
+const RESERVED = (p: number) =>
+  [13305, 11434, 9333, 1420, 9344, 3417, 5197, 9491, 9509, 9519].includes(p) || (p >= 41800 && p <= 41999);
 
 export async function startFakeLemonade(opts: FakeLemonadeOptions = {}): Promise<FakeLemonade> {
   const requests: FakeLemonade["requests"] = [];
@@ -42,12 +43,15 @@ export async function startFakeLemonade(opts: FakeLemonadeOptions = {}): Promise
     answerIndex: 0,
     job: null as string | null,
   };
-  const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
+  const json = (v: unknown, status = 200) =>
+    new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
 
   const handler = async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/api\/v1/, "");
-    const body = req.method === "POST" ? ((await req.json().catch(() => null)) as Record<string, unknown> | null) : null;
+    const body = req.method === "POST"
+      ? ((await req.json().catch(() => null)) as Record<string, unknown> | null)
+      : null;
     requests.push({ method: req.method, path, body });
     if (opts.apiKey && req.headers.get("authorization") !== `Bearer ${opts.apiKey}`) {
       return json({ error: { message: "unauthorized" } }, 401);
@@ -61,7 +65,9 @@ export async function startFakeLemonade(opts: FakeLemonadeOptions = {}): Promise
       });
     }
     if (path === "/models") {
-      return json({ data: state.models.map((m) => ({ id: m.id, downloaded: m.downloaded, labels: m.labels, size: 5.4 })) });
+      return json({
+        data: state.models.map((m) => ({ id: m.id, downloaded: m.downloaded, labels: m.labels, size: 5.4 })),
+      });
     }
     if (path === "/system-info") {
       return json(
@@ -77,8 +83,13 @@ export async function startFakeLemonade(opts: FakeLemonadeOptions = {}): Promise
       state.polls = 0;
       state.job = `model:${name}`;
       if (opts.pullAsStream) {
-        const events = [`event: progress\ndata: {"percent":40,"bytes_downloaded":4,"bytes_total":10}\n\n`, `event: complete\ndata: {}\n\n`];
-        if (!state.models.some((m) => m.id === name)) state.models.push({ id: name, downloaded: true, labels: ["custom"] });
+        const events = [
+          `event: progress\ndata: {"percent":40,"bytes_downloaded":4,"bytes_total":10}\n\n`,
+          `event: complete\ndata: {}\n\n`,
+        ];
+        if (!state.models.some((m) => m.id === name)) {
+          state.models.push({ id: name, downloaded: true, labels: ["custom"] });
+        }
         return new Response(events.join(""), { headers: { "content-type": "text/event-stream" } });
       }
       return json({ id: state.job });
@@ -115,7 +126,9 @@ export async function startFakeLemonade(opts: FakeLemonadeOptions = {}): Promise
     }
     if (path === "/chat/completions" && body) {
       if (body.max_tokens === 32) return json({ choices: [{ message: { content: opts.sanity ?? "51" } }] });
-      if (opts.rejectSchema && "response_format" in body) return json({ error: { message: "response_format is not supported" } }, 400);
+      if (opts.rejectSchema && "response_format" in body) {
+        return json({ error: { message: "response_format is not supported" } }, 400);
+      }
       const list = opts.answers ?? ["{}"];
       const pick = list[Math.min(state.answerIndex++, list.length - 1)]!;
       const text = typeof pick === "function" ? pick(body) : pick;
@@ -124,7 +137,9 @@ export async function startFakeLemonade(opts: FakeLemonadeOptions = {}): Promise
         start(c) {
           // Several small deltas, like a real stream, plus a keep-alive comment and the [DONE] marker.
           for (let i = 0; i < text.length; i += 64) {
-            c.enqueue(enc.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 64) } }] })}\n\n`));
+            c.enqueue(
+              enc.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 64) } }] })}\n\n`),
+            );
           }
           c.enqueue(enc.encode(": keep-alive\n\ndata: [DONE]\n\n"));
           c.close();

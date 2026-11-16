@@ -57,10 +57,11 @@ Never hard-code a colour: use classes (`bg-primary`, `text-muted-foreground`) or
   (`sendResetPassword`, `user.deleteUser.enabled`); until then the screens show the server's error.
 - Fonts are the system fonts. Add `expo-font` and a font family if the brand needs one.
 - Under Deno on Windows, `metro.config.js` carries a small patch for mixed path separators.
-- `expo export --platform android` (and ios) fails under the Deno runtime: Deno's `child_process` IPC breaks when Expo
-  spawns its transform workers ("IPC channel is already disconnected", or a silent exit with no output). The same
-  command under Node (`node node_modules/expo/bin/cli export --platform android`) exports a 6.8 MB Hermes bundle. Web
-  export, `deno task check` and `expo start` are unaffected. Use Node (or EAS Build) for native builds until Deno fixes
-  its IPC.
+- `expo export --platform android|ios` fails under Deno 2.9.7 and later (denoland/deno#37040: a `child_process` IPC
+  regression; Metro reaches 100%, then the process exits silently or throws "IPC channel is already disconnected").
+  Deno 2.9.6 and Node are fine. TEMPORARY workaround: `deno task build:android` / `deno task build:ios` run the export
+  with a checksum-verified patched Deno when your Deno is in the affected range, and print which Deno they use and why.
+  Install it once with `daedalus deno --install`. See `tools/deno-patched/README.md` in the Daedalus checkout. Web
+  export, `deno task check` and `expo start` are unaffected.
 
 Third-party code and licences: `THIRD_PARTY.md`.

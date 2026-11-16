@@ -1,17 +1,227 @@
-# Runs the same checks as `deno task check` on every push and merge request.
-check:
-  image: ghcr.io/cirruslabs/flutter:stable
+# GitLab pipeline: the same protections as .github/workflows (see docs/DEVSECOPS.md for what each job does).
+#   merge request / main : check, secret scan, SAST, SBOM, container build + scan
+#   tag vX.Y.Z           : build artifacts with provenance metadata, GitLab release, signed image when enabled
+#   deploy               : DISABLED until the variable DEPLOY_ENABLED is "true" (staging after main, production by hand)
+# Images use exact version tags; pin them by digest (name@sha256:...) if you need stricter supply-chain control.
+# Optional switches (Settings > CI/CD > Variables): PUBLISH_IMAGE=true, DEPLOY_ENABLED=true.
+
+workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+
+# GitLab's SAST and secret detection templates run in the "test" stage.
+stages: [check, test, security, build, release, deploy]
+
+variables:
+  DENO_VERSION: "2.9.8"
+  DENO_SHA256: e890975bc2549807bbcc0b584ffafda72cc7c93349dd99c80483dd784f6c4609
+  DENO_DIR: $CI_PROJECT_DIR/.deno
+
+# GitLab's maintained scanners (SAST needs no licence; its findings page needs Ultimate, the job log works for everyone).
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+.cache:
   cache:
-    key: $CI_COMMIT_REF_SLUG
+    key:
+      files: [deno.lock]
     paths: [.deno]
-  before_script:
-    - apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null
-    - curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh
-    - export DENO_DIR=$CI_PROJECT_DIR/.deno
-    - deno install --frozen
+
+# Installs Deno at an exact version with a checksum (used on images that do not ship it) and Rust when the project has a
+# Rust app. Tauri and GPUI apps also need system libraries: see the stack's README.
+.toolchains:
   script:
+    - |
+        if ! command -v deno >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq curl unzip ca-certificates >/dev/null
+          curl -fsSL -o /tmp/deno.zip "https://github.com/denoland/deno/releases/download/v${DENO_VERSION}/deno-x86_64-unknown-linux-gnu.zip"
+          echo "${DENO_SHA256}  /tmp/deno.zip" | sha256sum -c -
+          unzip -q /tmp/deno.zip -d /usr/local/bin
+        fi
+    - |
+        if [ -n "$(find . -name Cargo.toml -not -path '*/node_modules/*' -print -quit)" ] && ! command -v cargo >/dev/null; then
+          apt-get update -qq && apt-get install -y -qq curl build-essential >/dev/null
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal -c clippy,rustfmt >/dev/null
+          . "$HOME/.cargo/env"
+        fi
+
+.check-script:
+  script:
+    - !reference [.toolchains, script]
+    - deno install --frozen
     - deno task secrets
     - deno task check
+    - if [ -f scripts/ai/audit.ts ]; then deno task audit; fi
+    - if [ -f scripts/ai/sast.ts ]; then deno task sast; fi
+
+# Lint, types, tests, boundaries, Deno-only rule, advisory and licence audit, each app's own checks.
+check:
+  stage: check
+  image: denoland/deno:debian-2.9.8
+  extends: .cache
+  rules:
+    - exists: ["**/pubspec.yaml"]
+      when: never
+    - when: on_success
+  script: !reference [.check-script, script]
+
+# Same job on an image with the Flutter SDK, only for projects that have a Flutter app.
+check:flutter:
+  stage: check
+  image: ghcr.io/cirruslabs/flutter:stable
+  extends: .cache
+  rules:
+    - exists: ["**/pubspec.yaml"]
+  script: !reference [.check-script, script]
+
+# Committed passwords, keys and tokens, whole history.
+gitleaks:
+  stage: security
+  image:
+    name: ghcr.io/gitleaks/gitleaks:v8.30.1
+    entrypoint: [""]
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - gitleaks git --redact --verbose
+
+# Software bill of materials (CycloneDX), kept as an artifact and shown in GitLab's dependency list.
+sbom:
+  stage: security
+  image:
+    name: anchore/syft:v1.57.2
+    entrypoint: [""]
+  script:
+    - syft dir:. -o cyclonedx-json=sbom.cdx.json
+  artifacts:
+    paths: [sbom.cdx.json]
+    reports:
+      cyclonedx: [sbom.cdx.json]
+    expire_in: 90 days
+
+# Backend image: build it, then scan the file and the Dockerfile with Trivy. Skipped without backend/Dockerfile.
+container:build:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  rules:
+    - exists: [backend/Dockerfile]
+  script:
+    - docker build -f backend/Dockerfile -t app-backend:ci .
+    - docker save app-backend:ci -o app-backend.tar
+  artifacts:
+    paths: [app-backend.tar]
+    expire_in: 1 hour
+
+container:scan:
+  stage: build
+  needs: ["container:build"]
+  image:
+    name: aquasec/trivy:0.76.2
+    entrypoint: [""]
+  rules:
+    - exists: [backend/Dockerfile]
+  script:
+    - trivy config --exit-code 1 --severity CRITICAL,HIGH backend
+    - trivy image --input app-backend.tar --exit-code 1 --severity CRITICAL,HIGH --ignore-unfixed
+
+# ---- releases: push a tag made by `deno task release` ----
+
+# Build output, source archive and checksums. RUNNER_GENERATE_ARTIFACTS_METADATA makes the runner write a signed-by-the-
+# platform SLSA provenance statement for these artifacts (needs GitLab Runner 15.1 or newer).
+release:build:
+  stage: build
+  image: denoland/deno:debian-2.9.8
+  extends: .cache
+  variables:
+    RUNNER_GENERATE_ARTIFACTS_METADATA: "true"
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  script:
+    - !reference [.toolchains, script]
+    - deno install --frozen
+    - deno task check
+    - deno run -A scripts/ci/artifacts.ts "$CI_COMMIT_TAG"
+    - deno run -A scripts/release.ts --notes "$CI_COMMIT_TAG" > notes.md
+  artifacts:
+    paths: [artifacts/, notes.md]
+    expire_in: never
+
+# Signed image in the project's container registry. Keyless: the signature names this pipeline, no private key exists.
+container:publish:
+  stage: release
+  image: docker:27
+  services: [docker:27-dind]
+  needs: ["release:build"]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    COSIGN_VERSION: "3.1.4"
+    COSIGN_SHA256: 424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/ && $PUBLISH_IMAGE == "true"
+      exists: [backend/Dockerfile]
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker build -f backend/Dockerfile -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+    - DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG")
+    - wget -q -O /usr/local/bin/cosign "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64"
+    - echo "${COSIGN_SHA256}  /usr/local/bin/cosign" | sha256sum -c -
+    - chmod +x /usr/local/bin/cosign
+    - cosign sign --yes "$DIGEST"
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/cli:v1.130.0
+  needs: ["release:build"]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  script:
+    - echo "Creating the release for $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: ./notes.md
+
+# ---- deploy: templates, OFF until DEPLOY_ENABLED=true (docs/DEVSECOPS.md, "Turning deployment on") ----
+# Put each environment's secrets in Settings > CI/CD > Variables with "Protected" and "Masked" on and the environment scope
+# set to staging or production. Prefer OIDC (id_tokens) over long-lived cloud keys: uncomment the block and have your
+# cloud provider trust GitLab's issuer.
+
+deploy:staging:
+  stage: deploy
+  image: denoland/deno:debian-2.9.8
+  extends: .cache
+  environment:
+    name: staging
+  # id_tokens:
+  #   CLOUD_ID_TOKEN:
+  #     aud: https://your-cloud-provider.example.com
+  rules:
+    - if: $DEPLOY_ENABLED == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - deno install --frozen
+    - deno run -A scripts/ci/deploy.ts staging
+
+# Production: a person presses the button on a release tag. Protect the "production" environment (Settings > CI/CD >
+# Protected environments) so only named maintainers can.
+deploy:production:
+  stage: deploy
+  image: denoland/deno:debian-2.9.8
+  extends: .cache
+  environment:
+    name: production
+  rules:
+    - if: $DEPLOY_ENABLED == "true" && $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+      when: manual
+      allow_failure: false
+  script:
+    - deno install --frozen
+    - deno run -A scripts/ci/deploy.ts production

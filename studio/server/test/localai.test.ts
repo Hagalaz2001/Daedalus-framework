@@ -1,8 +1,22 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "node:path";
-import { assess, chooseLocalModel, type Hardware, LOCAL_MODELS, localModels, modelSpill } from "../../shared/localAi.ts";
+import {
+  assess,
+  chooseLocalModel,
+  type Hardware,
+  LOCAL_MODELS,
+  localModels,
+  modelSpill,
+} from "../../shared/localAi.ts";
 import { loadEnv, validateEnv } from "../env.ts";
-import { collectHardware, hasAvx2Linux, parseCpuNameLinux, parseDf, parseNvidiaSmi, parseWindowsDisplayRegistry } from "../hardware.ts";
+import {
+  collectHardware,
+  hasAvx2Linux,
+  parseCpuNameLinux,
+  parseDf,
+  parseNvidiaSmi,
+  parseWindowsDisplayRegistry,
+} from "../hardware.ts";
 import { createLocalAi, isChatModelId, type LocalProgress } from "../localAi.ts";
 import { createProviderManager } from "../providerManager.ts";
 import { renderDoctor, runDoctor } from "../doctor.ts";
@@ -81,16 +95,33 @@ Deno.test("assessment: tiers, minimum checks and Apple Silicon", () => {
   assert(lowDisk.checks.some((c) => c.level === "fail" && c.text.includes("free disk")));
   assertEquals(assess(hw({ avx2: false })).tier, "below-minimum");
   assertEquals(assess(hw({ arch: "arm" })).tier, "below-minimum");
-  const gpu = assess(hw({ ramBytes: 16 * GB, availableRamBytes: 12 * GB, gpus: [{ name: "GPU 16", vramBytes: 15.9 * GB }] }));
+  const gpu = assess(
+    hw({ ramBytes: 16 * GB, availableRamBytes: 12 * GB, gpus: [{ name: "GPU 16", vramBytes: 15.9 * GB }] }),
+  );
   assertEquals(gpu.tier, "recommended");
   assertEquals(gpu.bestQuality, "gpu");
   assertEquals(
-    assess(hw({ ramBytes: 8 * GB, availableRamBytes: 7 * GB, gpus: [{ name: "Intel UHD", vramBytes: 1 * GB, integrated: true }] }))
+    assess(
+      hw({
+        ramBytes: 8 * GB,
+        availableRamBytes: 7 * GB,
+        gpus: [{ name: "Intel UHD", vramBytes: 1 * GB, integrated: true }],
+      }),
+    )
       .gpuBytes,
     0,
     "integrated graphics share RAM",
   );
-  const mac = assess(hw({ os: "darwin", arch: "aarch64", avx2: null, unifiedMemory: true, ramBytes: 16 * GB, availableRamBytes: 10 * GB }));
+  const mac = assess(
+    hw({
+      os: "darwin",
+      arch: "aarch64",
+      avx2: null,
+      unifiedMemory: true,
+      ramBytes: 16 * GB,
+      availableRamBytes: 10 * GB,
+    }),
+  );
   assertEquals(mac.tier, "recommended");
   assert(mac.checks.some((c) => c.text.includes("Apple Silicon")));
   assert(assess(hw({ ryzenAi: true })).checks.some((c) => c.text.includes("Ryzen AI")));
@@ -98,7 +129,10 @@ Deno.test("assessment: tiers, minimum checks and Apple Silicon", () => {
 });
 
 Deno.test("hardware parsers: nvidia-smi, the Windows display registry, df and /proc/cpuinfo", () => {
-  assertEquals(parseNvidiaSmi("NVIDIA GeForce RTX 4070, 12282\n"), [{ name: "NVIDIA GeForce RTX 4070", vramBytes: 12282 * 1024 * 1024 }]);
+  assertEquals(parseNvidiaSmi("NVIDIA GeForce RTX 4070, 12282\n"), [{
+    name: "NVIDIA GeForce RTX 4070",
+    vramBytes: 12282 * 1024 * 1024,
+  }]);
   assertEquals(parseNvidiaSmi("garbage"), []);
   const reg = [
     "HKEY_LOCAL_MACHINE\\SYSTEM\\...\\0000",
@@ -111,12 +145,19 @@ Deno.test("hardware parsers: nvidia-smi, the Windows display registry, df and /p
     "",
   ].join("\r\n");
   const gpus = parseWindowsDisplayRegistry(reg);
-  assertEquals(gpus.map((g) => [g.name, Math.round(g.vramBytes / GB * 10) / 10, !!g.integrated]), [["AMD Radeon RX 9060 XT", 15.9, false], [
+  assertEquals(gpus.map((g) => [g.name, Math.round(g.vramBytes / GB * 10) / 10, !!g.integrated]), [[
+    "AMD Radeon RX 9060 XT",
+    15.9,
+    false,
+  ], [
     "Intel(R) UHD Graphics 630",
     1,
     true,
   ]]);
-  assertEquals(parseDf("Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/x 1000 400 600 40% /home"), 600 * 1024);
+  assertEquals(
+    parseDf("Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/x 1000 400 600 40% /home"),
+    600 * 1024,
+  );
   assertEquals(parseDf("nope"), null);
   assertEquals(parseCpuNameLinux("processor : 0\nmodel name : AMD Ryzen AI 9 HX 370\n"), "AMD Ryzen AI 9 HX 370");
   assertEquals(hasAvx2Linux("flags : fpu sse4_2 avx avx2 fma"), true);
@@ -134,14 +175,22 @@ Deno.test("model ids that cannot chat are filtered", () => {
   for (const id of ["nomic-embed-text-v1", "Whisper-Large", "PaddleOCR-VL", "kokoro-v1", "SDXL-Turbo"]) {
     assertEquals(isChatModelId(id), false, id);
   }
-  for (const id of ["Qwen3.5-4B-Q4_K_M", "user.MiMo-V2.6-Distill-Qwen-9B-Q4_K_M", "Socratic-7B"]) assertEquals(isChatModelId(id), true, id);
+  for (const id of ["Qwen3.5-4B-Q4_K_M", "user.MiMo-V2.6-Distill-Qwen-9B-Q4_K_M", "Socratic-7B"]) {
+    assertEquals(isChatModelId(id), true, id);
+  }
 });
 
 Deno.test("environment: LEMONADE_BASE_URL, auto by default, early failure for a pinned provider that cannot work", () => {
   const d = loadEnv([], {});
-  assertEquals([d.provider, d.lemonadeBaseUrl, d.lemonadeModel, d.lemonadeApiKey], ["auto", "http://localhost:13305/api/v1", "", null]);
+  assertEquals([d.provider, d.lemonadeBaseUrl, d.lemonadeModel, d.lemonadeApiKey], [
+    "auto",
+    "http://localhost:13305/api/v1",
+    "",
+    null,
+  ]);
   assertEquals(
-    loadEnv([], { LEMONADE_BASE_URL: "http://127.0.0.1:9/api/v1", LEMONADE_MODEL: "x", LEMONADE_API_KEY: "k" }).lemonadeBaseUrl,
+    loadEnv([], { LEMONADE_BASE_URL: "http://127.0.0.1:9/api/v1", LEMONADE_MODEL: "x", LEMONADE_API_KEY: "k" })
+      .lemonadeBaseUrl,
     "http://127.0.0.1:9/api/v1",
   );
   validateEnv(d);
@@ -185,14 +234,21 @@ Deno.test("set-up: registers, downloads with progress, loads with a 32k context,
   const fake = await startFakeLemonade({ pullPolls: 3 });
   try {
     const events: (LocalProgress | null)[] = [];
-    const ai = createLocalAi({ env: envFor(fake.base), collect: () => Promise.resolve(hw()), emit: (p) => events.push(p) });
+    const ai = createLocalAi({
+      env: envFor(fake.base),
+      collect: () => Promise.resolve(hw()),
+      emit: (p) => events.push(p),
+    });
     await ai.setUp();
     const done = await untilDone(ai.progress);
     assertEquals(done.stage, "done");
     assertEquals(done.model, LOCAL_MODELS.mimo9b.name);
     const stages = events.map((e) => e?.stage);
     assert(stages.includes("downloading") && stages.includes("loading") && stages.includes("checking"));
-    assert(events.some((e) => e?.stage === "downloading" && (e.percent ?? 0) > 0 && (e.percent ?? 0) < 100), "intermediate progress");
+    assert(
+      events.some((e) => e?.stage === "downloading" && (e.percent ?? 0) > 0 && (e.percent ?? 0) < 100),
+      "intermediate progress",
+    );
     const pull = fake.requests.find((r) => r.path === "/pull")!.body!;
     assertEquals(pull.model_name, LOCAL_MODELS.mimo9b.name);
     assertEquals(pull.checkpoint, LOCAL_MODELS.mimo9b.checkpoint);
@@ -319,7 +375,9 @@ Deno.test("pinning a provider overrides auto, and a pinned but unavailable one f
   const s = await m.describe();
   assertEquals([s.selected, s.active, s.banner], ["lemonade", "lemonade", null]);
   let msg = "";
-  await m.provider.call({ system: [], user: "x", tool: { name: "t", description: "", schema: {} } }).catch((e) => (msg = e.message));
+  await m.provider.call({ system: [], user: "x", tool: { name: "t", description: "", schema: {} } }).catch((
+    e,
+  ) => (msg = e.message));
   assertStringIncludes(msg, "Local AI (Lemonade) is not available");
   m.select("auto");
   assertEquals((await m.describe()).active, "fake");
@@ -408,11 +466,21 @@ Deno.test("API: provider state, local AI status and set-up over HTTP, and a desi
     assertEquals([status.reachable, status.loaded[0].model, status.assessment.tier], [true, "user.M", "recommended"]);
 
     const begun = await (await call("/api/design", {
-      command: { kind: "begin", step: "generate", name: "Overview", brief: "Sales dashboard", target: "web-desktop", count: 2 },
+      command: {
+        kind: "begin",
+        step: "generate",
+        name: "Overview",
+        brief: "Sales dashboard",
+        target: "web-desktop",
+        count: 2,
+      },
     })).json();
     await api.jobs.idle();
     const list = await (await call("/api/design", { command: { kind: "list" } })).json();
-    assertEquals(list.screens[0].files.map((f: { file: string; ok: boolean }) => [f.file, f.ok]), [["v1.html", true], ["v2.html", true]]);
+    assertEquals(list.screens[0].files.map((f: { file: string; ok: boolean }) => [f.file, f.ok]), [["v1.html", true], [
+      "v2.html",
+      true,
+    ]]);
     assertEquals(list.jobs[`${begun.slug}/${begun.step.id}`].state, "done");
     assert(Deno.readTextFileSync(join(root, "design", begun.slug, "v1.html")).includes("Overview"));
     assertEquals(fake.requests.filter((r) => r.path === "/chat/completions").length, 2, "one local call per variant");
@@ -430,7 +498,11 @@ Deno.test("a Lemonade server on another machine is flagged as not private", asyn
   const env = envFor("http://192.168.1.50:13305/api/v1");
   const m = createProviderManager({
     env,
-    localAi: createLocalAi({ env, collect: () => Promise.resolve(hw()), fetchImpl: () => Promise.reject(new Error("offline")) }),
+    localAi: createLocalAi({
+      env,
+      collect: () => Promise.resolve(hw()),
+      fetchImpl: () => Promise.reject(new Error("offline")),
+    }),
     ollamaModels: () => Promise.resolve(null),
   });
   assertStringIncludes((await m.describe()).options.find((o) => o.id === "lemonade")!.note!, "Not on this computer");

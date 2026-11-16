@@ -12,6 +12,7 @@
     "lint": "deno lint --config deno.lint.json app src",
     "test": "jest --runInBand",
     "export:android": "expo export --platform android",
+    "export:ios": "expo export --platform ios",
     "export:web": "expo export --platform web",
     "check": "deno task typecheck && deno task lint && deno task test"
   },

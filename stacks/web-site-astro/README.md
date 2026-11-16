@@ -8,8 +8,8 @@ Pages: landing, pricing (billing toggle island, FAQ), about, journal (blog list 
 contact (form island), privacy and terms (template text, have a lawyer review it), 404.
 
 SEO: per-page title, description, canonical, Open Graph and Twitter tags, JSON-LD (Organization and WebSite everywhere,
-BlogPosting and BreadcrumbList on posts, FAQPage on pricing), `sitemap-index.xml`, `robots.txt`, and Open Graph PNG images
-generated at build time (`/og/site.png`, `/og/<post>.png`) in the brand colours and display font, semantic landmarks, skip link.
+BlogPosting and BreadcrumbList on posts, FAQPage on pricing), `sitemap-index.xml`, `robots.txt`, and a default Open Graph image
+(`public/og-default.png`, used by every page), semantic landmarks, skip link.
 
 Need server features (forms handled on the server, auth, per-request rendering)? Use `web-site-next` instead, or add an
 Astro adapter (`output: 'server'`, or `prerender = false` on one page) in `astro.config.mjs`.
@@ -61,7 +61,11 @@ touches the UI kit from server-rendered code.
 - `deno task typecheck` runs the Astro checker through `scripts/typecheck.mjs` against TypeScript 5.9 (dependency
   `typescript5`), because `astro check` cannot use the native TypeScript 7 compiler yet. Replace it with plain
   `astro check` when Astro supports it.
-- Open Graph images are an SVG built from `design/tokens.json` (`src/lib/og.ts`) and rasterised by `@resvg/resvg-js`
-  (MPL-2.0, build time only, prebuilt binaries for Windows, macOS and Linux). resvg renders text from TTF/OTF only, so
-  `src/lib/woff.ts` converts the @fontsource WOFF file in memory. Titles are wrapped by a width estimate (up to four
-  lines). Prefer static images? Delete `src/pages/og/` and put PNGs in `public/og/`.
+- **Open Graph image (default, permissive licences only):** one 1200x630 card for the whole site, `public/og-default.png`.
+  `deno task og:default` draws it from `design/tokens.json` (brand colour, display font) and the name and tagline in
+  `src/lib/site.ts`, using `@napi-rs/canvas` (MIT, prebuilt for Windows, macOS and Linux). Run it after changing the brand
+  or the site name, and commit the PNG. `deno task sync` runs it for you.
+- **Open Graph image per page (opt-in, MPL-2.0 dependency):** `deno task og:per-page` gives every journal post its own
+  card (`/og/<post>.png`) plus `/og/site.png`. It adds `@resvg/resvg-js` (**MPL-2.0**, file-level copyleft; build time only,
+  nothing ships in the site), copies the generator from `optional/og-per-page/` into `src/`, and sets `og: 'per-page'` in
+  `src/lib/site.ts`. Skip it if your licence policy allows only MIT, Apache, BSD, ISC, CC0 and CC-BY dependencies.

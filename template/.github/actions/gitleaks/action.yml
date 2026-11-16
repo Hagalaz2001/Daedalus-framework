@@ -1,0 +1,29 @@
+# Installs gitleaks (MIT, https://github.com/gitleaks/gitleaks) at an exact version, verifies its SHA-256, then scans.
+# A pinned binary is used instead of gitleaks/gitleaks-action because that action needs a paid licence key in organisations.
+# To update: change both values from the release's *_checksums.txt file.
+name: gitleaks
+description: Scan the repository (and its history) for committed secrets
+inputs:
+  log-opts:
+    description: "git log range to scan, for example base..head; empty scans the whole history"
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GITLEAKS_VERSION: "8.30.1"
+        GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        LOG_OPTS: ${{ inputs.log-opts }}
+      run: |
+        set -euo pipefail
+        dir="$(mktemp -d)"
+        curl -fsSL -o "$dir/gitleaks.tgz" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+        echo "${GITLEAKS_SHA256}  $dir/gitleaks.tgz" | sha256sum -c -
+        tar -xzf "$dir/gitleaks.tgz" -C "$dir" gitleaks
+        # --redact keeps the secret itself out of the job log.
+        if [ -n "$LOG_OPTS" ]; then
+          "$dir/gitleaks" git --redact --verbose --log-opts="$LOG_OPTS"
+        else
+          "$dir/gitleaks" git --redact --verbose
+        fi

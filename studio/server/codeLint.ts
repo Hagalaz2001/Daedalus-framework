@@ -19,7 +19,10 @@ export function lintGeneratedCode(kind: CodeKind, code: string): CodeIssue[] {
   const noComments = code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const hex = noComments.match(HEX);
   if (hex) {
-    add("hard-coded-colour", `Hard-coded colours (${[...new Set(hex)].slice(0, 3).join(", ")}): use the kit's token classes or the theme.`);
+    add(
+      "hard-coded-colour",
+      `Hard-coded colours (${[...new Set(hex)].slice(0, 3).join(", ")}): use the kit's token classes or the theme.`,
+    );
   }
   if (kind !== "flutter" && /\b(?:p|m|gap|w|h|text)-\[\d+(?:px|rem)\]/.test(noComments)) {
     add("arbitrary-value", "Arbitrary pixel values: use the token scale.");
@@ -30,7 +33,9 @@ export function lintGeneratedCode(kind: CodeKind, code: string): CodeIssue[] {
   if (kind === "flutter" ? DART_TEXT.test(noComments) : [...noComments.matchAll(JSX_TEXT)].length > 0) {
     add("literal-text", "User-facing text is written inline: lift it into the `copy` prop so it can be localised.");
   }
-  if (/lorem ipsum|dolor sit amet|\bTODO\b/i.test(code)) add("placeholder", "Placeholder text or TODO left in the code.");
+  if (/lorem ipsum|dolor sit amet|\bTODO\b/i.test(code)) {
+    add("placeholder", "Placeholder text or TODO left in the code.");
+  }
   if (!/\bcopy\b/.test(code)) add("no-copy-prop", "The screen does not take a `copy` prop.");
   if (!/\b(loading|empty|error)\b/i.test(code)) add("states", "Loading, empty and error states are missing.");
   return issues;

@@ -1,10 +1,12 @@
 {
   "id": "mobile-flutter",
   "kind": "mobile",
+  "flag": "flutter",
   "label": "Flutter + Riverpod (Android + iOS)",
   "defaultAppDir": "apps/mobile",
   "appSource": "app",
   "workspaceMember": false,
+  "export": { "kind": "flutter", "label": "Flutter (Forui)", "screenDir": "presentation" },
   "packages": ["stack:packages/app_core"],
   "scripts": "scripts",
   "tasks": {
@@ -32,7 +34,7 @@
     { "cwd": "packages/app_core", "run": "dart run swagger_parser" },
     { "cwd": "packages/app_core", "run": "dart run build_runner build" }
   ],
-  "tokens": "scripts/tokens.ts",
+  "tokens": "deno run -A scripts/tokens/mobile-flutter.ts {appDir}",
   "check": [
     { "cwd": "packages/app_core", "run": "flutter analyze" },
     { "cwd": "packages/app_core", "run": "flutter test" },

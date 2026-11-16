@@ -4,14 +4,18 @@ import { fixPrompt, type LintWarning } from "../../../shared/design/designLint.t
 import { LINT_RULES } from "../../../shared/design/designLintStructure.ts";
 import { Button } from "../kit.tsx";
 
-export function ChecksPanel({ warnings, busy, onFix }: { warnings: LintWarning[]; busy: boolean; onFix: (instruction: string) => void }) {
+export function ChecksPanel(
+  { warnings, busy, onFix }: { warnings: LintWarning[]; busy: boolean; onFix: (instruction: string) => void },
+) {
   const failing = new Set(warnings.map((w) => w.id));
   const pass = LINT_RULES.length - failing.size;
   return (
     <div className="flex flex-col gap-3 overflow-auto p-4">
       <div className="flex items-baseline justify-between">
         <h3 className="text-ui-sm font-semibold">Design checks</h3>
-        <span className={failing.size ? "text-ui-xs text-warn" : "text-ui-xs text-ok"}>{pass}/{LINT_RULES.length} passed</span>
+        <span className={failing.size ? "text-ui-xs text-warn" : "text-ui-xs text-ok"}>
+          {pass}/{LINT_RULES.length} passed
+        </span>
       </div>
       <ul className="flex flex-col gap-1.5">
         {LINT_RULES.map((rule) => {

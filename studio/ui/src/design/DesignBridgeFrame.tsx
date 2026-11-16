@@ -8,7 +8,8 @@ export interface BridgeMark {
   seq: number;
 }
 
-const makeNonce = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
+const makeNonce = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
 
 /**
  * A design preview that can be clicked. Scripts run only by our nonce (the page has none of its own),

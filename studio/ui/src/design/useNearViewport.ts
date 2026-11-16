@@ -10,7 +10,9 @@ export function useNearViewport<T extends HTMLElement>(margin = "400px 600px") {
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
-    const observer = new IntersectionObserver(([entry]) => setNear(entry?.isIntersecting ?? false), { rootMargin: margin });
+    const observer = new IntersectionObserver(([entry]) => setNear(entry?.isIntersecting ?? false), {
+      rootMargin: margin,
+    });
     observer.observe(node);
     return () => observer.disconnect();
   }, [margin]);

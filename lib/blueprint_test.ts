@@ -1,22 +1,28 @@
 import { assert, assertEquals, assertThrows } from "jsr:@std/assert@1";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { join } from "jsr:@std/path@1";
 import {
   addToManifest,
   type AppEntry,
-  validateAudit,
   applyOverlay,
   applyReplacements,
-  defaultOverlays,
+  checkOverlay,
   composeStack,
+  copyTree,
+  defaultOverlays,
+  flagChoices,
   isAppDir,
-  mergeSettings,
   isBundleId,
   isDisplayName,
   type Manifest,
   mergeDenoJson,
+  mergeSettings,
   moveDir,
+  stackFlags,
   stacksFromFlags,
   subst,
+  validateAudit,
   varsFor,
 } from "./blueprint.ts";
 
@@ -35,7 +41,14 @@ Deno.test("validation: bundle id, app dir, display name", () => {
 });
 
 Deno.test("flags map to stack ids and reject unknown values", () => {
-  assertEquals(stacksFromFlags({ web: "spa,site,spa-vue,site-next", mobile: "rn", desktop: "tauri" }), ["web-spa", "web-site-astro", "web-spa-vue", "web-site-next", "mobile-rn", "desktop-tauri"]);
+  assertEquals(stacksFromFlags({ web: "spa,site,spa-vue,site-next", mobile: "rn", desktop: "tauri" }), [
+    "web-spa",
+    "web-site-astro",
+    "web-spa-vue",
+    "web-site-next",
+    "mobile-rn",
+    "desktop-tauri",
+  ]);
   assertEquals(stacksFromFlags({ web: "none", mobile: "none" }), []);
   assertThrows(() => stacksFromFlags({ web: "vue" }));
   assertThrows(() => stacksFromFlags({ mobile: "swift" }));
@@ -71,10 +84,18 @@ Deno.test("replacements and directory moves in an app copy", () => {
 
 Deno.test("deno.json merge: workspace members, task name conflicts", () => {
   const base = { workspace: ["./backend"], tasks: { sync: "x", "dev:web": "deno task --cwd apps/web dev" } };
-  const a = mergeDenoJson(base, { tasks: { "dev:web": "deno task --cwd apps/web dev" }, workspace: ["./apps/web"] }, "web");
+  const a = mergeDenoJson(
+    base,
+    { tasks: { "dev:web": "deno task --cwd apps/web dev" }, workspace: ["./apps/web"] },
+    "web",
+  );
   assertEquals(a.workspace, ["./backend", "./apps/web"]);
   assertEquals(Object.keys(a.tasks!), ["sync", "dev:web"]); // identical task is not duplicated
-  const b = mergeDenoJson(a, { tasks: { "dev:web": "deno task --cwd apps/admin dev" }, workspace: ["./apps/admin"] }, "admin");
+  const b = mergeDenoJson(
+    a,
+    { tasks: { "dev:web": "deno task --cwd apps/admin dev" }, workspace: ["./apps/admin"] },
+    "admin",
+  );
   assertEquals(b.tasks!["dev:web:admin"], "deno task --cwd apps/admin dev");
   assertEquals(b.tasks!["dev:web"], "deno task --cwd apps/web dev");
   assertEquals(base.workspace, ["./backend"]); // input untouched
@@ -97,13 +118,23 @@ Deno.test("composeStack copies the app and package once, resolves commands", () 
     Deno.writeTextFileSync(join(stackDir, "packages/kit/a.ts"), "export {};\n");
     Deno.writeTextFileSync(join(stackDir, "packages/kit/package.json"), "{}");
     const stack = {
-      id: "demo", kind: "mobile" as const, defaultAppDir: "apps/mobile", workspaceMember: true,
-      packages: ["stack:packages/kit"], root: stackDir,
+      id: "demo",
+      kind: "mobile" as const,
+      defaultAppDir: "apps/mobile",
+      workspaceMember: true,
+      packages: ["stack:packages/kit"],
+      root: stackDir,
       replace: [{ from: "com.example.mobile", to: "{bundleId}" }],
       tasks: { "dev:mobile": { cwd: "{appDir}", run: "start" } },
       check: [{ cwd: "{appDir}", run: "test {appName}" }],
     };
-    const r = composeStack({ projectDir: project, blueprintDir: bp, stack, appDir: "apps/shop", bundleId: "org.acme.shop" });
+    const r = composeStack({
+      projectDir: project,
+      blueprintDir: bp,
+      stack,
+      appDir: "apps/shop",
+      bundleId: "org.acme.shop",
+    });
     assertEquals(Deno.readTextFileSync(join(project, "apps/shop/src/main.ts")).includes("org.acme.shop"), true);
     assertEquals(r.entry.check, [{ cwd: "apps/shop", run: "test shop" }]);
     assertEquals(r.tasks["dev:mobile"], "cd apps/shop && start");
@@ -124,15 +155,37 @@ Deno.test("overlay: copies files, merges tasks, refuses overwrite and missing ba
     const dir = join(bp, "modules/billing");
     Deno.mkdirSync(join(dir, "files/backend/src"), { recursive: true });
     Deno.writeTextFileSync(join(dir, "files/backend/src/billing.ts"), "export {};");
-    Deno.writeTextFileSync(join(dir, "module.json"), JSON.stringify({ requires: { backend: true }, tasks: { "billing:seed": "deno run x.ts" }, check: ["deno test"] }));
+    Deno.writeTextFileSync(
+      join(dir, "module.json"),
+      JSON.stringify({ requires: { backend: true }, tasks: { "billing:seed": "deno run x.ts" }, check: ["deno test"] }),
+    );
     const manifest = { version: 2 as const, name: "p", backend: true, apps: [] };
     const r = applyOverlay({ blueprintDir: bp, projectDir: project, kind: "module", name: "billing", manifest });
     assertEquals(r.tasks, { "billing:seed": "deno run x.ts" });
     assertEquals(r.extra.check, [{ cwd: ".", run: "deno test" }]);
     assert(Deno.statSync(join(project, "backend/src/billing.ts")).isFile);
-    assertThrows(() => applyOverlay({ blueprintDir: bp, projectDir: project, kind: "module", name: "billing", manifest }), Error, "overwrite");
-    assertThrows(() => applyOverlay({ blueprintDir: bp, projectDir: project, kind: "module", name: "billing", manifest: { ...manifest, backend: false } }), Error, "backend");
-    assertThrows(() => applyOverlay({ blueprintDir: bp, projectDir: project, kind: "module", name: "nope", manifest }), Error, "Unknown");
+    assertThrows(
+      () => applyOverlay({ blueprintDir: bp, projectDir: project, kind: "module", name: "billing", manifest }),
+      Error,
+      "overwrite",
+    );
+    assertThrows(
+      () =>
+        applyOverlay({
+          blueprintDir: bp,
+          projectDir: project,
+          kind: "module",
+          name: "billing",
+          manifest: { ...manifest, backend: false },
+        }),
+      Error,
+      "backend",
+    );
+    assertThrows(
+      () => applyOverlay({ blueprintDir: bp, projectDir: project, kind: "module", name: "nope", manifest }),
+      Error,
+      "Unknown",
+    );
   } finally {
     Deno.removeSync(bp, { recursive: true });
     Deno.removeSync(project, { recursive: true });
@@ -141,7 +194,14 @@ Deno.test("overlay: copies files, merges tasks, refuses overwrite and missing ba
 
 Deno.test("settings merge: hooks concatenate without duplicates, own keys win", () => {
   const a = { model: "x", hooks: { PreToolUse: [{ matcher: "Bash", hooks: [{ command: "a" }] }] } };
-  const b = { model: "y", extra: 1, hooks: { PreToolUse: [{ matcher: "Bash", hooks: [{ command: "a" }] }, { matcher: "Write", hooks: [{ command: "b" }] }], Stop: [{ hooks: [{ command: "c" }] }] } };
+  const b = {
+    model: "y",
+    extra: 1,
+    hooks: {
+      PreToolUse: [{ matcher: "Bash", hooks: [{ command: "a" }] }, { matcher: "Write", hooks: [{ command: "b" }] }],
+      Stop: [{ hooks: [{ command: "c" }] }],
+    },
+  };
   const m = mergeSettings(a, b) as { model: string; extra: number; hooks: Record<string, unknown[]> };
   assertEquals([m.model, m.extra], ["x", 1]);
   assertEquals(m.hooks.PreToolUse.length, 2);
@@ -156,11 +216,23 @@ Deno.test("overlay: rules are appended to AGENTS.md and settings.json is merged"
     Deno.mkdirSync(join(dir, "files/.claude"), { recursive: true });
     Deno.writeTextFileSync(join(dir, "rules.md"), "Never ship unreviewed.\n");
     Deno.writeTextFileSync(join(dir, "pack.json"), JSON.stringify({ rules: "rules.md", default: true }));
-    Deno.writeTextFileSync(join(dir, "files/.claude/settings.json"), JSON.stringify({ hooks: { Stop: [{ hooks: [{ command: "b" }] }] } }));
+    Deno.writeTextFileSync(
+      join(dir, "files/.claude/settings.json"),
+      JSON.stringify({ hooks: { Stop: [{ hooks: [{ command: "b" }] }] } }),
+    );
     Deno.mkdirSync(join(project, ".claude"), { recursive: true });
-    Deno.writeTextFileSync(join(project, ".claude/settings.json"), JSON.stringify({ hooks: { Stop: [{ hooks: [{ command: "a" }] }] } }));
+    Deno.writeTextFileSync(
+      join(project, ".claude/settings.json"),
+      JSON.stringify({ hooks: { Stop: [{ hooks: [{ command: "a" }] }] } }),
+    );
     Deno.writeTextFileSync(join(project, "AGENTS.md"), "# Rules\n");
-    applyOverlay({ blueprintDir: bp, projectDir: project, kind: "pack", name: "safety", manifest: { version: 2, name: "p", backend: false, apps: [] } });
+    applyOverlay({
+      blueprintDir: bp,
+      projectDir: project,
+      kind: "pack",
+      name: "safety",
+      manifest: { version: 2, name: "p", backend: false, apps: [] },
+    });
     assert(Deno.readTextFileSync(join(project, "AGENTS.md")).includes("## Pack: safety\n\nNever ship unreviewed."));
     assertEquals(JSON.parse(Deno.readTextFileSync(join(project, ".claude/settings.json"))).hooks.Stop.length, 2);
     assertEquals(defaultOverlays(bp, "pack"), ["safety"]);
@@ -172,7 +244,10 @@ Deno.test("overlay: rules are appended to AGENTS.md and settings.json is merged"
 
 Deno.test("audit ignore needs valid advisory ids and a reason", () => {
   validateAudit(undefined, "s");
-  validateAudit({ ignore: ["GHSA-3g3m-2fjr-6pw4", "CVE-2026-118773"], reason: "dev-only test tooling, not shipped" }, "s");
+  validateAudit(
+    { ignore: ["GHSA-3g3m-2fjr-6pw4", "CVE-2026-118773"], reason: "dev-only test tooling, not shipped" },
+    "s",
+  );
   assertThrows(() => validateAudit({ ignore: [], reason: "long enough reason" }, "s"));
   assertThrows(() => validateAudit({ ignore: ["lodash"], reason: "long enough reason" }, "s"));
   assertThrows(() => validateAudit({ ignore: ["GHSA-3g3m-2fjr-6pw4"], reason: "" }, "s"), Error, "reason");
@@ -191,11 +266,20 @@ Deno.test("variants: overlay replaces app files, variant packages and tokens app
     Deno.writeTextFileSync(join(root, "src/a.ts"), "base");
     Deno.writeTextFileSync(join(root, "variants/vue/src/a.ts"), "vue");
     const stack = {
-      id: "site", kind: "web" as const, defaultAppDir: "apps/site", workspaceMember: true, root, check: [],
-      variants: { key: "islands" as const, default: "react", values: {
-        react: { overlay: "variants/react", tokens: "run react" },
-        vue: { overlay: "variants/vue", packages: ["shared:shared/packages/ui-vue"], tokens: "run vue" },
-      } },
+      id: "site",
+      kind: "web" as const,
+      defaultAppDir: "apps/site",
+      workspaceMember: true,
+      root,
+      check: [],
+      variants: {
+        key: "islands" as const,
+        default: "react",
+        values: {
+          react: { overlay: "variants/react", tokens: "run react" },
+          vue: { overlay: "variants/vue", packages: ["shared:shared/packages/ui-vue"], tokens: "run vue" },
+        },
+      },
     };
     const r = composeStack({ projectDir: project, blueprintDir: bp, stack, appDir: "apps/site", islands: "vue" });
     assertEquals(Deno.readTextFileSync(join(project, "apps/site/src/a.ts")), "vue");
@@ -203,9 +287,76 @@ Deno.test("variants: overlay replaces app files, variant packages and tokens app
     assertEquals(r.entry.tokens, "run vue");
     assertEquals(r.workspace, ["./packages/ui-vue", "./apps/site"]);
     assertEquals(Array.from(Deno.readDirSync(join(project, "apps/site"))).some((e) => e.name === "variants"), false);
-    assertThrows(() => composeStack({ projectDir: project, blueprintDir: bp, stack, appDir: "apps/other", islands: "svelte" }), Error, "islands");
+    assertThrows(
+      () => composeStack({ projectDir: project, blueprintDir: bp, stack, appDir: "apps/other", islands: "svelte" }),
+      Error,
+      "islands",
+    );
   } finally {
     Deno.removeSync(bp, { recursive: true });
     Deno.removeSync(project, { recursive: true });
   }
+});
+
+Deno.test("copy honours .gitignore and never ships Flutter's machine-local files", () => {
+  const src = Deno.makeTempDirSync();
+  const run = (...a: string[]) =>
+    new Deno.Command("git", { args: a, cwd: src, stdout: "null", stderr: "null" }).outputSync();
+  Deno.writeTextFileSync(join(src, ".gitignore"), "secret.txt\nlocal_dir/\n");
+  for (
+    const f of [
+      "keep.txt",
+      "secret.txt",
+      "local_dir/a.txt",
+      "ios/Flutter/Generated.xcconfig",
+      "ios/Flutter/flutter_export_environment.sh",
+      "ios/Flutter/Debug.xcconfig",
+    ]
+  ) {
+    mkdirSync(dirname(join(src, f)), { recursive: true });
+    Deno.writeTextFileSync(join(src, f), "x");
+  }
+  run("init", "-q");
+  const to = join(Deno.makeTempDirSync(), "out");
+  copyTree(src, to);
+  assertEquals(existsSync(join(to, "keep.txt")), true);
+  assertEquals(existsSync(join(to, "ios/Flutter/Debug.xcconfig")), true);
+  for (
+    const gone of [
+      "secret.txt",
+      "local_dir",
+      "ios/Flutter/Generated.xcconfig",
+      "ios/Flutter/flutter_export_environment.sh",
+    ]
+  ) {
+    assertEquals(existsSync(join(to, gone)), false, `${gone} must not be copied`);
+  }
+});
+
+Deno.test("stack flags come from stack.json and drive stacksFromFlags", () => {
+  const root = new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+  const flags = stackFlags(root);
+  assertEquals(flags.web["site-next"], "web-site-next");
+  assertEquals(flags.mobile["rn"], "mobile-rn");
+  assertEquals(Object.keys(flags.desktop).sort(), ["gpui", "tauri"]);
+  assertEquals(flagChoices("mobile", root).split("|").sort(), ["flutter", "rn"]);
+  assertThrows(() => stacksFromFlags({ web: "nope" }, root), Error, "--web must be");
+});
+
+Deno.test("checkOverlay enforces db, backend, stacks and modules", () => {
+  const have = { db: "postgres", backend: true, stacks: ["web-spa"], extras: ["email"] };
+  checkOverlay(
+    "module",
+    "m",
+    { requires: { db: "postgres", backend: true, stacks: ["web-spa"], modules: ["email"] } },
+    have,
+  );
+  assertThrows(() => checkOverlay("module", "m", { requires: { db: "mongodb" } }, have), Error, "--db mongodb");
+  assertThrows(
+    () => checkOverlay("module", "m", { requires: { backend: true } }, { ...have, backend: false }),
+    Error,
+    "backend",
+  );
+  assertThrows(() => checkOverlay("module", "m", { requires: { stacks: ["mobile-rn"] } }, have), Error, "mobile-rn");
+  assertThrows(() => checkOverlay("module", "m", { requires: { modules: ["storage"] } }, have), Error, "storage");
 });

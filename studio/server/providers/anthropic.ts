@@ -4,14 +4,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { CallInput, Provider } from "./types.ts";
 
-export function createAnthropicProvider(apiKey: string, model: string, client: Anthropic = new Anthropic({ apiKey })): Provider {
+export function createAnthropicProvider(
+  apiKey: string,
+  model: string,
+  client: Anthropic = new Anthropic({ apiKey }),
+): Provider {
   return {
     id: "anthropic",
     label: `Anthropic ${model}`,
     async call(input: CallInput) {
       const content: Anthropic.ContentBlockParam[] = [];
       if (input.image) {
-        content.push({ type: "image", source: { type: "base64", media_type: input.image.mime as "image/png", data: input.image.base64 } });
+        content.push({
+          type: "image",
+          source: { type: "base64", media_type: input.image.mime as "image/png", data: input.image.base64 },
+        });
       }
       content.push({ type: "text", text: `${input.user}\n\nAnswer by calling the ${input.tool.name} tool.` });
       const stream = client.messages.stream(
@@ -48,7 +55,9 @@ export function createAnthropicProvider(apiKey: string, model: string, client: A
         // Never echo the SDK error verbatim: request details can include headers.
         throw new Error(
           `Anthropic request failed: ${
-            error instanceof Anthropic.APIError ? `${error.status ?? ""} ${error.message}`.slice(0, 200) : "network or timeout error"
+            error instanceof Anthropic.APIError
+              ? `${error.status ?? ""} ${error.message}`.slice(0, 200)
+              : "network or timeout error"
           }`,
         );
       }
@@ -56,7 +65,9 @@ export function createAnthropicProvider(apiKey: string, model: string, client: A
       if (message.stop_reason === "max_tokens") {
         throw new Error("The answer was cut off (too long). Ask for fewer variants or a smaller screen.");
       }
-      const use = message.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use" && b.name === input.tool.name);
+      const use = message.content.find((b): b is Anthropic.ToolUseBlock =>
+        b.type === "tool_use" && b.name === input.tool.name
+      );
       if (!use) throw new Error("The model answered without calling the design tool. Try again.");
       return use.input;
     },

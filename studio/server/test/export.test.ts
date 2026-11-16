@@ -14,21 +14,34 @@ Deno.test("export paths follow the architecture of each stack", () => {
     barrel: "apps/web/src/features/billing/index.ts",
   });
   assertEquals(
-    exportPaths({ app: { ...web, stack: "mobile-rn", dir: "apps/app" }, kind: "react-native", feature: "notes", screen: "NoteList" })
+    exportPaths({
+      app: { ...web, stack: "mobile-rn", dir: "apps/app" },
+      kind: "react-native",
+      feature: "notes",
+      screen: "NoteList",
+    })
       .screen,
     "apps/app/src/features/notes/ui/NoteList.tsx",
   );
   assertEquals(exportPaths({ app: flutter, kind: "flutter", feature: "billing", screen: "InvoiceScreen" }), {
-    screen: "apps/mobile/lib/features/billing/ui/invoice_screen.dart",
-    barrel: null,
+    screen: "apps/mobile/lib/features/billing/presentation/invoice_screen.dart",
+    barrel: "apps/mobile/lib/features/billing/billing.dart",
   });
 });
 
 Deno.test("feature and screen names are validated before they reach a path", () => {
   assertThrows(() => exportPaths({ app: web, kind: "react", feature: "../x", screen: "A" }), Error, "Feature names");
   assertThrows(() => exportPaths({ app: web, kind: "react", feature: "Billing", screen: "A" }), Error, "Feature names");
-  assertThrows(() => exportPaths({ app: web, kind: "react", feature: "billing", screen: "a/b" }), Error, "Screen names");
-  assertThrows(() => exportPaths({ app: web, kind: "react", feature: "billing", screen: "lower" }), Error, "Screen names");
+  assertThrows(
+    () => exportPaths({ app: web, kind: "react", feature: "billing", screen: "a/b" }),
+    Error,
+    "Screen names",
+  );
+  assertThrows(
+    () => exportPaths({ app: web, kind: "react", feature: "billing", screen: "lower" }),
+    Error,
+    "Screen names",
+  );
 });
 
 Deno.test("the write guard accepts only project-relative paths in allowed folders", () => {
@@ -41,7 +54,10 @@ Deno.test("the write guard accepts only project-relative paths in allowed folder
     );
     assertEquals(guardPath(root, "design/tokens.json", prefixes), "design/tokens.json");
     assertEquals(guardPath(root, "DESIGN.md", prefixes), "DESIGN.md");
-    assertEquals(guardPath(root, "docs/screenshots/a-desktop-light.png", prefixes), "docs/screenshots/a-desktop-light.png");
+    assertEquals(
+      guardPath(root, "docs/screenshots/a-desktop-light.png", prefixes),
+      "docs/screenshots/a-desktop-light.png",
+    );
     const bad = [
       "../outside.ts",
       "apps/web/../../x.ts",
@@ -76,7 +92,10 @@ Deno.test("plan then apply: nothing is written by plan, apply writes exactly the
   try {
     const plans = createPlans(() => readContext(root), root);
     const file = "apps/web/src/features/billing/ui/InvoiceScreen.tsx";
-    const view = await plans.plan([{ path: file, content: "export const x = 1\n" }, { path: "design/tokens.json", content: "{}\n" }]);
+    const view = await plans.plan([{ path: file, content: "export const x = 1\n" }, {
+      path: "design/tokens.json",
+      content: "{}\n",
+    }]);
     assertEquals(view.files.map((f) => f.status), ["new", "changed"]);
     assertEquals(view.files[0]!.diff.map((l) => l.kind), ["add"]);
     assertEquals(await Deno.stat(join(root, file)).then(() => true, () => false), false, "plan must not write");
@@ -116,7 +135,10 @@ Deno.test("unchanged files are skipped and CRLF is normalised to LF", async () =
   try {
     const plans = createPlans(() => readContext(root), root);
     const same = Deno.readTextFileSync(join(root, "DESIGN.md"));
-    const view = await plans.plan([{ path: "DESIGN.md", content: same }, { path: "design/a.json", content: "{\r\n}\r\n" }]);
+    const view = await plans.plan([{ path: "DESIGN.md", content: same }, {
+      path: "design/a.json",
+      content: "{\r\n}\r\n",
+    }]);
     assertEquals(view.files[0]!.status, "unchanged");
     const { written } = await plans.apply(view.id);
     assertEquals(written, ["design/a.json"]);
@@ -147,7 +169,10 @@ Deno.test("apply refuses to write through a symlinked folder", async () => {
 
 Deno.test("barrel exports are appended once and keep existing lines", () => {
   assertEquals(withBarrelExport(null, "A", "react"), "export { A } from './ui/A'\n");
-  assertEquals(withBarrelExport("export { B } from './ui/B'\n", "A", "react"), "export { B } from './ui/B'\nexport { A } from './ui/A'\n");
+  assertEquals(
+    withBarrelExport("export { B } from './ui/B'\n", "A", "react"),
+    "export { B } from './ui/B'\nexport { A } from './ui/A'\n",
+  );
   const once = withBarrelExport("export { A } from './ui/A'\n", "A", "react");
   assertEquals(once, "export { A } from './ui/A'\n");
 });
@@ -163,9 +188,29 @@ Deno.test("generated code is checked for hard-coded colours, literal text, place
   assert(ids("react", "export const S = () => null").includes("no-copy-prop"));
   assert(ids("react", `${good}\nconst c = 'p-[13px]'`).includes("arbitrary-value"));
   assert(
-    ids("flutter", "class S { final copy; Widget build() { return Text('Hello world'); } } // loading empty error").includes(
-      "literal-text",
+    ids("flutter", "class S { final copy; Widget build() { return Text('Hello world'); } } // loading empty error")
+      .includes(
+        "literal-text",
+      ),
+  );
+  assert(
+    ids("flutter", "class S { final copy; Color c = Color(0xFF112233); } // loading empty error").includes(
+      "hard-coded-colour",
     ),
   );
-  assert(ids("flutter", "class S { final copy; Color c = Color(0xFF112233); } // loading empty error").includes("hard-coded-colour"));
+});
+
+Deno.test("stack ids come from stack.json export blocks, not a hard-coded table", async () => {
+  const { kindOfStack } = await import("../export.ts");
+  assertEquals(
+    ["web-spa", "web-site-next", "mobile-rn", "mobile-flutter", "web-site-astro", "web-spa-vue", "nope", "../x"].map((
+      s,
+    ) => kindOfStack(s) ?? null),
+    ["react", "react", "react-native", "flutter", null, null, null, null],
+  );
+  assertEquals(
+    withBarrelExport("export 'presentation/ab.dart';\n", "AB", "flutter"),
+    "export 'presentation/ab.dart';\n",
+  );
+  assertEquals(withBarrelExport(null, "InvoiceScreen", "flutter"), "export 'presentation/invoice_screen.dart';\n");
 });

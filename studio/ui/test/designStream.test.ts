@@ -41,7 +41,9 @@ test("only complete elements, open containers are closed; the output is raw (the
   assert.equal(progressiveDocument('<style>a{}</style><body><div><p>x</p><img src="a').body, "<div><p>x</p></div>");
   // Raw-text elements hide their "<" from the scanner.
   assert.equal(
-    progressiveDocument("<style>a{}</style><body><div><script>if (a < b) {}</script><p>x</p></div>").body.includes("<p>x</p>"),
+    progressiveDocument("<style>a{}</style><body><div><script>if (a < b) {}</script><p>x</p></div>").body.includes(
+      "<p>x</p>",
+    ),
     true,
   );
 });
@@ -71,7 +73,10 @@ test("replay prefixes grow monotonically, start with the tokens, end near the wh
 });
 
 test("render cost: a 60 KB page costs a few ms per frame, well under the throttle", () => {
-  const big = PAGE.replace("</main>", `${'<section class="card"><h2>Row</h2><p>text</p></section>'.repeat(1000)}</main>`);
+  const big = PAGE.replace(
+    "</main>",
+    `${'<section class="card"><h2>Row</h2><p>text</p></section>'.repeat(1000)}</main>`,
+  );
   assert.ok(big.length > 55_000);
   const steps = replayPrefixes(big, 14);
   const start = performance.now();

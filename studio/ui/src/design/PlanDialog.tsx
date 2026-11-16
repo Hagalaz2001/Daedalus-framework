@@ -19,7 +19,12 @@ export function PlanDialog({ plan, title, busy, error, onWrite, onCancel }: {
   const changed = plan.files.filter((f) => f.status !== "unchanged");
   const lines = file.diff;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-6" role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
       <div className="flex max-h-[86vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-panel shadow-[var(--shadow)]">
         <header className="flex items-center gap-3 border-b border-border px-5 py-3">
           <h2 className="text-ui-base font-semibold">{title}</h2>
@@ -47,7 +52,10 @@ export function PlanDialog({ plan, title, busy, error, onWrite, onCancel }: {
                     : <FileText className="mt-0.5 size-3.5 shrink-0" aria-hidden />}
                   <span className="min-w-0 flex-1 break-all font-mono">{f.path}</span>
                   <span
-                    className={cn("shrink-0 uppercase tracking-wide", f.status === "unchanged" ? "text-foreground-subtle" : "text-brand")}
+                    className={cn(
+                      "shrink-0 uppercase tracking-wide",
+                      f.status === "unchanged" ? "text-foreground-subtle" : "text-brand",
+                    )}
                   >
                     {f.status}
                   </span>

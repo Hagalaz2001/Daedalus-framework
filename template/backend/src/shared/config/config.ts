@@ -10,8 +10,10 @@ export interface Config {
   trustedOrigins: string[];
   logLevel: "debug" | "info" | "warn" | "error";
   rateLimitPerMinute: number;
-  /** Trust X-Forwarded-For (only behind a proxy you control). */
-  trustProxy: boolean;
+  /** Requests per minute per client address on /api/auth/* (sign in, sign up: password guessing). */
+  authRateLimitPerMinute: number;
+  /** Reverse proxies you control in front of the app: X-Forwarded-For is read that many entries from the end. 0 = none. */
+  trustProxy: number;
   /** Emails of platform operators (admin module, feature flags). Not tied to any organization. */
   adminEmails: string[];
 }
@@ -43,6 +45,13 @@ export function loadConfig(env: Record<string, string | undefined> = Deno.env.to
   };
   const port = num("PORT", 8787);
   const rateLimitPerMinute = num("RATE_LIMIT_PER_MINUTE", 120);
+  const authRateLimitPerMinute = num("AUTH_RATE_LIMIT_PER_MINUTE", 30);
+  // "true" (older configs) means one proxy; a number is the hop count; unset or "false" trusts nobody.
+  const proxyRaw = env["TRUST_PROXY"] ?? "";
+  const trustProxy = proxyRaw === "true" ? 1 : proxyRaw === "" || proxyRaw === "false" ? 0 : Number(proxyRaw);
+  if (!Number.isInteger(trustProxy) || trustProxy < 0) {
+    problems.push("TRUST_PROXY must be a number of proxies (0, 1, 2 ...), or true/false");
+  }
   const authSecret = env["BETTER_AUTH_SECRET"] || (production ? "" : DEV_SECRET);
   if (authSecret.length < 32) {
     problems.push("BETTER_AUTH_SECRET must be set (32+ characters, e.g. `openssl rand -base64 32`)");
@@ -66,7 +75,8 @@ export function loadConfig(env: Record<string, string | undefined> = Deno.env.to
     trustedOrigins: csv(env["AUTH_TRUSTED_ORIGINS"], "http://localhost:5173"),
     logLevel: level as Config["logLevel"],
     rateLimitPerMinute,
-    trustProxy: env["TRUST_PROXY"] === "true",
+    authRateLimitPerMinute,
+    trustProxy,
     adminEmails: csv(env["ADMIN_EMAILS"], "").map((e) => e.toLowerCase()),
   };
 }

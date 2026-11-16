@@ -29,7 +29,9 @@ export function createOllamaProvider(host: string, model: string, fetchFn: typeo
           ],
         }),
       }).catch(() => {
-        throw new Error(`Cannot reach Ollama at ${host}. Start it with "ollama serve" and pull the model: ollama pull ${model}`);
+        throw new Error(
+          `Cannot reach Ollama at ${host}. Start it with "ollama serve" and pull the model: ollama pull ${model}`,
+        );
       });
       if (!res.ok || !res.body) throw new Error(`Ollama answered ${res.status}. Is the model "${model}" pulled?`);
       let raw = "";

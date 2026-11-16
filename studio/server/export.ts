@@ -2,19 +2,39 @@
 // never writes files. It returns code; the server turns that into a *plan* (paths + contents), the developer
 // reviews the diff, and only then does apply write exactly that plan, nowhere else.
 import { createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { lstat, readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { writeProjectFile } from "./design/projectDesignFs.ts";
 import type { AppRef, ProjectContext } from "./context.ts";
 
 export type CodeKind = "react" | "react-native" | "flutter";
 
-export const KIND_OF_STACK: Record<string, CodeKind> = {
-  "web-spa": "react",
-  "web-site": "react",
-  "mobile-rn": "react-native",
-  "mobile-flutter": "flutter",
-};
+/** What a stack declares in its stack.json `export` block; stacks without one (Astro site, Vue SPA: the translator writes React) cannot be exported to. */
+export interface ExportInfo {
+  kind: CodeKind;
+  label: string;
+  /** Folder under features/<feature>/ that holds screens. Default "ui"; Flutter uses "presentation". */
+  screenDir?: string;
+}
+const STACKS_DIR = fileURLToPath(new URL("../../stacks/", import.meta.url));
+const exportCache = new Map<string, ExportInfo | null>();
+export function exportInfoOf(stackId: string): ExportInfo | null {
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(stackId)) return null;
+  if (!exportCache.has(stackId)) {
+    try {
+      exportCache.set(
+        stackId,
+        JSON.parse(readFileSync(join(STACKS_DIR, stackId, "stack.json"), "utf8")).export ?? null,
+      );
+    } catch {
+      exportCache.set(stackId, null);
+    }
+  }
+  return exportCache.get(stackId) ?? null;
+}
+export const kindOfStack = (stackId: string): CodeKind | undefined => exportInfoOf(stackId)?.kind;
 
 const FEATURE = /^[a-z][a-z0-9-]{0,40}$/;
 const SCREEN = /^[A-Z][A-Za-z0-9]{0,60}$/;
@@ -28,13 +48,22 @@ export interface ExportTarget {
   screen: string;
 }
 
-/** Where a screen lands: <app>/src/features/<feature>/ui for TypeScript stacks, <app>/lib/features/<feature>/ui for Flutter. */
+/** Where a screen lands: <app>/src/features/<feature>/ui for TypeScript stacks, <app>/lib/features/<feature>/presentation for Flutter. */
 export function exportPaths(t: ExportTarget): { screen: string; barrel: string | null } {
   if (!FEATURE.test(t.feature)) throw new Error("Feature names are lowercase words with dashes, for example billing.");
   if (!SCREEN.test(t.screen)) throw new Error("Screen names are PascalCase, for example DashboardScreen.");
   const dir = t.app.dir.replace(/\\/g, "/").replace(/\/+$/, "");
-  if (t.kind === "flutter") return { screen: `${dir}/lib/features/${t.feature}/ui/${snake(t.screen)}.dart`, barrel: null };
-  return { screen: `${dir}/src/features/${t.feature}/ui/${t.screen}.tsx`, barrel: `${dir}/src/features/${t.feature}/index.ts` };
+  const sub = exportInfoOf(t.app.stack)?.screenDir ?? (t.kind === "flutter" ? "presentation" : "ui");
+  if (t.kind === "flutter") {
+    return {
+      screen: `${dir}/lib/features/${t.feature}/${sub}/${snake(t.screen)}.dart`,
+      barrel: `${dir}/lib/features/${t.feature}/${t.feature}.dart`,
+    };
+  }
+  return {
+    screen: `${dir}/src/features/${t.feature}/ui/${t.screen}.tsx`,
+    barrel: `${dir}/src/features/${t.feature}/index.ts`,
+  };
 }
 
 export interface PlannedFile {
@@ -54,8 +83,15 @@ export function allowedPrefixes(ctx: Pick<ProjectContext, "apps">): string[] {
  * The single gate every write passes. Returns the normalised relative path or throws. Rejects absolute paths,
  * traversal, .git, node_modules, .env files, extensions outside the allow-list and folders outside the prefixes.
  */
-export function guardPath(root: string, path: string, prefixes: readonly string[], extraFiles: readonly string[] = ["DESIGN.md"]): string {
-  if (typeof path !== "string" || path === "" || path.length > 300 || path.includes("\0")) throw new Error("Not a valid file path.");
+export function guardPath(
+  root: string,
+  path: string,
+  prefixes: readonly string[],
+  extraFiles: readonly string[] = ["DESIGN.md"],
+): string {
+  if (typeof path !== "string" || path === "" || path.length > 300 || path.includes("\0")) {
+    throw new Error("Not a valid file path.");
+  }
   if (isAbsolute(path) || /^[a-zA-Z]:/.test(path) || path.startsWith("\\\\")) {
     throw new Error(`${path}: paths must be relative to the project.`);
   }
@@ -69,7 +105,9 @@ export function guardPath(root: string, path: string, prefixes: readonly string[
   const back = relative(resolve(root), full);
   if (back.startsWith("..") || back.split(sep).includes("..")) throw new Error(`${path}: path leaves the project.`);
   const ext = rel.slice(rel.lastIndexOf("."));
-  if (!ALLOWED_EXT.has(ext)) throw new Error(`${path}: ${ext || "files without an extension"} cannot be written by the studio.`);
+  if (!ALLOWED_EXT.has(ext)) {
+    throw new Error(`${path}: ${ext || "files without an extension"} cannot be written by the studio.`);
+  }
   if (!extraFiles.includes(rel) && !prefixes.some((p) => rel.startsWith(p))) {
     throw new Error(`${path}: outside the folders the studio may write to.`);
   }
@@ -136,7 +174,9 @@ export function createPlans(ctxOf: () => ProjectContext, root: string) {
   return {
     /** Validates every path, reads what is on disk and returns diffs. Nothing is written. */
     async plan(files: PlannedFile[]): Promise<PlanView> {
-      if (!Array.isArray(files) || files.length === 0 || files.length > 40) throw new Error("A plan has 1 to 40 files.");
+      if (!Array.isArray(files) || files.length === 0 || files.length > 40) {
+        throw new Error("A plan has 1 to 40 files.");
+      }
       const prefixes = allowedPrefixes(ctxOf());
       const clean: PlannedFile[] = [];
       const views: PlanFileView[] = [];
@@ -144,7 +184,9 @@ export function createPlans(ctxOf: () => ProjectContext, root: string) {
         let f = input;
         const path = guardPath(root, f.path, prefixes);
         if (clean.some((c) => c.path === path)) throw new Error(`${path}: listed twice.`);
-        if (typeof f.content !== "string" || f.content.length > 8_000_000) throw new Error(`${path}: content is missing or too large.`);
+        if (typeof f.content !== "string" || f.content.length > 8_000_000) {
+          throw new Error(`${path}: content is missing or too large.`);
+        }
         if (!f.binary && /\r\n/.test(f.content)) f = { ...f, content: f.content.replace(/\r\n/g, "\n") };
         const before = f.binary ? null : await current(path);
         clean.push({ path, content: f.content, ...(f.binary ? { binary: true } : {}) });
@@ -176,7 +218,11 @@ export function createPlans(ctxOf: () => ProjectContext, root: string) {
       for (const f of files) {
         const rel = guardPath(root, f.path, prefixes);
         if (!f.binary && (await current(rel)) === f.content) continue;
-        await writeProjectFile(root, join(root, rel), f.binary ? Uint8Array.from(atob(f.content), (c) => c.charCodeAt(0)) : f.content);
+        await writeProjectFile(
+          root,
+          join(root, rel),
+          f.binary ? Uint8Array.from(atob(f.content), (c) => c.charCodeAt(0)) : f.content,
+        );
         written.push(rel);
       }
       plans.delete(id);
@@ -188,13 +234,17 @@ export function createPlans(ctxOf: () => ProjectContext, root: string) {
 
 /** Adds `export * from './ui/<Screen>'` to the feature barrel without touching anything else in it. */
 export function withBarrelExport(existing: string | null, screen: string, kind: CodeKind): string {
-  const line = kind === "react-native" || kind === "react" ? `export { ${screen} } from './ui/${screen}'\n` : "";
+  const target = kind === "flutter" ? `presentation/${snake(screen)}.dart` : `./ui/${screen}`;
+  const line = kind === "flutter" ? `export '${target}';\n` : `export { ${screen} } from '${target}'\n`;
   if (existing === null) return line;
-  return existing.includes(`'./ui/${screen}'`) ? existing : `${existing.replace(/\n*$/, "\n")}${line}`;
+  return existing.includes(`'${target}'`) ? existing : `${existing.replace(/\n*$/, "\n")}${line}`;
 }
 
 /** Runs the project's `deno task check` and returns what it printed. Only called after an explicit click. */
-export async function runCheck(root: string, timeoutMs = 600_000): Promise<{ ok: boolean; code: number | null; output: string }> {
+export async function runCheck(
+  root: string,
+  timeoutMs = 600_000,
+): Promise<{ ok: boolean; code: number | null; output: string }> {
   const cmd = new Deno.Command(Deno.execPath(), {
     args: ["task", "check"],
     cwd: root,

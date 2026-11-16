@@ -18,7 +18,15 @@ import { designFilePath, readManifest, screenDir } from "./design/projectDesignS
 import { listShells } from "./design/projectDesignShells.ts";
 import { listDirections, writeDirectionDesignMd } from "./design/projectDesignDirections.ts";
 import type { ProjectContext } from "./context.ts";
-import { DESIGN_TOOL, directionPrompt, generatePrompt, PATCH_TOOL, refinePrompt, screensPrompt, systemBlocks } from "./prompts.ts";
+import {
+  DESIGN_TOOL,
+  directionPrompt,
+  generatePrompt,
+  PATCH_TOOL,
+  refinePrompt,
+  screensPrompt,
+  systemBlocks,
+} from "./prompts.ts";
 import type { Provider } from "./providers/types.ts";
 
 export type StudioEvent =
@@ -51,7 +59,12 @@ export function createJobs(deps: { ctx: () => ProjectContext; provider: Provider
       .catch((e) => void (state.errors["*"] = message(e)))
       .finally(() => {
         state.state = Object.keys(state.errors).length ? "error" : "done";
-        bus.emit({ type: "job", id, state: state.state, ...(state.state === "error" ? { message: Object.values(state.errors)[0] } : {}) });
+        bus.emit({
+          type: "job",
+          id,
+          state: state.state,
+          ...(state.state === "error" ? { message: Object.values(state.errors)[0] } : {}),
+        });
         running.delete(p);
       });
     running.add(p);
@@ -100,8 +113,9 @@ export function createJobs(deps: { ctx: () => ProjectContext; provider: Provider
       await Promise.all(
         step.files.map(async (file, i) => {
           try {
-            if (step.kind === "generate") await full(file, generatePrompt(manifest, slug, file, { index: i, total: step.files.length }));
-            else if (step.kind === "screens") {
+            if (step.kind === "generate") {
+              await full(file, generatePrompt(manifest, slug, file, { index: i, total: step.files.length }));
+            } else if (step.kind === "screens") {
               const shell = (await listShells(dir))[0];
               await full(
                 file,
@@ -138,7 +152,11 @@ export function createJobs(deps: { ctx: () => ProjectContext; provider: Provider
   ) {
     const raw = await provider.call({ system, user: refinePrompt(parentHtml, manifest, step), tool: PATCH_TOOL });
     const patch = parseDesignPatch(raw);
-    await writeProjectFile(dir, join(screenDir(dir, manifest.slug), `${file.replace(/\.html$/, "")}.patch.json`), JSON.stringify(patch));
+    await writeProjectFile(
+      dir,
+      join(screenDir(dir, manifest.slug), `${file.replace(/\.html$/, "")}.patch.json`),
+      JSON.stringify(patch),
+    );
     const error = await settlePatch(dir, manifest, file, step.parent);
     if (error) throw new Error(error);
     bus.emit({ type: "write", key: `${manifest.slug}/${file}`, html: "", done: true });
@@ -207,12 +225,19 @@ export function createJobs(deps: { ctx: () => ProjectContext; provider: Provider
   };
 }
 
-async function readReference(dir: string, slug: string, name: string): Promise<{ mime: string; base64: string } | undefined> {
+async function readReference(
+  dir: string,
+  slug: string,
+  name: string,
+): Promise<{ mime: string; base64: string } | undefined> {
   try {
     const bytes = await Deno.readFile(join(screenDir(dir, slug), name));
     let bin = "";
     for (const b of bytes) bin += String.fromCharCode(b);
-    return { mime: name.endsWith("png") ? "image/png" : name.endsWith("webp") ? "image/webp" : "image/jpeg", base64: btoa(bin) };
+    return {
+      mime: name.endsWith("png") ? "image/png" : name.endsWith("webp") ? "image/webp" : "image/jpeg",
+      base64: btoa(bin),
+    };
   } catch {
     return undefined;
   }

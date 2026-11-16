@@ -1,0 +1,16 @@
+# gitleaks (MIT, https://github.com/gitleaks/gitleaks): the default rules plus the allowances below.
+# CI runs it on every pull request; locally: gitleaks git --redact -v (history) or gitleaks dir . --redact -v (files).
+# Silence one reviewed line with a trailing comment: gitleaks:allow
+title = "project gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "example env files only name variables"
+paths = ['''(^|/)\.env\.example$''']
+
+[[allowlists]]
+description = "made-up keys and tokens in tests (limited to the generic rule; real provider keys are still caught)"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)[^/]*(_test|\.test|\.spec)\.[cm]?[jt]sx?$''', '''(^|/)(tests?|__tests__)/''']

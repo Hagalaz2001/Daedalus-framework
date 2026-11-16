@@ -43,7 +43,9 @@ const FRAMES = {
 const message = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason));
 
 function useTheme(): [Theme, () => void] {
-  const [theme, setTheme] = useState<Theme>(() => (document.documentElement.classList.contains("dark") ? "dark" : "light"));
+  const [theme, setTheme] = useState<Theme>(
+    () => (document.documentElement.classList.contains("dark") ? "dark" : "light"),
+  );
   const toggle = () =>
     setTheme((t) => {
       const next = t === "dark" ? "light" : "dark";
@@ -97,7 +99,9 @@ export function Studio() {
   const [redoTo, setRedoTo] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<string | null>(null);
   const [appliedCount, setAppliedCount] = useState(0);
-  const [plan, setPlan] = useState<{ plan: PlanView; title: string; resolve: (files: string[] | null) => void } | null>(null);
+  const [plan, setPlan] = useState<{ plan: PlanView; title: string; resolve: (files: string[] | null) => void } | null>(
+    null,
+  );
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   const [theme, toggleTheme] = useTheme();
@@ -109,7 +113,9 @@ export function Studio() {
   const canvasRef = useCallback((node: HTMLElement | null) => {
     observer.current?.disconnect();
     if (!node) return;
-    observer.current = new ResizeObserver(([e]) => setCanvasSize({ w: e?.contentRect.width ?? 800, h: e?.contentRect.height ?? 700 }));
+    observer.current = new ResizeObserver(([e]) =>
+      setCanvasSize({ w: e?.contentRect.width ?? 800, h: e?.contentRect.height ?? 700 })
+    );
     observer.current.observe(node);
   }, []);
 
@@ -250,16 +256,25 @@ export function Studio() {
         out[st.parent] = { selector, kind: "working", seq: 0 };
       }
     }
-    for (const [k, m] of Object.entries(doneMarks)) if (screen && k.startsWith(`${screen.slug}/`)) out[k.slice(screen.slug.length + 1)] = m;
+    for (const [k, m] of Object.entries(doneMarks)) {
+      if (screen && k.startsWith(`${screen.slug}/`)) out[k.slice(screen.slug.length + 1)] = m;
+    }
     return out;
   }, [screen, doneMarks]);
 
   // --- frame size and zoom ------------------------------------------------------------------------------------
   const frame = device === "auto" ? TARGET_FRAMES[screen?.manifest.target ?? "web-desktop"] : FRAMES[device];
-  const fit = Math.min(1, Math.max(0.25, Math.min((canvasSize.w - 96) / (frame.width * 1.12), (canvasSize.h - 140) / frame.height)));
+  const fit = Math.min(
+    1,
+    Math.max(0.25, Math.min((canvasSize.w - 96) / (frame.width * 1.12), (canvasSize.h - 140) / frame.height)),
+  );
   const zoom = manualZoom ?? fit;
   const stepZoom = (dir: 1 | -1) =>
-    setManualZoom(dir === 1 ? (ZOOMS.find((z) => z > zoom + 0.01) ?? 1) : ([...ZOOMS].reverse().find((z) => z < zoom - 0.01) ?? 0.25));
+    setManualZoom(
+      dir === 1
+        ? (ZOOMS.find((z) => z > zoom + 0.01) ?? 1)
+        : ([...ZOOMS].reverse().find((z) => z < zoom - 0.01) ?? 0.25),
+    );
 
   // --- history: every edit is a new version, so undo is "go to the parent" ---------------------------------------
   const parentOf = (f: string) => screen?.manifest.steps.find((s) => s.files.includes(f))?.parent ?? null;
@@ -306,7 +321,10 @@ export function Studio() {
       setCreating(false);
       setView("variants");
       if (input.engine === "stitch") {
-        setSlug((await api.stitchGenerate({ name: input.name, brief: input.brief, target: input.target, count: input.count })).slug);
+        setSlug(
+          (await api.stitchGenerate({ name: input.name, brief: input.brief, target: input.target, count: input.count }))
+            .slug,
+        );
         return;
       }
       const begun = await api.begin({
@@ -322,7 +340,10 @@ export function Studio() {
       setManualZoom(null);
     });
 
-  const step = (kind: "refine" | "fix" | "screens", extra: { instruction?: string; mode?: "surgical" | "full"; names?: string[] }) =>
+  const step = (
+    kind: "refine" | "fix" | "screens",
+    extra: { instruction?: string; mode?: "surgical" | "full"; names?: string[] },
+  ) =>
     guard(async () => {
       if (!screen || !selectedFile) return;
       const begun = await api.begin({ step: kind, slug: screen.slug, parent: selectedFile, ...extra });
@@ -390,7 +411,9 @@ export function Studio() {
   const showForm = creating || (list !== null && list.screens.length === 0);
   const hasScreen = screen && info;
 
-  if (!config || !list) return <div className="grid h-full place-items-center text-foreground-subtle">{error ?? "Loading studio..."}</div>;
+  if (!config || !list) {
+    return <div className="grid h-full place-items-center text-foreground-subtle">{error ?? "Loading studio..."}</div>;
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -400,9 +423,10 @@ export function Studio() {
           {config.name}
         </span>
         <div className="seg mx-auto" role="group" aria-label="View">
-          {([["variants", "Variants"], ["flow", "Flow"], ["directions", "Directions"], ["system", "System"]] as const).map(([v, label]) => (
-            <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)}>{label}</button>
-          ))}
+          {([["variants", "Variants"], ["flow", "Flow"], ["directions", "Directions"], ["system", "System"]] as const)
+            .map(([v, label]) => (
+              <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)}>{label}</button>
+            ))}
         </div>
         <div className="seg" role="group" aria-label="Device">
           {(["auto", "phone", "tablet", "desktop"] as const).map((d) => (
@@ -429,7 +453,14 @@ export function Studio() {
           </Button>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" aria-label="Undo" title="Undo (previous version)" disabled={!parent} onClick={undo}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Undo"
+            title="Undo (previous version)"
+            disabled={!parent}
+            onClick={undo}
+          >
             <Undo2 className="size-4" />
           </Button>
           <Button variant="ghost" size="sm" aria-label="Redo" title="Redo" disabled={!redoTo} onClick={redo}>
@@ -454,11 +485,16 @@ export function Studio() {
           title="Choose the AI model"
         >
           <span
-            className={cn("size-1.5 rounded-full", running ? "animate-pulse bg-warn" : providers?.banner ? "bg-warn" : "bg-ok")}
+            className={cn(
+              "size-1.5 rounded-full",
+              running ? "animate-pulse bg-warn" : providers?.banner ? "bg-warn" : "bg-ok",
+            )}
             aria-hidden
           />
           {providers?.options.find((o) => o.id === providers.active)?.label ?? config.provider.label}
-          {providers?.active === "ollama" || providers?.active === "lemonade" ? <span className="text-warn">local</span> : null}
+          {providers?.active === "ollama" || providers?.active === "lemonade"
+            ? <span className="text-warn">local</span>
+            : null}
         </button>
       </header>
       {providers?.banner === "no-ai" ? <NoAiBanner onOpen={() => setModelOpen(true)} /> : null}
@@ -466,10 +502,15 @@ export function Studio() {
       <div
         className={cn(
           "grid min-h-0 flex-1",
-          view === "variants" && hasScreen ? "grid-cols-[272px_minmax(0,1fr)_344px]" : "grid-cols-[272px_minmax(0,1fr)]",
+          view === "variants" && hasScreen
+            ? "grid-cols-[272px_minmax(0,1fr)_344px]"
+            : "grid-cols-[272px_minmax(0,1fr)]",
         )}
       >
-        <aside className="flex min-h-0 flex-col gap-3 overflow-auto border-r border-border bg-panel p-3" aria-label="Screens">
+        <aside
+          className="flex min-h-0 flex-col gap-3 overflow-auto border-r border-border bg-panel p-3"
+          aria-label="Screens"
+        >
           <Button
             onClick={() => {
               setCreating(true);
@@ -481,7 +522,9 @@ export function Studio() {
           <ul className="flex flex-col gap-1">
             {list.screens.map((s) => {
               const active = s.slug === screen?.slug;
-              const job = Object.entries(jobs).find(([k]) => k.startsWith(`${s.slug}/`) && jobs[k]?.state === "running");
+              const job = Object.entries(jobs).find(([k]) =>
+                k.startsWith(`${s.slug}/`) && jobs[k]?.state === "running"
+              );
               return (
                 <li key={s.slug}>
                   <button
@@ -512,7 +555,13 @@ export function Studio() {
               );
             })}
           </ul>
-          {error ? <p className="rounded-lg border border-destructive/40 p-2 text-ui-xs text-destructive" role="alert">{error}</p> : null}
+          {error
+            ? (
+              <p className="rounded-lg border border-destructive/40 p-2 text-ui-xs text-destructive" role="alert">
+                {error}
+              </p>
+            )
+            : null}
           <p className="mt-auto flex items-center gap-1.5 text-ui-xs text-foreground-subtle">
             <Workflow className="size-3.5" aria-hidden />Files are written only after you review a diff.
           </p>
@@ -554,8 +603,8 @@ export function Studio() {
                 <div className="w-full max-w-xl rounded-2xl border border-border bg-panel p-8 shadow-[var(--shadow)]">
                   <h1 className="text-2xl font-semibold tracking-tight">Start from a brief</h1>
                   <p className="mb-6 mt-1 text-ui-sm text-foreground-subtle">
-                    Describe a screen or a flow in plain words. You get several different versions built from your DESIGN.md and tokens,
-                    ready to refine.
+                    Describe a screen or a flow in plain words. You get several different versions built from your
+                    DESIGN.md and tokens, ready to refine.
                   </p>
                   <DesignBriefForm
                     hasDesignMd={config.hasDesignMd}
@@ -565,7 +614,11 @@ export function Studio() {
                     onSubmit={(input) => void submit(input)}
                   />
                   {list.screens.length > 0
-                    ? <Button variant="ghost" size="sm" className="mt-3" onClick={() => setCreating(false)}>Back to screens</Button>
+                    ? (
+                      <Button variant="ghost" size="sm" className="mt-3" onClick={() => setCreating(false)}>
+                        Back to screens
+                      </Button>
+                    )
                     : null}
                 </div>
               </div>
@@ -575,7 +628,9 @@ export function Studio() {
               <>
                 <div className="flex items-center gap-3 border-b border-border bg-panel px-4 py-2">
                   <span className="truncate text-ui-sm font-medium">{screen.manifest.brief.slice(0, 90)}</span>
-                  <span className="ml-auto text-ui-xs text-foreground-subtle">{selectedFile?.replace(/\.html$/, "")}</span>
+                  <span className="ml-auto text-ui-xs text-foreground-subtle">
+                    {selectedFile?.replace(/\.html$/, "")}
+                  </span>
                 </div>
                 <div className="min-h-0 flex-1">
                   <DesignCanvas
@@ -644,7 +699,15 @@ export function Studio() {
                       onFix={(instruction) => void step("fix", { instruction, mode: "full" })}
                     />
                   )
-                  : <ExportPanel config={config} slug={screen.slug} file={info.file} onPlan={openPlan} applied={appliedCount} />}
+                  : (
+                    <ExportPanel
+                      config={config}
+                      slug={screen.slug}
+                      file={info.file}
+                      onPlan={openPlan}
+                      applied={appliedCount}
+                    />
+                  )}
               </div>
             </aside>
           )

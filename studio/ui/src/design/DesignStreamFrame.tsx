@@ -26,7 +26,8 @@ document.documentElement.classList.toggle("dark",d.theme==="dark");if(tok.textCo
   }"><style id="ds-tokens"></style><style>@keyframes ds-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.ds-in{animation:ds-in .28s ease-out}@media (prefers-reduced-motion:reduce){.ds-in{animation:none}}</style><script nonce="${nonce}">${script}</script></head><body></body></html>`;
 }
 
-export const makeNonce = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
+export const makeNonce = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
 
 /** Replays a finished page in Stitch's order: tokens, then the shell, then blocks, a few renders per second. */
 export function useReplay(html: string | undefined, active: boolean): { prefix: string; finished: boolean } {
@@ -54,7 +55,17 @@ export function LiveFrameBody(
   },
 ) {
   const { prefix, finished } = useReplay(html, true);
-  return <LiveBody source={prefix} finished={finished} title={title} width={width} height={height} zoom={zoom} theme={theme} />;
+  return (
+    <LiveBody
+      source={prefix}
+      finished={finished}
+      title={title}
+      width={width}
+      height={height}
+      zoom={zoom}
+      theme={theme}
+    />
+  );
 }
 
 function useStatusText() {

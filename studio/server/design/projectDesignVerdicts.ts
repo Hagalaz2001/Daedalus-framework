@@ -21,7 +21,9 @@ export const setVerdictFile = (path: string | null): void => {
 };
 
 const valid = (v: unknown): v is Verdict =>
-  !!v && typeof v === "object" && Array.isArray((v as Verdict).problems) && (v as Verdict).problems.every((p) => typeof p === "string") &&
+  !!v && typeof v === "object" && Array.isArray((v as Verdict).problems) && (v as Verdict).problems.every((p) =>
+    typeof p === "string"
+  ) &&
   typeof (v as Verdict).remote === "boolean";
 
 async function load(): Promise<Map<string, Verdict>> {

@@ -29,12 +29,18 @@ function manifestPath(root: string, kind: ItemKind, id: string): string {
     : join(root, `${kind}s`, id, `${kind}.json`);
 }
 
-export function describe(root: string, kind: ItemKind, id: string): Item & { manifest: Record<string, unknown>; readme?: string } {
+export function describe(
+  root: string,
+  kind: ItemKind,
+  id: string,
+): Item & { manifest: Record<string, unknown>; readme?: string } {
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) throw new UsageError(`Invalid ${kind} id "${id}"`);
   const f = manifestPath(root, kind, id);
   if (!existsSync(f)) throw new UsageError(`Unknown ${kind} "${id}"`);
   const manifest = readJson(f);
-  const readmePath = kind === "stack" ? join(root, "stacks", id, existsSync(join(root, "stacks", id, "README.md")) ? "README.md" : "app/README.md") : join(root, `${kind}s`, id, "README.md");
+  const readmePath = kind === "stack"
+    ? join(root, "stacks", id, existsSync(join(root, "stacks", id, "README.md")) ? "README.md" : "app/README.md")
+    : join(root, `${kind}s`, id, "README.md");
   return {
     kind,
     id,
@@ -73,9 +79,16 @@ function walkMd(dir: string, rel: string, out: string[], depth = 0) {
 /** Markdown documents that describe Daedalus itself (not the third-party skill folders). */
 export function listDocs(root: string): DocRef[] {
   const paths: string[] = [];
-  for (const top of ["README.md", "CONTRIBUTING.md", "DISCLAIMER.md", "SECURITY.md", "CATALOG.md"]) if (existsSync(join(root, top))) paths.push(top);
-  for (const d of ["docs", "template/docs", "stacks", "modules", "packs", "studio"]) walkMd(join(root, d), `/${d}`, paths);
-  return paths.filter((p) => !p.includes("/node_modules/")).map((path) => ({ path, title: firstHeading(readFileSync(join(root, path), "utf8")) || path }));
+  for (const top of ["README.md", "CONTRIBUTING.md", "DISCLAIMER.md", "SECURITY.md", "CATALOG.md"]) {
+    if (existsSync(join(root, top))) paths.push(top);
+  }
+  for (const d of ["docs", "template/docs", "stacks", "modules", "packs", "studio"]) {
+    walkMd(join(root, d), `/${d}`, paths);
+  }
+  return paths.filter((p) => !p.includes("/node_modules/")).map((path) => ({
+    path,
+    title: firstHeading(readFileSync(join(root, path), "utf8")) || path,
+  }));
 }
 
 const firstHeading = (text: string) => /^#\s+(.+)$/m.exec(text)?.[1].trim();
@@ -103,7 +116,12 @@ export function searchDocs(root: string, query: string, limit = 8): DocHit[] {
     if (!score) continue;
     const lines = text.split("\n");
     const best = lines.findIndex((l) => words.some((w) => l.toLowerCase().includes(w)));
-    hits.push({ path: doc.path, title: doc.title, score, snippet: lines.slice(Math.max(0, best), best + 4).join("\n").trim().slice(0, 400) });
+    hits.push({
+      path: doc.path,
+      title: doc.title,
+      score,
+      snippet: lines.slice(Math.max(0, best), best + 4).join("\n").trim().slice(0, 400),
+    });
   }
   return hits.sort((a, b) => b.score - a.score).slice(0, limit);
 }
@@ -112,4 +130,37 @@ export function readDoc(root: string, path: string): string {
   const known = listDocs(root).find((d) => d.path === path);
   if (!known) throw new UsageError(`Unknown document "${path}"`);
   return readFileSync(join(root, known.path), "utf8");
+}
+
+// ---------- human output (the CLI default; --json prints the data instead) ----------
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
+
+/** Aligned table: id, title, one-line description. */
+export function formatList(kind: ItemKind, items: Item[]): string {
+  if (!items.length) return `No ${kind}s found.`;
+  const w = Math.max(...items.map((i) => i.id.length));
+  return [
+    `${items.length} ${kind}${items.length === 1 ? "" : "s"}:`,
+    ...items.map((i) => `  ${i.id.padEnd(w)}  ${clip(i.description || i.title, 100)}`),
+  ].join("\n");
+}
+
+/** Title, description and the manifest's own keys; the README is left to `docs`. */
+export function formatDescribe(item: ReturnType<typeof describe>): string {
+  const keys = Object.keys(item.manifest).filter((k) => !k.startsWith("$"));
+  return [
+    `${item.kind} ${item.id}: ${item.title}`,
+    item.description && `\n${item.description}`,
+    `\nManifest keys: ${keys.join(", ")}`,
+    item.readme && "\nREADME: run `daedalus docs " + item.id + "`",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export function formatDocs(query: string, hits: DocHit[]): string {
+  if (!hits.length) return `No documents match "${query}".`;
+  return hits.map((h, i) =>
+    `${i + 1}. ${h.title}  (${h.path}, score ${h.score})\n${h.snippet.split("\n").map((l) => "   " + l).join("\n")}`
+  ).join("\n\n");
 }

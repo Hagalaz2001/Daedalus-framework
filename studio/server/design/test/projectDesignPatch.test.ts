@@ -16,7 +16,10 @@ describe("surgical patches", () => {
   it("validates patch JSON", () => {
     assert.throws(() => parseDesignPatch({ ops: [] }), /1-30/);
     assert.throws(() => parseDesignPatch({ ops: [{ op: "text", selector: "p:contains(x)", text: "a" }] }), /selector/);
-    assert.throws(() => parseDesignPatch({ ops: [{ op: "attr", selector: "a", name: "onclick", value: "x()" }] }), /not allowed/);
+    assert.throws(
+      () => parseDesignPatch({ ops: [{ op: "attr", selector: "a", name: "onclick", value: "x()" }] }),
+      /not allowed/,
+    );
     assert.throws(
       () => parseDesignPatch({ ops: [{ op: "attr", selector: "a", name: "href", value: "javascript:alert(1)" }] }),
       /not allowed/,
@@ -34,13 +37,23 @@ describe("surgical patches", () => {
   });
 
   it("rejects the whole patch when a selector is ambiguous or missing", () => {
-    assert.throws(() => applyDesignPatch(PAGE, parseDesignPatch({ ops: [{ op: "text", selector: "p", text: "x" }] })), /matched 2/);
-    assert.throws(() => applyDesignPatch(PAGE, parseDesignPatch({ ops: [{ op: "remove", selector: "#nope" }] })), /matched 0/);
+    assert.throws(
+      () => applyDesignPatch(PAGE, parseDesignPatch({ ops: [{ op: "text", selector: "p", text: "x" }] })),
+      /matched 2/,
+    );
+    assert.throws(
+      () => applyDesignPatch(PAGE, parseDesignPatch({ ops: [{ op: "remove", selector: "#nope" }] })),
+      /matched 0/,
+    );
   });
 
   it("sanitises inserted html", () => {
     const patch = parseDesignPatch({
-      ops: [{ op: "append", selector: "main", html: '<img src="https://x.com/a.png"><script>1</script><b onclick="x()">ok</b>' }],
+      ops: [{
+        op: "append",
+        selector: "main",
+        html: '<img src="https://x.com/a.png"><script>1</script><b onclick="x()">ok</b>',
+      }],
     });
     const out = applyDesignPatch(PAGE, patch);
     assert.ok(!/script|x\.com|onclick/.test(out) && out.includes("ok"));
@@ -63,8 +76,18 @@ describe("surgical patches", () => {
       count: 1,
     });
     writeFileSync(join(screenDir(dir, slug), "v1.html"), PAGE);
-    await beginStep(dir, { kind: "begin", step: "refine", slug, parent: "v1.html", instruction: "Rename title", mode: "surgical" });
-    writeFileSync(join(screenDir(dir, slug), "v1-r1.patch.json"), JSON.stringify({ ops: [{ op: "text", selector: "p", text: "x" }] }));
+    await beginStep(dir, {
+      kind: "begin",
+      step: "refine",
+      slug,
+      parent: "v1.html",
+      instruction: "Rename title",
+      mode: "surgical",
+    });
+    writeFileSync(
+      join(screenDir(dir, slug), "v1-r1.patch.json"),
+      JSON.stringify({ ops: [{ op: "text", selector: "p", text: "x" }] }),
+    );
     let result = await settlePatches(dir, (await listDesigns(dir)).screens);
     assert.match(result.errors.get(slug)!["v1-r1.html"]!, /matched 2/);
     assert.equal(existsSync(join(screenDir(dir, slug), "v1-r1.html")), false);
