@@ -51,7 +51,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AdminRow"
+                  type: object
+                  additionalProperties: {}
         "401":
           $ref: "#/components/responses/Problem"
         "403":
@@ -69,7 +70,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdminRow"
+                type: object
+                additionalProperties: {}
         "401":
           $ref: "#/components/responses/Problem"
         "403":
@@ -101,14 +103,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AdminRow"
+              type: object
+              additionalProperties: {}
       responses:
         "200":
           description: The updated row
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdminRow"
+                type: object
+                additionalProperties: {}
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -178,4 +182,4 @@ components:
     AdminRow:
       type: object
       description: A row as column name to value.
-      additionalProperties: true
+      additionalProperties: {}

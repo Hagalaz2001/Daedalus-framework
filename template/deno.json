@@ -37,11 +37,13 @@
     ]
   },
   "lint": {
+    "rules": { "exclude": ["no-import-prefix"] },
     "exclude": [
       "**/node_modules",
       "**/dist",
       "**/build",
       "packages/api_ts/src/schema.d.ts",
+      "packages/ui",
       "backend/drizzle",
       ".agents",
       ".claude",

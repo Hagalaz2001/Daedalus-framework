@@ -21,7 +21,7 @@ export const PATTERNS: [string, RegExp][] = [
   ["Stripe live key", /\b[rs]k_live_[0-9a-zA-Z]{20,}/],
   ["Slack token", /\bxox[abpr]-[0-9A-Za-z-]{10,}/],
   ["Supabase service key", /SUPABASE_SERVICE_ROLE_KEY\s*=\s*\S{20,}/],
-  ["database URL with password", /postgres(?:ql)?:\/\/[^:\s/]+:[^@\s]{6,}@(?!localhost|127\.0\.0\.1)/],
+  ["database URL with password", /postgres(?:ql)?:\/\/[^:\s/]+:(?!<[^>\s]*>@)[^@\s]{6,}@(?!localhost|127\.0\.0\.1)/],
 ];
 
 /** Problems found in one file (its path and, when readable, its text). */

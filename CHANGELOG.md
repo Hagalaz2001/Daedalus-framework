@@ -4,6 +4,16 @@ Format: newest first. Versions follow semantic versioning once the first tag is 
 
 ## 2.0.0 (unreleased)
 
+### Fixed (2026-11-18, found generating HomeStead on Windows)
+
+- The first commit of a new project was refused by the pre-commit hook: `deno lint` checked `packages/ui` (browser code
+  with Vite-style imports and `window`, already covered by `tsc`) and flagged the inline `npm:` imports AGENTS.md
+  allows. `template/deno.json` lint now excludes `packages/ui` and the `no-import-prefix` rule.
+- `scripts/secret-scan.ts` flagged the `postgres://postgres:<password>@db...` example in `docs/OPERATIONS.md`; an
+  angle-bracket placeholder password is no longer treated as a secret (a real password still is).
+- Not changed: picomatch GHSA-fc5q-39xc-vjpf (dev-only via vite, vitest, astro; no fixed release) fails `deno audit` in
+  every new project. Projects declare it under `audit.ignore` with a reason until a patched picomatch ships.
+
 Pick-your-stack framework. The single fixed template became a base plus stacks.
 
 ### Added

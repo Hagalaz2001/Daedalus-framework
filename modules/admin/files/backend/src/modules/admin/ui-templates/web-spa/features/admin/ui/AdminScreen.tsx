@@ -89,7 +89,6 @@ function ResourceTable({ resource }: { resource: Resource }) {
                         ? (
                           <>
                             <Button
-                              size="sm"
                               disabled={update.isPending}
                               onClick={() =>
                                 update.mutate({ id: row.id, values: editing.values }, {
@@ -98,7 +97,7 @@ function ResourceTable({ resource }: { resource: Resource }) {
                             >
                               Save
                             </Button>
-                            <Button size="sm" variant="secondary" onClick={() => setEditing(null)}>
+                            <Button variant="secondary" onClick={() => setEditing(null)}>
                               Cancel
                             </Button>
                           </>
@@ -107,7 +106,6 @@ function ResourceTable({ resource }: { resource: Resource }) {
                           <>
                             {resource.columns.some((c) => c.editable) && (
                               <Button
-                                size="sm"
                                 variant="secondary"
                                 aria-label={`Edit ${row.id}`}
                                 onClick={() => startEdit(row)}
@@ -117,7 +115,6 @@ function ResourceTable({ resource }: { resource: Resource }) {
                             )}
                             {resource.deletable && (
                               <Button
-                                size="sm"
                                 variant="secondary"
                                 aria-label={`Delete ${row.id}`}
                                 disabled={remove.isPending}
